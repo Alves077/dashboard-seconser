@@ -1,546 +1,472 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>DIP · Seconser Niterói — Dashboard</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-<style>
-*{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#f5f4f0;--surface:#fff;--surface2:#f0efe9;
-  --border:rgba(0,0,0,0.09);--border2:rgba(0,0,0,0.15);
-  --text:#1a1a18;--text2:#6b6b66;--text3:#9e9e98;
-  --radius:8px;--radius-lg:12px;
-  --blue:#378ADD;--green:#639922;--amber:#BA7517;--red:#E24B4A;--purple:#7F77DD;
-}
-body{font-family:-apple-system,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:13px;min-height:100vh}
-
-.topbar{padding:.875rem 1.25rem;border-bottom:.5px solid var(--border2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;background:var(--surface)}
-.topbar-title{font-size:14px;font-weight:600;color:var(--text)}
-.topbar-sub{font-size:11px;color:var(--text2);margin-top:1px}
-.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
-.topbar-badges{display:flex;gap:6px;flex-wrap:wrap}
-
-.filters{display:flex;gap:8px;padding:.65rem 1.25rem;border-bottom:.5px solid var(--border);flex-wrap:wrap;align-items:center;background:var(--surface)}
-.fg{display:flex;align-items:center;gap:5px}
-.filters label{font-size:11px;color:var(--text2);white-space:nowrap}
-.filters select{font-size:11px;padding:3px 7px;border-radius:var(--radius);border:.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer}
-.filter-note{font-size:10px;color:var(--text3);margin-left:auto}
-
-.page{padding:1rem 1.25rem}
-
-.kpis{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:10px}
-.kpi{background:var(--surface2);border-radius:var(--radius);padding:.7rem .875rem}
-.kpi-label{font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-.kpi-row{display:flex;align-items:center;gap:6px}
-.kpi-accent{width:3px;height:26px;border-radius:2px;flex-shrink:0}
-.kpi-value{font-size:22px;font-weight:500;color:var(--text);line-height:1}
-.kpi-sub{font-size:10px;color:var(--text2);margin-top:3px}
-
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px}
-.fw{grid-column:1/-1}
-
-.card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--radius-lg);padding:.875rem 1rem}
-.ct{font-size:10px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:.75rem;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
-
-.tag{display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;font-weight:500}
-.tag-calc{background:#E6F1FB;color:#0C447C}
-.tag-native{background:#EAF3DE;color:#27500A}
-.tag-extra{background:#FAEEDA;color:#633806}
-
-.badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:var(--radius);font-weight:500}
-.b-red{background:#FCEBEB;color:#791F1F}
-.b-amb{background:#FAEEDA;color:#633806}
-.b-blue{background:#E6F1FB;color:#0C447C}
-.b-green{background:#EAF3DE;color:#27500A}
-
-.sit-g{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:10px}
-.sit-c{background:var(--surface2);border-radius:var(--radius);padding:.6rem;text-align:center}
-.sit-n{font-size:20px;font-weight:500}
-.sit-l{font-size:10px;color:var(--text2);margin-top:2px}
-
-.leg-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
-.leg{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text2)}
-.leg-sq{width:8px;height:8px;border-radius:2px;flex-shrink:0}
-
-.bar-row{display:flex;align-items:center;gap:7px;margin-bottom:6px}
-.bar-label{font-size:10px;color:var(--text2);width:130px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.bar-track{flex:1;background:var(--surface2);border-radius:2px;height:6px;overflow:hidden}
-.bar-fill{height:100%;border-radius:2px}
-.bar-n{font-size:10px;color:var(--text2);width:40px;text-align:right;flex-shrink:0}
-
-.list-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:.5px solid var(--border)}
-.list-row:last-child{border-bottom:none}
-.faixa-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
-
-.rank-row{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:.5px solid var(--border)}
-.rank-row:last-child{border-bottom:none}
-.rank-num{font-size:10px;color:var(--text3);width:14px;text-align:right;flex-shrink:0}
-.rank-name{font-size:11px;color:var(--text);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.rank-bar-wrap{width:80px;background:var(--surface2);border-radius:2px;height:5px}
-.rank-bar{height:5px;border-radius:2px;background:var(--purple)}
-.rank-n{font-size:10px;color:var(--text2);width:30px;text-align:right;flex-shrink:0}
-
-.stat-inline{display:flex;align-items:baseline;gap:6px;margin-bottom:8px}
-.stat-n{font-size:20px;font-weight:500;color:var(--text)}
-.stat-s{font-size:11px;color:var(--text2)}
-
-/* loading overlay */
-#loading{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:999}
-.spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-#loading p{font-size:12px;color:var(--text2)}
-#error-msg{display:none;color:var(--red);font-size:12px;text-align:center;max-width:320px}
-
-.refresh-btn{font-size:11px;padding:4px 10px;border-radius:var(--radius);border:.5px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer}
-.refresh-btn:hover{background:var(--surface2)}
-.last-update{font-size:10px;color:var(--text3)}
-
-@media(max-width:900px){.kpis{grid-template-columns:repeat(3,1fr)}.g2,.g3{grid-template-columns:1fr}}
-@media(max-width:600px){.kpis{grid-template-columns:repeat(2,1fr)}.page{padding:.75rem}}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIP · Seconser Niterói — Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
+
 <body>
 
-<div id="loading">
-  <div class="spinner"></div>
-  <p>Carregando dados da planilha…</p>
-  <p id="error-msg"></p>
-</div>
-
-<div id="app" style="display:none">
-
-<div class="topbar">
-  <div>
-    <div class="topbar-title">DIP · Seconser Niterói — Visão Geral</div>
-    <div class="topbar-sub" id="sub-periodo">carregando…</div>
-  </div>
-  <div class="topbar-right">
-    <div class="topbar-badges">
-      <span class="badge b-green" id="badge-ok">—</span>
-      <span class="badge b-amb" id="badge-at">—</span>
-      <span class="badge b-red" id="badge-ar">—</span>
-    </div>
-    <span class="last-update" id="last-update"></span>
-    <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
-  </div>
-</div>
-
-<div class="filters">
-  <div class="fg"><label>Período</label><select id="fPeriodo"><option value="">Todos</option></select></div>
-  <div class="fg"><label>Região</label><select id="fRegiao"><option value="">Todas</option></select></div>
-  <div class="fg"><label>Categoria</label><select id="fCat"><option value="">Todas</option></select></div>
-  <span class="filter-note">dados ao vivo · Google Sheets</span>
-</div>
-
-<div class="page">
-  <div class="kpis">
-    <div class="kpi">
-      <div class="kpi-label">Total de Serviços <span class="tag tag-native">nativo</span></div>
-      <div class="kpi-row"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value" id="kTotal">—</span></div>
-      <div class="kpi-sub">registros na planilha</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Concluídos <span class="tag tag-calc">calculado</span></div>
-      <div class="kpi-row"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value" id="kOk">—</span></div>
-      <div class="kpi-sub" id="kOkPct">COUNTIF Situação = OK</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Em Atendimento <span class="tag tag-calc">calculado</span></div>
-      <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="kAt">—</span></div>
-      <div class="kpi-sub">COUNTIF Situação = Em Atendimento</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Em Atraso <span class="tag tag-calc">calculado</span></div>
-      <div class="kpi-row"><span class="kpi-accent" style="background:var(--red)"></span><span class="kpi-value" id="kAr">—</span></div>
-      <div class="kpi-sub">COUNTIF Situação = Em Atraso</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Reaberturas <span class="tag tag-calc">calculado</span></div>
-      <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="kReab">—</span></div>
-      <div class="kpi-sub" id="kReabPct">Ocorrências > 1</div>
-    </div>
-    <div class="kpi">
-      <div class="kpi-label">Tempo Médio <span class="tag tag-extra">extra</span></div>
-      <div class="kpi-row"><span class="kpi-accent" style="background:#888780"></span><span class="kpi-value" id="kMedia">—</span></div>
-      <div class="kpi-sub" id="kMediaSub">AVERAGE Dias Execução</div>
-    </div>
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Carregando dados da planilha…</p>
+    <p id="error-msg"></p>
   </div>
 
-  <div class="g3">
-    <div class="card">
-      <div class="ct">Situação atual <span class="tag tag-native">dim. Situação</span></div>
-      <div class="sit-g">
-        <div class="sit-c"><div class="sit-n" style="color:var(--green)" id="sOk">—</div><div class="sit-l">OK</div></div>
-        <div class="sit-c"><div class="sit-n" style="color:var(--amber)" id="sAt">—</div><div class="sit-l">Em atendimento</div></div>
-        <div class="sit-c"><div class="sit-n" style="color:var(--red)" id="sAr">—</div><div class="sit-l">Em atraso</div></div>
-        <div class="sit-c"><div class="sit-n" style="color:var(--text3)" id="sTaxa">—</div><div class="sit-l">taxa de sucesso</div></div>
-      </div>
-      <div class="leg-row">
-        <span class="leg"><span class="leg-sq" style="background:var(--green)"></span>OK</span>
-        <span class="leg"><span class="leg-sq" style="background:var(--amber)"></span>Em atendimento</span>
-        <span class="leg"><span class="leg-sq" style="background:var(--red)"></span>Em atraso</span>
-      </div>
-      <div style="position:relative;height:110px"><canvas id="cSit" role="img" aria-label="Donut situação"></canvas></div>
-    </div>
+  <div id="app" style="display:none">
 
-    <div class="card">
-      <div class="ct">Categorias <span class="tag tag-native">dim. Categoria</span></div>
-      <div id="catDestaque" style="margin-bottom:8px;padding:6px 8px;background:var(--surface2);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:11px;color:var(--text2)" id="catTop">—</span>
-        <span style="font-size:12px;font-weight:500;color:var(--text)" id="catTopVal">—</span>
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">DIP · Seconser Niterói — Visão Geral</div>
+        <div class="topbar-sub" id="sub-periodo">carregando…</div>
       </div>
-      <div id="catBars"></div>
-    </div>
-
-    <div class="card">
-      <div class="ct">Serviços por região <span class="tag tag-native">dim. Região</span></div>
-      <div style="position:relative;height:170px"><canvas id="cReg" role="img" aria-label="Regiões"></canvas></div>
-    </div>
-  </div>
-
-  <div class="g3">
-    <div class="card">
-      <div class="ct">Reaberturas <span class="tag tag-calc">Ocorrências > 1</span></div>
-      <div class="stat-inline">
-        <span class="stat-n" id="rTotal">—</span>
-        <span class="stat-s" id="rPct">—</span>
-      </div>
-      <div id="reabList"></div>
-      <div style="margin-top:10px;padding-top:8px;border-top:.5px solid var(--border)">
-        <div class="ct" style="margin-bottom:6px">Por região <span class="tag tag-extra">extra</span></div>
-        <div id="reabRegBars"></div>
+      <div class="topbar-right">
+        <div class="topbar-badges">
+          <span class="badge b-green" id="badge-ok">—</span>
+          <span class="badge b-amb" id="badge-at">—</span>
+          <span class="badge b-red" id="badge-ar">—</span>
+        </div>
+        <span class="last-update" id="last-update"></span>
+        <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
       </div>
     </div>
 
-    <div class="card">
-      <div class="ct">Tempo de execução <span class="tag tag-native">dim. Faixa Execução</span></div>
-      <div style="margin-bottom:10px">
-        <div style="font-size:10px;color:var(--text2);margin-bottom:6px">Distribuição por faixa · concluídos</div>
-        <div id="faixaList"></div>
+    <div class="filters">
+      <div class="fg"><label>Período</label><select id="fPeriodo">
+          <option value="">Todos</option>
+        </select></div>
+      <div class="fg"><label>Região</label><select id="fRegiao">
+          <option value="">Todas</option>
+        </select></div>
+      <div class="fg"><label>Categoria</label><select id="fCat">
+          <option value="">Todas</option>
+        </select></div>
+      <span class="filter-note">dados ao vivo · Google Sheets</span>
+    </div>
+
+    <div class="page">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">Total de Serviços</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value" id="kTotal">—</span></div>
+          <div class="kpi-sub">registros na planilha</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Concluídos</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value" id="kOk">—</span></div>
+          <div class="kpi-sub" id="kOkPct">COUNTIF Situação = OK</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Em Atendimento</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="kAt">—</span></div>
+          <div class="kpi-sub">COUNTIF Situação = Em Atendimento</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Em Atraso</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--red)"></span><span class="kpi-value" id="kAr">—</span></div>
+          <div class="kpi-sub">COUNTIF Situação = Em Atraso</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Reaberturas</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="kReab">—</span></div>
+          <div class="kpi-sub" id="kReabPct">Ocorrências > 1</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Tempo Médio</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:#888780"></span><span class="kpi-value" id="kMedia">—</span></div>
+          <div class="kpi-sub" id="kMediaSub">AVERAGE Dias Execução</div>
+        </div>
       </div>
-      <div style="font-size:10px;color:var(--text2);margin-bottom:6px">Tempo médio por categoria <span class="tag tag-native">média Dias Execução</span></div>
-      <div style="position:relative;height:110px"><canvas id="cTempo" role="img" aria-label="Tempo médio"></canvas></div>
+
+      <div class="g3">
+        <div class="card">
+          <div class="ct">Situação atual <span class="tag tag-native">dim. Situação</span></div>
+          <div class="sit-g">
+            <div class="sit-c">
+              <div class="sit-n" style="color:var(--green)" id="sOk">—</div>
+              <div class="sit-l">OK</div>
+            </div>
+            <div class="sit-c">
+              <div class="sit-n" style="color:var(--amber)" id="sAt">—</div>
+              <div class="sit-l">Em atendimento</div>
+            </div>
+            <div class="sit-c">
+              <div class="sit-n" style="color:var(--red)" id="sAr">—</div>
+              <div class="sit-l">Em atraso</div>
+            </div>
+            <div class="sit-c">
+              <div class="sit-n" style="color:var(--text3)" id="sTaxa">—</div>
+              <div class="sit-l">taxa de sucesso</div>
+            </div>
+          </div>
+          <div class="leg-row">
+            <span class="leg"><span class="leg-sq" style="background:var(--green)"></span>OK</span>
+            <span class="leg"><span class="leg-sq" style="background:var(--amber)"></span>Em atendimento</span>
+            <span class="leg"><span class="leg-sq" style="background:var(--red)"></span>Em atraso</span>
+          </div>
+          <div style="position:relative;height:110px"><canvas id="cSit" role="img" aria-label="Donut situação"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Categorias <span class="tag tag-native">dim. Categoria</span></div>
+          <div id="catDestaque" style="margin-bottom:8px;padding:6px 8px;background:var(--surface2);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center">
+            <span style="font-size:11px;color:var(--text2)" id="catTop">—</span>
+            <span style="font-size:12px;font-weight:500;color:var(--text)" id="catTopVal">—</span>
+          </div>
+          <div id="catBars"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Serviços por região <span class="tag tag-native">dim. Região</span></div>
+          <div style="position:relative;height:170px"><canvas id="cReg" role="img" aria-label="Regiões"></canvas></div>
+        </div>
+      </div>
+
+      <div class="g3">
+        <div class="card">
+          <div class="ct">Reaberturas <span class="tag tag-calc">Ocorrências > 1</span></div>
+          <div class="stat-inline">
+            <span class="stat-n" id="rTotal">—</span>
+            <span class="stat-s" id="rPct">—</span>
+          </div>
+          <div id="reabList"></div>
+          <div style="margin-top:10px;padding-top:8px;border-top:.5px solid var(--border)">
+            <div class="ct" style="margin-bottom:6px">Por região <span class="tag tag-extra">extra</span></div>
+            <div id="reabRegBars"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Tempo de execução <span class="tag tag-native">dim. Faixa Execução</span></div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:10px;color:var(--text2);margin-bottom:6px">Distribuição por faixa · concluídos</div>
+            <div id="faixaList"></div>
+          </div>
+          <div style="font-size:10px;color:var(--text2);margin-bottom:6px">Tempo médio por categoria <span class="tag tag-native">média Dias Execução</span></div>
+          <div style="position:relative;height:110px"><canvas id="cTempo" role="img" aria-label="Tempo médio"></canvas></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Top 8 bairros <span class="tag tag-extra">dim. Bairro</span></div>
+          <div id="bairroList"></div>
+        </div>
+      </div>
+
+      <div class="card fw">
+        <div class="ct" style="justify-content:space-between">
+          <span>Volume mensal de demandas <span class="tag tag-extra">dim. Data Saída</span></span>
+          <span style="font-size:10px;color:var(--text2);font-weight:400;text-transform:none" id="pico-label"></span>
+        </div>
+        <div style="position:relative;height:140px"><canvas id="cMensal" role="img" aria-label="Volume mensal"></canvas></div>
+      </div>
     </div>
 
-    <div class="card">
-      <div class="ct">Top 8 bairros <span class="tag tag-extra">dim. Bairro</span></div>
-      <div id="bairroList"></div>
-    </div>
-  </div>
+  </div><!-- /#app -->
 
-  <div class="card fw">
-    <div class="ct" style="justify-content:space-between">
-      <span>Volume mensal de demandas <span class="tag tag-extra">dim. Data Saída</span></span>
-      <span style="font-size:10px;color:var(--text2);font-weight:400;text-transform:none" id="pico-label"></span>
-    </div>
-    <div style="position:relative;height:140px"><canvas id="cMensal" role="img" aria-label="Volume mensal"></canvas></div>
-  </div>
-</div>
+  <script>
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdf3k8zVVJRakFS6Z87Gct-7RneG1INv--7a1lDCMvuO6qtwd57kpyxHsGAOfqcZe9Gf2RBCqYtDRu/pub?gid=0&single=true&output=csv';
 
-</div><!-- /#app -->
+    let allRows = [];
+    let charts = {};
+    const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
+    const tc = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
+    const gc = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
 
-<script>
-const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdf3k8zVVJRakFS6Z87Gct-7RneG1INv--7a1lDCMvuO6qtwd57kpyxHsGAOfqcZe9Gf2RBCqYtDRu/pub?gid=0&single=true&output=csv';
+    function fmt(n) { return n.toLocaleString('pt-BR'); }
+    function pct(a, b) { return b ? (a / b * 100).toFixed(1) + '%' : '—'; }
 
-let allRows = [];
-let charts = {};
-const isDark = matchMedia('(prefers-color-scheme: dark)').matches;
-const tc = isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)';
-const gc = isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+    function parseDate(s) {
+      if (!s) return null;
+      const p = s.split('/');
+      if (p.length === 3) return new Date(+p[2], +p[1] - 1, +p[0]);
+      return new Date(s);
+    }
 
-function fmt(n){ return n.toLocaleString('pt-BR'); }
-function pct(a,b){ return b ? (a/b*100).toFixed(1)+'%' : '—'; }
+    function mesLabel(d) {
+      const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      return months[d.getMonth()] + '/' + String(d.getFullYear()).slice(2);
+    }
 
-function parseDate(s){
-  if(!s) return null;
-  const p = s.split('/');
-  if(p.length===3) return new Date(+p[2], +p[1]-1, +p[0]);
-  return new Date(s);
-}
+    function count(rows, col, val) {
+      return rows.filter(r => r[col] && r[col].trim() === val).length;
+    }
 
-function mesLabel(d){
-  const months = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-  return months[d.getMonth()]+'/'+String(d.getFullYear()).slice(2);
-}
+    function countIf(rows, col, fn) {
+      return rows.filter(r => fn(r[col])).length;
+    }
 
-function count(rows, col, val){
-  return rows.filter(r => r[col] && r[col].trim() === val).length;
-}
+    function groupBy(rows, col) {
+      const m = {};
+      rows.forEach(r => {
+        const k = (r[col] || '').trim();
+        m[k] = (m[k] || 0) + 1;
+      });
+      return Object.entries(m).sort((a, b) => b[1] - a[1]);
+    }
 
-function countIf(rows, col, fn){
-  return rows.filter(r => fn(r[col])).length;
-}
+    function avgBy(rows, col) {
+      const m = {}, cnt = {};
+      rows.forEach(r => {
+        const k = (r[col] || '').trim();
+        const v = parseFloat(r['Dias Execução'] || r['Dias ExecuÃ§Ã£o'] || 0);
+        if (!isNaN(v)) { m[k] = (m[k] || 0) + v; cnt[k] = (cnt[k] || 0) + 1; }
+      });
+      return Object.entries(m).map(([k, v]) => [k, v / cnt[k]]).sort((a, b) => b[1] - a[1]);
+    }
 
-function groupBy(rows, col){
-  const m = {};
-  rows.forEach(r => {
-    const k = (r[col]||'').trim();
-    m[k] = (m[k]||0)+1;
-  });
-  return Object.entries(m).sort((a,b)=>b[1]-a[1]);
-}
+    // Normaliza cabeçalhos com encoding problemático
+    function normalizeHeaders(row) {
+      const map = {
+        'ID Colab': 'ID Colab',
+        'Categoria': 'Categoria',
+        'Bairro': 'Bairro',
+        'Regi\u00e3o': 'Região',
+        'RegiÃ£o': 'Região',
+        'Data Sa\u00edda': 'Data Saída',
+        'Data SaÃ\xadda': 'Data Saída',
+        'Data Retorno': 'Data Retorno',
+        'Prazo': 'Prazo',
+        'Situa\u00e7\u00e3o': 'Situação',
+        'SituaÃ§Ã£o': 'Situação',
+        'Dias Execu\u00e7\u00e3o': 'Dias Execução',
+        'Dias ExecuÃ§Ã£o': 'Dias Execução',
+        'Faixa Execu\u00e7\u00e3o': 'Faixa Execução',
+        'Faixa ExecuÃ§Ã£o': 'Faixa Execução',
+        'Ocorr\u00eancias': 'Ocorrências',
+        'OcorrÃªncias': 'Ocorrências',
+        'Latitude': 'Latitude', 'Longitude': 'Longitude'
+      };
+      const out = {};
+      Object.keys(row).forEach(k => {
+        const clean = map[k.trim()] || k.trim();
+        out[clean] = row[k];
+      });
+      return out;
+    }
 
-function avgBy(rows, col){
-  const m = {}, cnt = {};
-  rows.forEach(r => {
-    const k = (r[col]||'').trim();
-    const v = parseFloat(r['Dias Execução']||r['Dias ExecuÃ§Ã£o']||0);
-    if(!isNaN(v)){ m[k]=(m[k]||0)+v; cnt[k]=(cnt[k]||0)+1; }
-  });
-  return Object.entries(m).map(([k,v])=>[k, v/cnt[k]]).sort((a,b)=>b[1]-a[1]);
-}
+    function destroyChart(id) {
+      if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+    }
 
-// Normaliza cabeçalhos com encoding problemático
-function normalizeHeaders(row){
-  const map = {
-    'ID Colab':'ID Colab',
-    'Categoria':'Categoria',
-    'Bairro':'Bairro',
-    'Regi\u00e3o':'Região',
-    'RegiÃ£o':'Região',
-    'Data Sa\u00edda':'Data Saída',
-    'Data SaÃ\xadda':'Data Saída',
-    'Data Retorno':'Data Retorno',
-    'Prazo':'Prazo',
-    'Situa\u00e7\u00e3o':'Situação',
-    'SituaÃ§Ã£o':'Situação',
-    'Dias Execu\u00e7\u00e3o':'Dias Execução',
-    'Dias ExecuÃ§Ã£o':'Dias Execução',
-    'Faixa Execu\u00e7\u00e3o':'Faixa Execução',
-    'Faixa ExecuÃ§Ã£o':'Faixa Execução',
-    'Ocorr\u00eancias':'Ocorrências',
-    'OcorrÃªncias':'Ocorrências',
-    'Latitude':'Latitude','Longitude':'Longitude'
-  };
-  const out = {};
-  Object.keys(row).forEach(k => {
-    const clean = map[k.trim()] || k.trim();
-    out[clean] = row[k];
-  });
-  return out;
-}
+    function render(rows) {
+      const total = rows.length;
+      if (!total) { document.getElementById('sub-periodo').textContent = 'Sem dados para os filtros selecionados'; return; }
 
-function destroyChart(id){
-  if(charts[id]){ charts[id].destroy(); delete charts[id]; }
-}
+      const ok = count(rows, 'Situação', 'OK');
+      const at = count(rows, 'Situação', 'Em Atendimento');
+      const ar = count(rows, 'Situação', 'Em Atraso');
+      const reab = countIf(rows, 'Ocorrências', v => parseInt(v || 0) > 1);
+      const diasVals = rows.filter(r => r['Situação'] === 'OK').map(r => parseFloat(r['Dias Execução'] || 0)).filter(v => !isNaN(v));
+      const media = diasVals.length ? diasVals.reduce((a, b) => a + b, 0) / diasVals.length : 0;
+      const mediana = diasVals.length ? diasVals.sort((a, b) => a - b)[Math.floor(diasVals.length / 2)] : 0;
 
-function render(rows){
-  const total = rows.length;
-  if(!total){ document.getElementById('sub-periodo').textContent = 'Sem dados para os filtros selecionados'; return; }
+      // KPIs
+      document.getElementById('kTotal').textContent = fmt(total);
+      document.getElementById('kOk').textContent = fmt(ok);
+      document.getElementById('kOkPct').textContent = pct(ok, total) + ' do total';
+      document.getElementById('kAt').textContent = fmt(at);
+      document.getElementById('kAr').textContent = fmt(ar);
+      document.getElementById('kReab').textContent = fmt(reab);
+      document.getElementById('kReabPct').textContent = pct(reab, total) + ' do total';
+      document.getElementById('kMedia').innerHTML = media.toFixed(1) + '<span style="font-size:14px;font-weight:400;color:var(--text2)"> d</span>';
+      document.getElementById('kMediaSub').textContent = 'Mediana: ' + Math.round(mediana) + ' dias';
 
-  const ok   = count(rows,'Situação','OK');
-  const at   = count(rows,'Situação','Em Atendimento');
-  const ar   = count(rows,'Situação','Em Atraso');
-  const reab = countIf(rows,'Ocorrências', v => parseInt(v||0) > 1);
-  const diasVals = rows.filter(r=>r['Situação']==='OK').map(r=>parseFloat(r['Dias Execução']||0)).filter(v=>!isNaN(v));
-  const media = diasVals.length ? diasVals.reduce((a,b)=>a+b,0)/diasVals.length : 0;
-  const mediana = diasVals.length ? diasVals.sort((a,b)=>a-b)[Math.floor(diasVals.length/2)] : 0;
+      // Badges topbar
+      document.getElementById('badge-ok').textContent = pct(ok, total) + ' no prazo';
+      document.getElementById('badge-at').textContent = fmt(at) + ' em atendimento';
+      document.getElementById('badge-ar').textContent = fmt(ar) + ' em atraso';
 
-  // KPIs
-  document.getElementById('kTotal').textContent = fmt(total);
-  document.getElementById('kOk').textContent = fmt(ok);
-  document.getElementById('kOkPct').textContent = pct(ok,total)+' do total';
-  document.getElementById('kAt').textContent = fmt(at);
-  document.getElementById('kAr').textContent = fmt(ar);
-  document.getElementById('kReab').textContent = fmt(reab);
-  document.getElementById('kReabPct').textContent = pct(reab,total)+' do total';
-  document.getElementById('kMedia').innerHTML = media.toFixed(1)+'<span style="font-size:14px;font-weight:400;color:var(--text2)"> d</span>';
-  document.getElementById('kMediaSub').textContent = 'Mediana: '+Math.round(mediana)+' dias';
+      // Situação card
+      document.getElementById('sOk').textContent = fmt(ok);
+      document.getElementById('sAt').textContent = fmt(at);
+      document.getElementById('sAr').textContent = fmt(ar);
+      document.getElementById('sTaxa').textContent = pct(ok, total);
 
-  // Badges topbar
-  document.getElementById('badge-ok').textContent  = pct(ok,total)+' no prazo';
-  document.getElementById('badge-at').textContent  = fmt(at)+' em atendimento';
-  document.getElementById('badge-ar').textContent  = fmt(ar)+' em atraso';
+      // Donut situação
+      destroyChart('cSit');
+      charts['cSit'] = new Chart(document.getElementById('cSit'), {
+        type: 'doughnut',
+        data: { labels: ['OK', 'Em atendimento', 'Em atraso'], datasets: [{ data: [ok, at, ar], backgroundColor: ['#639922', '#BA7517', '#E24B4A'], borderWidth: 0, hoverOffset: 4 }] },
+        options: { responsive: true, maintainAspectRatio: false, cutout: '68%', plugins: { legend: { display: false } } }
+      });
 
-  // Situação card
-  document.getElementById('sOk').textContent  = fmt(ok);
-  document.getElementById('sAt').textContent  = fmt(at);
-  document.getElementById('sAr').textContent  = fmt(ar);
-  document.getElementById('sTaxa').textContent = pct(ok,total);
-
-  // Donut situação
-  destroyChart('cSit');
-  charts['cSit'] = new Chart(document.getElementById('cSit'),{
-    type:'doughnut',
-    data:{labels:['OK','Em atendimento','Em atraso'],datasets:[{data:[ok,at,ar],backgroundColor:['#639922','#BA7517','#E24B4A'],borderWidth:0,hoverOffset:4}]},
-    options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{display:false}}}
-  });
-
-  // Categorias
-  const cats = groupBy(rows,'Categoria');
-  const topCat = cats[0] || ['—',0];
-  document.getElementById('catTop').textContent = topCat[0];
-  document.getElementById('catTopVal').innerHTML = fmt(topCat[1])+' · <span style="color:var(--blue)">'+pct(topCat[1],total)+'</span>';
-  const otherCats = cats.slice(1,7);
-  const maxCat = otherCats.length ? otherCats[0][1] : 1;
-  document.getElementById('catBars').innerHTML = otherCats.map(([lbl,n])=>`
+      // Categorias
+      const cats = groupBy(rows, 'Categoria');
+      const topCat = cats[0] || ['—', 0];
+      document.getElementById('catTop').textContent = topCat[0];
+      document.getElementById('catTopVal').innerHTML = fmt(topCat[1]) + ' · <span style="color:var(--blue)">' + pct(topCat[1], total) + '</span>';
+      const otherCats = cats.slice(1, 7);
+      const maxCat = otherCats.length ? otherCats[0][1] : 1;
+      document.getElementById('catBars').innerHTML = otherCats.map(([lbl, n]) => `
     <div class="bar-row">
       <span class="bar-label" title="${lbl}">${lbl}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxCat*100)}%;background:var(--purple)"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n / maxCat * 100)}%;background:var(--purple)"></div></div>
       <span class="bar-n">${fmt(n)}</span>
     </div>`).join('');
 
-  // Regiões
-  const regs = groupBy(rows,'Região');
-  const regColors = ['#378ADD','#7F77DD','#1D9E75','#BA7517','#888780'];
-  destroyChart('cReg');
-  charts['cReg'] = new Chart(document.getElementById('cReg'),{
-    type:'bar', indexAxis:'y',
-    data:{labels:regs.map(r=>r[0]),datasets:[{data:regs.map(r=>r[1]),backgroundColor:regs.map((_,i)=>regColors[i]||'#888780'),borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{ticks:{color:tc,font:{size:10}},grid:{color:gc},border:{display:false}},y:{ticks:{color:tc,font:{size:10}},grid:{display:false},border:{display:false}}}}
-  });
+      // Regiões
+      const regs = groupBy(rows, 'Região');
+      const regColors = ['#378ADD', '#7F77DD', '#1D9E75', '#BA7517', '#888780'];
+      destroyChart('cReg');
+      charts['cReg'] = new Chart(document.getElementById('cReg'), {
+        type: 'bar', indexAxis: 'y',
+        data: { labels: regs.map(r => r[0]), datasets: [{ data: regs.map(r => r[1]), backgroundColor: regs.map((_, i) => regColors[i] || '#888780'), borderRadius: 3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: tc, font: { size: 10 } }, grid: { color: gc }, border: { display: false } }, y: { ticks: { color: tc, font: { size: 10 } }, grid: { display: false }, border: { display: false } } } }
+      });
 
-  // Reaberturas por categoria
-  const reabRows = rows.filter(r=>parseInt(r['Ocorrências']||0)>1);
-  const reabCats = groupBy(reabRows,'Categoria').slice(0,4);
-  const badgeClasses = ['b-red','b-amb','b-blue','b-blue'];
-  document.getElementById('rTotal').textContent = fmt(reab);
-  document.getElementById('rPct').textContent   = 'reaberturas · '+pct(reab,total)+' do total';
-  document.getElementById('reabList').innerHTML = reabCats.map(([lbl,n],i)=>`
-    <div class="list-row"><span style="font-size:11px">${lbl}</span><span class="badge ${badgeClasses[i]||'b-blue'}">${fmt(n)}</span></div>`).join('');
+      // Reaberturas por categoria
+      const reabRows = rows.filter(r => parseInt(r['Ocorrências'] || 0) > 1);
+      const reabCats = groupBy(reabRows, 'Categoria').slice(0, 4);
+      const badgeClasses = ['b-red', 'b-amb', 'b-blue', 'b-blue'];
+      document.getElementById('rTotal').textContent = fmt(reab);
+      document.getElementById('rPct').textContent = 'reaberturas · ' + pct(reab, total) + ' do total';
+      document.getElementById('reabList').innerHTML = reabCats.map(([lbl, n], i) => `
+    <div class="list-row"><span style="font-size:11px">${lbl}</span><span class="badge ${badgeClasses[i] || 'b-blue'}">${fmt(n)}</span></div>`).join('');
 
-  // Reaberturas por região
-  const reabRegs = groupBy(reabRows,'Região');
-  const maxReabReg = reabRegs.length ? reabRegs[0][1] : 1;
-  document.getElementById('reabRegBars').innerHTML = reabRegs.slice(0,5).map(([lbl,n])=>`
+      // Reaberturas por região
+      const reabRegs = groupBy(reabRows, 'Região');
+      const maxReabReg = reabRegs.length ? reabRegs[0][1] : 1;
+      document.getElementById('reabRegBars').innerHTML = reabRegs.slice(0, 5).map(([lbl, n]) => `
     <div class="bar-row">
       <span class="bar-label">${lbl}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/maxReabReg*100)}%;background:var(--blue)"></div></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n / maxReabReg * 100)}%;background:var(--blue)"></div></div>
       <span class="bar-n">${fmt(n)}</span>
     </div>`).join('');
 
-  // Faixas de execução
-  const faixaMap = {'1. Até 3 dias':'1. Até 3 dias','1. AtÃ© 3 dias':'1. Até 3 dias','2. 4 a 7 dias':'2. 4 a 7 dias','3. 8 a 15 dias':'3. 8 a 15 dias','4. Mais de 15 dias':'4. Mais de 15 dias','0. Em Atendimento':'0. Em Atendimento'};
-  const okRows = rows.filter(r=>r['Situação']==='OK');
-  const faixas = groupBy(okRows,'Faixa Execução').filter(([k])=>k&&k!=='0. Em Atendimento');
-  const faixaColors = {'1. Até 3 dias':'var(--green)','2. 4 a 7 dias':'var(--blue)','3. 8 a 15 dias':'var(--amber)','4. Mais de 15 dias':'var(--red)'};
-  const faixaLabels = {'1. Até 3 dias':'Até 3 dias','2. 4 a 7 dias':'4 a 7 dias','3. 8 a 15 dias':'8 a 15 dias','4. Mais de 15 dias':'Mais de 15 dias'};
-  const totalFaixa = faixas.reduce((s,[,n])=>s+n,0)||1;
-  document.getElementById('faixaList').innerHTML = faixas.map(([k,n])=>`
+      // Faixas de execução
+      const faixaMap = { '1. Até 3 dias': '1. Até 3 dias', '1. AtÃ© 3 dias': '1. Até 3 dias', '2. 4 a 7 dias': '2. 4 a 7 dias', '3. 8 a 15 dias': '3. 8 a 15 dias', '4. Mais de 15 dias': '4. Mais de 15 dias', '0. Em Atendimento': '0. Em Atendimento' };
+      const okRows = rows.filter(r => r['Situação'] === 'OK');
+      const faixas = groupBy(okRows, 'Faixa Execução').filter(([k]) => k && k !== '0. Em Atendimento');
+      const faixaColors = { '1. Até 3 dias': 'var(--green)', '2. 4 a 7 dias': 'var(--blue)', '3. 8 a 15 dias': 'var(--amber)', '4. Mais de 15 dias': 'var(--red)' };
+      const faixaLabels = { '1. Até 3 dias': 'Até 3 dias', '2. 4 a 7 dias': '4 a 7 dias', '3. 8 a 15 dias': '8 a 15 dias', '4. Mais de 15 dias': 'Mais de 15 dias' };
+      const totalFaixa = faixas.reduce((s, [, n]) => s + n, 0) || 1;
+      document.getElementById('faixaList').innerHTML = faixas.map(([k, n]) => `
     <div class="list-row">
-      <div style="display:flex;align-items:center;gap:6px"><span class="faixa-dot" style="background:${faixaColors[k]||'#888'}"></span><span>${faixaLabels[k]||k}</span></div>
-      <span style="font-size:11px;color:var(--text2)">${fmt(n)} · <b style="color:var(--text)">${pct(n,totalFaixa)}</b></span>
+      <div style="display:flex;align-items:center;gap:6px"><span class="faixa-dot" style="background:${faixaColors[k] || '#888'}"></span><span>${faixaLabels[k] || k}</span></div>
+      <span style="font-size:11px;color:var(--text2)">${fmt(n)} · <b style="color:var(--text)">${pct(n, totalFaixa)}</b></span>
     </div>`).join('');
 
-  // Tempo médio por categoria (top 5 exceto categorias com < 5 registros)
-  const tempoData = avgBy(okRows,'Categoria').filter(([,v])=>v>0).slice(0,5);
-  destroyChart('cTempo');
-  charts['cTempo'] = new Chart(document.getElementById('cTempo'),{
-    type:'bar', indexAxis:'y',
-    data:{labels:tempoData.map(([k])=>k.replace('Lâmpada','Lâmp.').replace('Iluminação','Ilum.').replace('Irregular','Irr.')),datasets:[{data:tempoData.map(([,v])=>+v.toFixed(1)),backgroundColor:'#7F77DD',borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.x.toFixed(1)} dias`}}},scales:{x:{ticks:{color:tc,font:{size:10},callback:v=>v+'d'},grid:{color:gc},border:{display:false}},y:{ticks:{color:tc,font:{size:10}},grid:{display:false},border:{display:false}}}}
-  });
+      // Tempo médio por categoria (top 5 exceto categorias com < 5 registros)
+      const tempoData = avgBy(okRows, 'Categoria').filter(([, v]) => v > 0).slice(0, 5);
+      destroyChart('cTempo');
+      charts['cTempo'] = new Chart(document.getElementById('cTempo'), {
+        type: 'bar', indexAxis: 'y',
+        data: { labels: tempoData.map(([k]) => k.replace('Lâmpada', 'Lâmp.').replace('Iluminação', 'Ilum.').replace('Irregular', 'Irr.')), datasets: [{ data: tempoData.map(([, v]) => +v.toFixed(1)), backgroundColor: '#7F77DD', borderRadius: 3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x.toFixed(1)} dias` } } }, scales: { x: { ticks: { color: tc, font: { size: 10 }, callback: v => v + 'd' }, grid: { color: gc }, border: { display: false } }, y: { ticks: { color: tc, font: { size: 10 } }, grid: { display: false }, border: { display: false } } } }
+      });
 
-  // Top 8 bairros
-  const bairros = groupBy(rows,'Bairro').slice(0,8);
-  const maxB = bairros.length ? bairros[0][1] : 1;
-  document.getElementById('bairroList').innerHTML = bairros.map(([lbl,n],i)=>`
+      // Top 8 bairros
+      const bairros = groupBy(rows, 'Bairro').slice(0, 8);
+      const maxB = bairros.length ? bairros[0][1] : 1;
+      document.getElementById('bairroList').innerHTML = bairros.map(([lbl, n], i) => `
     <div class="rank-row">
-      <span class="rank-num">${i+1}</span>
+      <span class="rank-num">${i + 1}</span>
       <span class="rank-name" title="${lbl}">${lbl}</span>
-      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${Math.round(n/maxB*100)}%"></div></div>
+      <div class="rank-bar-wrap"><div class="rank-bar" style="width:${Math.round(n / maxB * 100)}%"></div></div>
       <span class="rank-n">${fmt(n)}</span>
     </div>`).join('');
 
-  // Volume mensal
-  const mensal = {};
-  rows.forEach(r=>{
-    const d = parseDate(r['Data Saída']);
-    if(!d||isNaN(d)) return;
-    const k = d.getFullYear()*100+d.getMonth();
-    const lbl = mesLabel(d);
-    if(!mensal[k]) mensal[k]={lbl,n:0};
-    mensal[k].n++;
-  });
-  const mensalSorted = Object.entries(mensal).sort((a,b)=>+a[0]-+b[0]);
-  const mensalVals = mensalSorted.map(([,v])=>v.n);
-  const picoIdx = mensalVals.indexOf(Math.max(...mensalVals));
-  document.getElementById('pico-label').textContent = mensalSorted.length ? 'pico: '+mensalSorted[picoIdx][1].lbl+' · '+fmt(mensalVals[picoIdx]) : '';
-  destroyChart('cMensal');
-  charts['cMensal'] = new Chart(document.getElementById('cMensal'),{
-    type:'bar',
-    data:{labels:mensalSorted.map(([,v])=>v.lbl),datasets:[{data:mensalVals,backgroundColor:mensalVals.map((_,i)=>i===picoIdx?'#E24B4A':'#378ADD'),borderRadius:3}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toLocaleString('pt-BR')} demandas`}}},scales:{x:{ticks:{color:tc,font:{size:10},maxRotation:0},grid:{display:false},border:{display:false}},y:{ticks:{color:tc,font:{size:10}},grid:{color:gc},border:{display:false}}}}
-  });
-}
-
-function applyFilters(){
-  const periodo = document.getElementById('fPeriodo').value;
-  const regiao  = document.getElementById('fRegiao').value;
-  const cat     = document.getElementById('fCat').value;
-  let rows = allRows;
-  if(periodo) rows = rows.filter(r=>{
-    const d = parseDate(r['Data Saída']);
-    return d && mesLabel(d) === periodo;
-  });
-  if(regiao) rows = rows.filter(r=>(r['Região']||'').trim()===regiao);
-  if(cat)    rows = rows.filter(r=>(r['Categoria']||'').trim()===cat);
-  render(rows);
-}
-
-function populateFilters(){
-  // Período
-  const meses = {};
-  allRows.forEach(r=>{
-    const d = parseDate(r['Data Saída']);
-    if(d&&!isNaN(d)){ const k=d.getFullYear()*100+d.getMonth(); meses[k]=mesLabel(d); }
-  });
-  const sel = document.getElementById('fPeriodo');
-  Object.entries(meses).sort((a,b)=>+a[0]-+b[0]).forEach(([,lbl])=>{
-    const o=document.createElement('option'); o.value=lbl; o.textContent=lbl; sel.appendChild(o);
-  });
-  // Região
-  const regs = [...new Set(allRows.map(r=>(r['Região']||'').trim()).filter(Boolean))].sort();
-  const selR = document.getElementById('fRegiao');
-  regs.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; selR.appendChild(o); });
-  // Categoria
-  const cats = groupBy(allRows,'Categoria').map(([k])=>k).filter(Boolean);
-  const selC = document.getElementById('fCat');
-  cats.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; selC.appendChild(o); });
-
-  ['fPeriodo','fRegiao','fCat'].forEach(id=>document.getElementById(id).addEventListener('change',applyFilters));
-}
-
-function updateSubPeriodo(){
-  const datas = allRows.map(r=>parseDate(r['Data Saída'])).filter(d=>d&&!isNaN(d));
-  if(!datas.length) return;
-  const min = new Date(Math.min(...datas)), max = new Date(Math.max(...datas));
-  document.getElementById('sub-periodo').textContent =
-    mesLabel(min)+' – '+mesLabel(max)+' · '+fmt(allRows.length)+' registros';
-  document.getElementById('last-update').textContent =
-    'atualizado '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-}
-
-function loadData(){
-  document.getElementById('loading').style.display='flex';
-  document.getElementById('app').style.display='none';
-  document.getElementById('error-msg').style.display='none';
-
-  Papa.parse(CSV_URL, {
-    download: true,
-    header: true,
-    skipEmptyLines: true,
-    complete(results){
-      allRows = results.data.map(normalizeHeaders);
-      populateFilters();
-      updateSubPeriodo();
-      render(allRows);
-      document.getElementById('loading').style.display='none';
-      document.getElementById('app').style.display='block';
-    },
-    error(err){
-      document.getElementById('error-msg').style.display='block';
-      document.getElementById('error-msg').textContent =
-        'Erro ao carregar dados. Verifique se a planilha está publicada publicamente. ('+err.message+')';
+      // Volume mensal
+      const mensal = {};
+      rows.forEach(r => {
+        const d = parseDate(r['Data Saída']);
+        if (!d || isNaN(d)) return;
+        const k = d.getFullYear() * 100 + d.getMonth();
+        const lbl = mesLabel(d);
+        if (!mensal[k]) mensal[k] = { lbl, n: 0 };
+        mensal[k].n++;
+      });
+      const mensalSorted = Object.entries(mensal).sort((a, b) => +a[0] - +b[0]);
+      const mensalVals = mensalSorted.map(([, v]) => v.n);
+      const picoIdx = mensalVals.indexOf(Math.max(...mensalVals));
+      document.getElementById('pico-label').textContent = mensalSorted.length ? 'pico: ' + mensalSorted[picoIdx][1].lbl + ' · ' + fmt(mensalVals[picoIdx]) : '';
+      destroyChart('cMensal');
+      charts['cMensal'] = new Chart(document.getElementById('cMensal'), {
+        type: 'bar',
+        data: { labels: mensalSorted.map(([, v]) => v.lbl), datasets: [{ data: mensalVals, backgroundColor: mensalVals.map((_, i) => i === picoIdx ? '#E24B4A' : '#378ADD'), borderRadius: 3 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString('pt-BR')} demandas` } } }, scales: { x: { ticks: { color: tc, font: { size: 10 }, maxRotation: 0 }, grid: { display: false }, border: { display: false } }, y: { ticks: { color: tc, font: { size: 10 } }, grid: { color: gc }, border: { display: false } } } }
+      });
     }
-  });
-}
 
-loadData();
-</script>
+    function applyFilters() {
+      const periodo = document.getElementById('fPeriodo').value;
+      const regiao = document.getElementById('fRegiao').value;
+      const cat = document.getElementById('fCat').value;
+      let rows = allRows;
+      if (periodo) rows = rows.filter(r => {
+        const d = parseDate(r['Data Saída']);
+        return d && mesLabel(d) === periodo;
+      });
+      if (regiao) rows = rows.filter(r => (r['Região'] || '').trim() === regiao);
+      if (cat) rows = rows.filter(r => (r['Categoria'] || '').trim() === cat);
+      render(rows);
+    }
+
+    function populateFilters() {
+      // Período
+      const meses = {};
+      allRows.forEach(r => {
+        const d = parseDate(r['Data Saída']);
+        if (d && !isNaN(d)) { const k = d.getFullYear() * 100 + d.getMonth(); meses[k] = mesLabel(d); }
+      });
+      const sel = document.getElementById('fPeriodo');
+      Object.entries(meses).sort((a, b) => +a[0] - +b[0]).forEach(([, lbl]) => {
+        const o = document.createElement('option'); o.value = lbl; o.textContent = lbl; sel.appendChild(o);
+      });
+      // Região
+      const regs = [...new Set(allRows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
+      const selR = document.getElementById('fRegiao');
+      regs.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; selR.appendChild(o); });
+      // Categoria
+      const cats = groupBy(allRows, 'Categoria').map(([k]) => k).filter(Boolean);
+      const selC = document.getElementById('fCat');
+      cats.forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; selC.appendChild(o); });
+
+      ['fPeriodo', 'fRegiao', 'fCat'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
+    }
+
+    function updateSubPeriodo() {
+      const datas = allRows.map(r => parseDate(r['Data Saída'])).filter(d => d && !isNaN(d));
+      if (!datas.length) return;
+      const min = new Date(Math.min(...datas)), max = new Date(Math.max(...datas));
+      document.getElementById('sub-periodo').textContent =
+        mesLabel(min) + ' – ' + mesLabel(max) + ' · ' + fmt(allRows.length) + ' registros';
+      document.getElementById('last-update').textContent =
+        'atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function loadData() {
+      document.getElementById('loading').style.display = 'flex';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('error-msg').style.display = 'none';
+
+      Papa.parse(CSV_URL, {
+        download: true,
+        header: true,
+        skipEmptyLines: true,
+        complete(results) {
+          allRows = results.data.map(normalizeHeaders);
+          populateFilters();
+          updateSubPeriodo();
+          render(allRows);
+          document.getElementById('loading').style.display = 'none';
+          document.getElementById('app').style.display = 'block';
+        },
+        error(err) {
+          document.getElementById('error-msg').style.display = 'block';
+          document.getElementById('error-msg').textContent =
+            'Erro ao carregar dados. Verifique se a planilha está publicada publicamente. (' + err.message + ')';
+        }
+      });
+    }
+
+    loadData();
+  </script>
 </body>
+
 </html>
