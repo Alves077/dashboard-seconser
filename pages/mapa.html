@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DIP · Seconser — Mapa</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <style>
+    #map { width: 100%; height: calc(100vh - 112px); }
+    .map-legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 8px 1.25rem;
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border);
+      font-size: 11px;
+      color: var(--text2);
+    }
+    .map-legend span { display: flex; align-items: center; gap: 5px; }
+    .map-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+
+<body>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Carregando dados da planilha…</p>
+    <p id="error-msg"></p>
+  </div>
+
+  <div id="app" style="display:none">
+
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">DIP · Seconser Niterói — Mapa</div>
+        <div class="topbar-sub" id="sub-periodo">carregando…</div>
+      </div>
+      <nav class="topbar-nav">
+        <a class="nav-link" href="../index.html">Visão Geral</a>
+        <a class="nav-link nav-active" href="mapa.html">Mapa</a>
+        <a class="nav-link" href="qualidade.html">Qualidade</a>
+        <a class="nav-link" href="tendencia.html">Tendência</a>
+      </nav>
+      <div class="topbar-right">
+        <span class="last-update" id="last-update"></span>
+        <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
+      </div>
+    </div>
+
+    <div class="map-legend">
+      <span><span class="map-dot" style="background:#639922"></span>OK</span>
+      <span><span class="map-dot" style="background:#BA7517"></span>Em Atendimento</span>
+      <span><span class="map-dot" style="background:#E24B4A"></span>Em Atraso</span>
+      <span id="map-count" style="margin-left:auto"></span>
+    </div>
+
+    <div id="map"></div>
+
+  </div>
+
+  <script src="../js/config.js"></script>
+  <script src="../js/data.js"></script>
+  <script>
+    let map;
+
+    const sitColors = {
+      'OK': '#639922',
+      'Em Atendimento': '#BA7517',
+      'Em Atraso': '#E24B4A'
+    };
+
+    function render(rows) {
+      const datas = rows.map(r => parseDate(r['Data Saída'])).filter(d => d && !isNaN(d));
+      if (datas.length) {
+        const min = new Date(Math.min(...datas));
+        const max = new Date(Math.max(...datas));
+        document.getElementById('sub-periodo').textContent =
+          mesLabel(min) + ' – ' + mesLabel(max) + ' · ' + fmt(rows.length) + ' registros';
+        document.getElementById('last-update').textContent =
+          'atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      }
+
+      if (!map) {
+        map = L.map('map').setView([-22.903, -43.172], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        }).addTo(map);
+      } else {
+        map.eachLayer(l => { if (l instanceof L.CircleMarker) map.removeLayer(l); });
+      }
+
+      let plotted = 0;
+      rows.forEach(r => {
+        const lat = parseFloat(r['Latitude']);
+        const lng = parseFloat(r['Longitude']);
+        if (isNaN(lat) || isNaN(lng)) return;
+        const sit = (r['Situação'] || '').trim();
+        const color = sitColors[sit] || '#888780';
+        L.circleMarker([lat, lng], {
+          radius: 6,
+          fillColor: color,
+          color: '#fff',
+          weight: 1,
+          fillOpacity: 0.85
+        }).bindPopup(`
+          <b>${r['Categoria'] || '—'}</b><br>
+          ${r['Bairro'] || '—'} · ${r['Região'] || '—'}<br>
+          Situação: <b style="color:${color}">${sit || '—'}</b><br>
+          Dias execução: ${r['Dias Execução'] || '—'}
+        `).addTo(map);
+        plotted++;
+      });
+
+      document.getElementById('map-count').textContent = fmt(plotted) + ' pontos no mapa';
+    }
+
+    function populateFilters() {}
+    function updateSubPeriodo() {}
+
+    loadData();
+  </script>
+</body>
+
+</html>

@@ -48,6 +48,28 @@ body {
   color: var(--text2);
   margin-top: 1px;
 }
+.topbar-nav {
+  display: flex;
+  gap: 2px;
+}
+.nav-link {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: var(--radius);
+  color: var(--text2);
+  text-decoration: none;
+  font-weight: 500;
+  transition: background 0.15s;
+}
+.nav-link:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+.nav-link.nav-active {
+  background: var(--surface2);
+  color: var(--text);
+}
+
 .topbar-right {
   display: flex;
   align-items: center;
