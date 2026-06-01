@@ -1,15 +1,20 @@
-function updateSubPeriodo() {
-  const datas = allRows.map(r => parseDate(r['Data Saída'])).filter(d => d && !isNaN(d));
-  if (!datas.length) return;
-  const min = new Date(Math.min(...datas));
-  const max = new Date(Math.max(...datas));
-  document.getElementById('sub-periodo').textContent =
-    mesLabel(min) + ' – ' + mesLabel(max) + ' · ' + fmt(allRows.length) + ' registros';
-  document.getElementById('last-update').textContent =
-    'atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+// ─── Filtros ─────────────────────────────────────────────────────────────────
+
+let filtersInitialized = false;
+
+function resetSelect(id, defaultLabel) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  sel.innerHTML = `<option value="">${defaultLabel}</option>`;
 }
 
 function populateFilters() {
+  // Reseta antes de repopular — evita duplicação no botão Atualizar
+  resetSelect('fPeriodo', 'Todos');
+  resetSelect('fRegiao',  'Todas');
+  resetSelect('fCat',     'Todas');
+
+  // Períodos ordenados
   const meses = {};
   allRows.forEach(r => {
     const d = parseDate(r['Data Saída']);
@@ -18,47 +23,50 @@ function populateFilters() {
       meses[k] = mesLabel(d);
     }
   });
-  const sel = document.getElementById('fPeriodo');
+  const selP = document.getElementById('fPeriodo');
   Object.entries(meses).sort((a, b) => +a[0] - +b[0]).forEach(([, lbl]) => {
-    const o = document.createElement('option');
-    o.value = lbl;
-    o.textContent = lbl;
-    sel.appendChild(o);
+    selP.appendChild(Object.assign(document.createElement('option'), { value: lbl, textContent: lbl }));
   });
 
-  const regs = [...new Set(allRows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
+  // Regiões
   const selR = document.getElementById('fRegiao');
-  regs.forEach(v => {
-    const o = document.createElement('option');
-    o.value = v;
-    o.textContent = v;
-    selR.appendChild(o);
-  });
+  [...new Set(allRows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort()
+    .forEach(v => selR.appendChild(Object.assign(document.createElement('option'), { value: v, textContent: v })));
 
-  const cats = groupBy(allRows, 'Categoria').map(([k]) => k).filter(Boolean);
+  // Categorias (ordenadas por volume)
   const selC = document.getElementById('fCat');
-  cats.forEach(v => {
-    const o = document.createElement('option');
-    o.value = v;
-    o.textContent = v;
-    selC.appendChild(o);
-  });
+  groupBy(allRows, 'Categoria').map(([k]) => k).filter(Boolean)
+    .forEach(v => selC.appendChild(Object.assign(document.createElement('option'), { value: v, textContent: v })));
 
-  ['fPeriodo', 'fRegiao', 'fCat'].forEach(id =>
-    document.getElementById(id).addEventListener('change', applyFilters)
-  );
+  // Listeners adicionados só uma vez
+  if (!filtersInitialized) {
+    ['fPeriodo', 'fRegiao', 'fCat'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('change', applyFilters);
+    });
+    filtersInitialized = true;
+  }
 }
 
 function applyFilters() {
-  const periodo = document.getElementById('fPeriodo').value;
-  const regiao = document.getElementById('fRegiao').value;
-  const cat = document.getElementById('fCat').value;
+  const periodo = document.getElementById('fPeriodo')?.value || '';
+  const regiao  = document.getElementById('fRegiao')?.value  || '';
+  const cat     = document.getElementById('fCat')?.value     || '';
+
   let rows = allRows;
-  if (periodo) rows = rows.filter(r => {
-    const d = parseDate(r['Data Saída']);
-    return d && mesLabel(d) === periodo;
-  });
-  if (regiao) rows = rows.filter(r => (r['Região'] || '').trim() === regiao);
-  if (cat) rows = rows.filter(r => (r['Categoria'] || '').trim() === cat);
+  if (periodo) rows = rows.filter(r => { const d = parseDate(r['Data Saída']); return d && mesLabel(d) === periodo; });
+  if (regiao)  rows = rows.filter(r => (r['Região']    || '').trim() === regiao);
+  if (cat)     rows = rows.filter(r => (r['Categoria'] || '').trim() === cat);
+
   render(rows);
+}
+
+function updateTopbar(rows) {
+  const range = dateRange(rows);
+  if (range) {
+    const el = document.getElementById('sub-periodo');
+    if (el) el.textContent = mesLabel(range.min) + ' – ' + mesLabel(range.max) + ' · ' + fmt(rows.length) + ' registros';
+  }
+  const lu = document.getElementById('last-update');
+  if (lu) lu.textContent = 'atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }

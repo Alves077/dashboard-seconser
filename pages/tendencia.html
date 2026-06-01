@@ -22,7 +22,7 @@
 
     <div class="topbar">
       <div>
-        <div class="topbar-title">DIP · Seconser Niterói — Tendência</div>
+        <div class="topbar-title">DIP · Seconser Niterói</div>
         <div class="topbar-sub" id="sub-periodo">carregando…</div>
       </div>
       <nav class="topbar-nav">
@@ -53,17 +53,17 @@
         <div class="kpi">
           <div class="kpi-label">Variação mensal</div>
           <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="tVariacao">—</span></div>
-          <div class="kpi-sub">último vs. penúltimo mês</div>
+          <div class="kpi-sub" id="tVariacaoSub">último vs. penúltimo</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Média mensal</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:#888780"></span><span class="kpi-value" id="tMedia">—</span></div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--gray)"></span><span class="kpi-value" id="tMedia">—</span></div>
           <div class="kpi-sub">demandas por mês</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Categoria em alta</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="tCatAlta" style="font-size:13px;line-height:1.3">—</span></div>
-          <div class="kpi-sub" id="tCatAltaVal">mais demandas no último mês</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="tCatAlta" style="font-size:14px;line-height:1.3">—</span></div>
+          <div class="kpi-sub" id="tCatAltaVal">último mês</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Meses no histórico</div>
@@ -72,35 +72,43 @@
         </div>
       </div>
 
-      <div class="card fw">
+      <div class="card">
         <div class="ct" style="justify-content:space-between">
-          <span>Volume mensal de demandas <span class="tag tag-extra">dim. Data Saída</span></span>
-          <span style="font-size:10px;color:var(--text2);font-weight:400;text-transform:none" id="pico-label"></span>
+          <span>Volume mensal de demandas</span>
+          <span class="ct-note" id="pico-label"></span>
         </div>
-        <div style="position:relative;height:180px"><canvas id="cVolMensal" role="img" aria-label="Volume mensal"></canvas></div>
-      </div>
-
-      <div class="g2">
-        <div class="card">
-          <div class="ct">Tendência por situação ao longo do tempo <span class="tag tag-calc">mensal</span></div>
-          <div style="position:relative;height:200px"><canvas id="cSitMensal" role="img" aria-label="Situação mensal"></canvas></div>
-        </div>
-
-        <div class="card">
-          <div class="ct">Top 5 categorias · evolução mensal <span class="tag tag-native">dim. Categoria</span></div>
-          <div style="position:relative;height:200px"><canvas id="cCatMensal" role="img" aria-label="Categorias mensal"></canvas></div>
+        <div style="position:relative;height:200px">
+          <canvas id="cVolMensal" role="img" aria-label="Volume mensal"></canvas>
         </div>
       </div>
 
       <div class="g2">
         <div class="card">
-          <div class="ct">Tempo médio de execução mensal <span class="tag tag-native">média Dias Execução</span></div>
-          <div style="position:relative;height:180px"><canvas id="cTempoMensal" role="img" aria-label="Tempo mensal"></canvas></div>
+          <div class="ct">Evolução por situação</div>
+          <div style="position:relative;height:200px">
+            <canvas id="cSitMensal" role="img" aria-label="Situação mensal"></canvas>
+          </div>
         </div>
-
         <div class="card">
-          <div class="ct">Taxa de atraso mensal <span class="tag tag-calc">% Em Atraso</span></div>
-          <div style="position:relative;height:180px"><canvas id="cAtrasoMensal" role="img" aria-label="Atraso mensal"></canvas></div>
+          <div class="ct">Top 5 categorias · evolução mensal</div>
+          <div style="position:relative;height:200px">
+            <canvas id="cCatMensal" role="img" aria-label="Categorias mensal"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="card">
+          <div class="ct">Tempo médio de execução mensal</div>
+          <div style="position:relative;height:180px">
+            <canvas id="cTempoMensal" role="img" aria-label="Tempo médio mensal"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">Taxa de atraso mensal</div>
+          <div style="position:relative;height:180px">
+            <canvas id="cAtrasoMensal" role="img" aria-label="Taxa de atraso mensal"></canvas>
+          </div>
         </div>
       </div>
 
@@ -108,185 +116,10 @@
   </div>
 
   <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
   <script src="../js/data.js"></script>
   <script src="../js/charts.js"></script>
-  <script>
-    function buildMensalMap(rows) {
-      const m = {};
-      rows.forEach(r => {
-        const d = parseDate(r['Data Saída']);
-        if (!d || isNaN(d)) return;
-        const k = d.getFullYear() * 100 + d.getMonth();
-        const lbl = mesLabel(d);
-        if (!m[k]) m[k] = { lbl, rows: [] };
-        m[k].rows.push(r);
-      });
-      return Object.entries(m).sort((a, b) => +a[0] - +b[0]);
-    }
-
-    function render(rows) {
-      const total = rows.length;
-      if (!total) return;
-
-      const datas = rows.map(r => parseDate(r['Data Saída'])).filter(d => d && !isNaN(d));
-      if (datas.length) {
-        const min = new Date(Math.min(...datas));
-        const max = new Date(Math.max(...datas));
-        document.getElementById('sub-periodo').textContent =
-          mesLabel(min) + ' – ' + mesLabel(max) + ' · ' + fmt(total) + ' registros';
-        document.getElementById('last-update').textContent =
-          'atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      }
-
-      const mensalEntries = buildMensalMap(rows);
-      const labels = mensalEntries.map(([, v]) => v.lbl);
-      const volumes = mensalEntries.map(([, v]) => v.rows.length);
-      const picoIdx = volumes.indexOf(Math.max(...volumes));
-
-      // KPIs de tendência
-      document.getElementById('tPicoMes').textContent = labels[picoIdx] || '—';
-      document.getElementById('tPicoVal').textContent = fmt(volumes[picoIdx] || 0) + ' demandas';
-      const ultIdx = mensalEntries.length - 1;
-      document.getElementById('tUltMes').textContent = labels[ultIdx] || '—';
-      document.getElementById('tUltVal').textContent = fmt(volumes[ultIdx] || 0) + ' demandas';
-      if (mensalEntries.length >= 2) {
-        const diff = volumes[ultIdx] - volumes[ultIdx - 1];
-        const sinal = diff > 0 ? '+' : '';
-        document.getElementById('tVariacao').textContent = sinal + fmt(diff);
-        document.getElementById('tVariacao').parentElement.querySelector('.kpi-accent').style.background =
-          diff > 0 ? 'var(--red)' : 'var(--green)';
-      }
-      const mediaVol = volumes.reduce((a, b) => a + b, 0) / (volumes.length || 1);
-      document.getElementById('tMedia').textContent = Math.round(mediaVol).toLocaleString('pt-BR');
-      document.getElementById('tMeses').textContent = mensalEntries.length;
-
-      // Categoria em alta no último mês
-      if (mensalEntries.length) {
-        const ultRows = mensalEntries[ultIdx][1].rows;
-        const topCat = groupBy(ultRows, 'Categoria')[0];
-        if (topCat) {
-          document.getElementById('tCatAlta').textContent = topCat[0];
-          document.getElementById('tCatAltaVal').textContent = fmt(topCat[1]) + ' no mês';
-        }
-      }
-
-      // Volume mensal
-      document.getElementById('pico-label').textContent =
-        'pico: ' + (labels[picoIdx] || '—') + ' · ' + fmt(volumes[picoIdx] || 0);
-      destroyChart('cVolMensal');
-      charts['cVolMensal'] = new Chart(document.getElementById('cVolMensal'), {
-        type: 'bar',
-        data: {
-          labels,
-          datasets: [{
-            data: volumes,
-            backgroundColor: volumes.map((_, i) => i === picoIdx ? '#E24B4A' : '#378ADD'),
-            borderRadius: 3
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y.toLocaleString('pt-BR')} demandas` } } },
-          scales: {
-            x: { ticks: { color: tc, font: { size: 10 }, maxRotation: 0 }, grid: { display: false }, border: { display: false } },
-            y: { ticks: { color: tc, font: { size: 10 } }, grid: { color: gc }, border: { display: false } }
-          }
-        }
-      });
-
-      // Situação por mês (linhas)
-      const okMes = mensalEntries.map(([, v]) => count(v.rows, 'Situação', 'OK'));
-      const atMes = mensalEntries.map(([, v]) => count(v.rows, 'Situação', 'Em Atendimento'));
-      const arMes = mensalEntries.map(([, v]) => count(v.rows, 'Situação', 'Em Atraso'));
-      makeLine('cSitMensal', labels, [
-        { label: 'OK', data: okMes, borderColor: '#639922', backgroundColor: 'rgba(99,153,34,0.1)', tension: 0.3, fill: false, pointRadius: 3 },
-        { label: 'Em Atendimento', data: atMes, borderColor: '#BA7517', backgroundColor: 'transparent', tension: 0.3, fill: false, pointRadius: 3 },
-        { label: 'Em Atraso', data: arMes, borderColor: '#E24B4A', backgroundColor: 'transparent', tension: 0.3, fill: false, pointRadius: 3 }
-      ]);
-
-      // Top 5 categorias mensal
-      const topCats = groupBy(rows, 'Categoria').slice(0, 5).map(([k]) => k);
-      const catColors = ['#378ADD', '#7F77DD', '#639922', '#BA7517', '#E24B4A'];
-      makeLine('cCatMensal', labels,
-        topCats.map((cat, i) => ({
-          label: cat,
-          data: mensalEntries.map(([, v]) => count(v.rows, 'Categoria', cat)),
-          borderColor: catColors[i] || '#888',
-          backgroundColor: 'transparent',
-          tension: 0.3,
-          fill: false,
-          pointRadius: 2
-        }))
-      );
-
-      // Tempo médio mensal
-      const tempoMes = mensalEntries.map(([, v]) => {
-        const okR = v.rows.filter(r => r['Situação'] === 'OK');
-        const vals = okR.map(r => parseFloat(r['Dias Execução'] || 0)).filter(n => !isNaN(n));
-        return vals.length ? +(vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1) : null;
-      });
-      destroyChart('cTempoMensal');
-      charts['cTempoMensal'] = new Chart(document.getElementById('cTempoMensal'), {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: 'Dias médios',
-            data: tempoMes,
-            borderColor: '#7F77DD',
-            backgroundColor: 'rgba(127,119,221,0.1)',
-            tension: 0.3,
-            fill: true,
-            pointRadius: 3,
-            spanGaps: true
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y} dias` } } },
-          scales: {
-            x: { ticks: { color: tc, font: { size: 10 }, maxRotation: 0 }, grid: { display: false }, border: { display: false } },
-            y: { ticks: { color: tc, font: { size: 10 }, callback: v => v + 'd' }, grid: { color: gc }, border: { display: false } }
-          }
-        }
-      });
-
-      // Taxa de atraso mensal
-      const atrasoMes = mensalEntries.map(([, v]) => {
-        const ar = count(v.rows, 'Situação', 'Em Atraso');
-        return v.rows.length ? +(ar / v.rows.length * 100).toFixed(1) : 0;
-      });
-      destroyChart('cAtrasoMensal');
-      charts['cAtrasoMensal'] = new Chart(document.getElementById('cAtrasoMensal'), {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [{
-            label: '% Em Atraso',
-            data: atrasoMes,
-            borderColor: '#E24B4A',
-            backgroundColor: 'rgba(226,75,74,0.1)',
-            tension: 0.3,
-            fill: true,
-            pointRadius: 3
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}%` } } },
-          scales: {
-            x: { ticks: { color: tc, font: { size: 10 }, maxRotation: 0 }, grid: { display: false }, border: { display: false } },
-            y: { ticks: { color: tc, font: { size: 10 }, callback: v => v + '%' }, grid: { color: gc }, border: { display: false } }
-          }
-        }
-      });
-    }
-
-    function populateFilters() {}
-    function updateSubPeriodo() {}
-
-    loadData();
-  </script>
+  <script src="tendencia.js"></script>
 </body>
 
 </html>

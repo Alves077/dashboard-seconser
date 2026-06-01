@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,207 +8,107 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
-
 <body>
 
-  <div id="loading">
-    <div class="spinner"></div>
-    <p>Carregando dados da planilha…</p>
-    <p id="error-msg"></p>
-  </div>
+<div id="loading">
+  <div class="spinner"></div>
+  <p>Carregando dados da planilha…</p>
+  <p id="error-msg"></p>
+</div>
 
-  <div id="app" style="display:none">
+<div id="app" style="display:none">
 
-    <div class="topbar">
-      <div>
-        <div class="topbar-title">DIP · Seconser Niterói — Qualidade</div>
-        <div class="topbar-sub" id="sub-periodo">carregando…</div>
-      </div>
-      <nav class="topbar-nav">
-        <a class="nav-link" href="../index.html">Visão Geral</a>
-        <a class="nav-link" href="mapa.html">Mapa</a>
-        <a class="nav-link nav-active" href="qualidade.html">Qualidade</a>
-        <a class="nav-link" href="tendencia.html">Tendência</a>
-      </nav>
-      <div class="topbar-right">
-        <span class="last-update" id="last-update"></span>
-        <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
-      </div>
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">DIP · Seconser Niterói</div>
+      <div class="topbar-sub" id="sub-periodo">carregando…</div>
     </div>
-
-    <div class="page">
-
-      <div class="kpis">
-        <div class="kpi">
-          <div class="kpi-label">Taxa de Conclusão</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value" id="qTaxaOk">—</span></div>
-          <div class="kpi-sub">serviços concluídos no prazo</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Taxa de Atraso</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--red)"></span><span class="kpi-value" id="qTaxaAr">—</span></div>
-          <div class="kpi-sub">serviços em atraso</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Taxa de Reabertura</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="qTaxaReab">—</span></div>
-          <div class="kpi-sub">demandas com ocorrências > 1</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Concluídos em ≤ 7 dias</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value" id="qSla7">—</span></div>
-          <div class="kpi-sub">dos concluídos</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Tempo Médio (OK)</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:#888780"></span><span class="kpi-value" id="qMedia">—</span></div>
-          <div class="kpi-sub" id="qMediaSub">dias úteis médios</div>
-        </div>
-        <div class="kpi">
-          <div class="kpi-label">Acima de 15 dias</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="qLong">—</span></div>
-          <div class="kpi-sub">dos concluídos</div>
-        </div>
-      </div>
-
-      <div class="g3">
-        <div class="card">
-          <div class="ct">SLA por região <span class="tag tag-calc">% no prazo</span></div>
-          <div id="slaRegList"></div>
-        </div>
-
-        <div class="card">
-          <div class="ct">SLA por categoria <span class="tag tag-calc">% no prazo</span></div>
-          <div id="slaCatList"></div>
-        </div>
-
-        <div class="card">
-          <div class="ct">Reaberturas por categoria <span class="tag tag-calc">Ocorrências > 1</span></div>
-          <div style="position:relative;height:200px"><canvas id="cReabCat" role="img" aria-label="Reaberturas por categoria"></canvas></div>
-        </div>
-      </div>
-
-      <div class="g2">
-        <div class="card">
-          <div class="ct">Distribuição faixa de execução · concluídos <span class="tag tag-native">dim. Faixa Execução</span></div>
-          <div style="position:relative;height:200px"><canvas id="cFaixaQ" role="img" aria-label="Faixa execução"></canvas></div>
-        </div>
-
-        <div class="card">
-          <div class="ct">Tempo médio por região <span class="tag tag-native">média Dias Execução</span></div>
-          <div style="position:relative;height:200px"><canvas id="cTempoReg" role="img" aria-label="Tempo médio por região"></canvas></div>
-        </div>
-      </div>
-
+    <nav class="topbar-nav">
+      <a class="nav-link" href="../index.html">Visão Geral</a>
+      <a class="nav-link" href="mapa.html">Mapa</a>
+      <a class="nav-link nav-active" href="qualidade.html">Qualidade</a>
+      <a class="nav-link" href="tendencia.html">Tendência</a>
+    </nav>
+    <div class="topbar-right">
+      <span class="last-update" id="last-update"></span>
+      <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
     </div>
   </div>
 
-  <script src="../js/config.js"></script>
-  <script src="../js/data.js"></script>
-  <script src="../js/charts.js"></script>
-  <script>
-    function render(rows) {
-      const total = rows.length;
-      if (!total) return;
+  <div class="page">
 
-      const datas = rows.map(r => parseDate(r['Data Saída'])).filter(d => d && !isNaN(d));
-      if (datas.length) {
-        const min = new Date(Math.min(...datas));
-        const max = new Date(Math.max(...datas));
-        document.getElementById('sub-periodo').textContent =
-          mesLabel(min) + ' – ' + mesLabel(max) + ' · ' + fmt(total) + ' registros';
-        document.getElementById('last-update').textContent =
-          'atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-      }
+    <div class="kpis">
+      <div class="kpi">
+        <div class="kpi-label">Taxa de Conclusão</div>
+        <div class="kpi-row"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value" id="qTaxaOk">—</span></div>
+        <div class="kpi-sub">concluídos no prazo</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Taxa de Atraso</div>
+        <div class="kpi-row"><span class="kpi-accent" style="background:var(--red)"></span><span class="kpi-value" id="qTaxaAr">—</span></div>
+        <div class="kpi-sub">serviços em atraso</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Taxa de Reabertura</div>
+        <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="qTaxaReab">—</span></div>
+        <div class="kpi-sub">demandas reabertas</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Concluídos ≤ 7 dias</div>
+        <div class="kpi-row"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value" id="qSla7">—</span></div>
+        <div class="kpi-sub">dos concluídos</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Tempo Médio</div>
+        <div class="kpi-row"><span class="kpi-accent" style="background:var(--gray)"></span><span class="kpi-value" id="qMedia">—</span></div>
+        <div class="kpi-sub" id="qMediaSub">—</div>
+      </div>
+      <div class="kpi">
+        <div class="kpi-label">Acima de 15 dias</div>
+        <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="qLong">—</span></div>
+        <div class="kpi-sub">dos concluídos</div>
+      </div>
+    </div>
 
-      const ok = count(rows, 'Situação', 'OK');
-      const ar = count(rows, 'Situação', 'Em Atraso');
-      const reab = countIf(rows, 'Ocorrências', v => parseInt(v || 0) > 1);
-      const okRows = rows.filter(r => r['Situação'] === 'OK');
-      const diasVals = okRows.map(r => parseFloat(r['Dias Execução'] || 0)).filter(v => !isNaN(v));
-      const media = diasVals.length ? diasVals.reduce((a, b) => a + b, 0) / diasVals.length : 0;
-      const sorted = [...diasVals].sort((a, b) => a - b);
-      const mediana = sorted.length ? sorted[Math.floor(sorted.length / 2)] : 0;
+    <div class="g3">
+      <div class="card">
+        <div class="ct">SLA por região</div>
+        <div id="slaRegList"></div>
+      </div>
+      <div class="card">
+        <div class="ct">SLA por categoria</div>
+        <div id="slaCatList"></div>
+      </div>
+      <div class="card">
+        <div class="ct">Reaberturas por categoria</div>
+        <div style="position:relative;height:220px">
+          <canvas id="cReabCat" role="img" aria-label="Reaberturas por categoria"></canvas>
+        </div>
+      </div>
+    </div>
 
-      const faixas = groupBy(okRows, 'Faixa Execução').filter(([k]) => k && k !== '0. Em Atendimento');
-      const sla7 = faixas.filter(([k]) => k === '1. Até 3 dias' || k === '2. 4 a 7 dias').reduce((s, [, n]) => s + n, 0);
-      const long15 = faixas.find(([k]) => k === '4. Mais de 15 dias');
+    <div class="g2">
+      <div class="card">
+        <div class="ct">Faixa de execução · concluídos</div>
+        <div style="position:relative;height:220px">
+          <canvas id="cFaixaQ" role="img" aria-label="Faixas de execução"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ct">Tempo médio por região</div>
+        <div style="position:relative;height:220px">
+          <canvas id="cTempoReg" role="img" aria-label="Tempo médio por região"></canvas>
+        </div>
+      </div>
+    </div>
 
-      document.getElementById('qTaxaOk').textContent = pct(ok, total);
-      document.getElementById('qTaxaAr').textContent = pct(ar, total);
-      document.getElementById('qTaxaReab').textContent = pct(reab, total);
-      document.getElementById('qSla7').textContent = pct(sla7, ok);
-      document.getElementById('qMedia').innerHTML = media.toFixed(1) + '<span style="font-size:14px;font-weight:400;color:var(--text2)"> d</span>';
-      document.getElementById('qMediaSub').textContent = 'Mediana: ' + Math.round(mediana) + ' dias';
-      document.getElementById('qLong').textContent = long15 ? pct(long15[1], ok) : '0%';
+  </div>
+</div>
 
-      // SLA por região
-      const regioes = [...new Set(rows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
-      document.getElementById('slaRegList').innerHTML = regioes.map(reg => {
-        const regRows = rows.filter(r => (r['Região'] || '').trim() === reg);
-        const regOk = count(regRows, 'Situação', 'OK');
-        const taxa = regRows.length ? (regOk / regRows.length * 100) : 0;
-        const cor = taxa >= 70 ? 'var(--green)' : taxa >= 50 ? 'var(--amber)' : 'var(--red)';
-        return `<div class="bar-row">
-          <span class="bar-label" title="${reg}">${reg}</span>
-          <div class="bar-track"><div class="bar-fill" style="width:${taxa.toFixed(0)}%;background:${cor}"></div></div>
-          <span class="bar-n" style="color:${cor};font-weight:500">${taxa.toFixed(0)}%</span>
-        </div>`;
-      }).join('');
-
-      // SLA por categoria (top 6)
-      const catsSla = groupBy(rows, 'Categoria').slice(0, 6).map(([cat]) => {
-        const catRows = rows.filter(r => (r['Categoria'] || '').trim() === cat);
-        const catOk = count(catRows, 'Situação', 'OK');
-        const taxa = catRows.length ? (catOk / catRows.length * 100) : 0;
-        return { cat, taxa, n: catRows.length };
-      }).sort((a, b) => b.taxa - a.taxa);
-      document.getElementById('slaCatList').innerHTML = catsSla.map(({ cat, taxa, n }) => {
-        const cor = taxa >= 70 ? 'var(--green)' : taxa >= 50 ? 'var(--amber)' : 'var(--red)';
-        return `<div class="bar-row">
-          <span class="bar-label" title="${cat}">${cat}</span>
-          <div class="bar-track"><div class="bar-fill" style="width:${taxa.toFixed(0)}%;background:${cor}"></div></div>
-          <span class="bar-n" style="color:${cor};font-weight:500">${taxa.toFixed(0)}%</span>
-        </div>`;
-      }).join('');
-
-      // Reaberturas por categoria
-      const reabRows = rows.filter(r => parseInt(r['Ocorrências'] || 0) > 1);
-      const reabCats = groupBy(reabRows, 'Categoria').slice(0, 6);
-      makeBarH('cReabCat',
-        reabCats.map(([k]) => k),
-        reabCats.map(([, v]) => v),
-        '#7F77DD'
-      );
-
-      // Faixa execução donut
-      const faixaColors = ['#639922', '#378ADD', '#BA7517', '#E24B4A'];
-      const faixaLabels = { '1. Até 3 dias': 'Até 3 dias', '2. 4 a 7 dias': '4-7 dias', '3. 8 a 15 dias': '8-15 dias', '4. Mais de 15 dias': '>15 dias' };
-      makeDonut('cFaixaQ',
-        faixas.map(([k]) => faixaLabels[k] || k),
-        faixas.map(([, v]) => v),
-        faixas.map((_, i) => faixaColors[i] || '#888')
-      );
-
-      // Tempo médio por região
-      const tempoReg = regioes.map(reg => {
-        const regOkRows = okRows.filter(r => (r['Região'] || '').trim() === reg);
-        const vals = regOkRows.map(r => parseFloat(r['Dias Execução'] || 0)).filter(v => !isNaN(v));
-        const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-        return [reg, avg];
-      }).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
-      makeBarH('cTempoReg',
-        tempoReg.map(([k]) => k),
-        tempoReg.map(([, v]) => +v.toFixed(1)),
-        '#378ADD'
-      );
-    }
-
-    function populateFilters() {}
-    function updateSubPeriodo() {}
-
-    loadData();
-  </script>
+<script src="../js/config.js"></script>
+<script src="../js/utils.js"></script>
+<script src="../js/data.js"></script>
+<script src="../js/charts.js"></script>
+<script src="qualidade.js"></script>
 </body>
-
 </html>

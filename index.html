@@ -22,7 +22,7 @@
 
     <div class="topbar">
       <div>
-        <div class="topbar-title">DIP · Seconser Niterói — Visão Geral</div>
+        <div class="topbar-title">DIP · Seconser Niterói</div>
         <div class="topbar-sub" id="sub-periodo">carregando…</div>
       </div>
       <nav class="topbar-nav">
@@ -43,19 +43,30 @@
     </div>
 
     <div class="filters">
-      <div class="fg"><label>Período</label><select id="fPeriodo">
+      <div class="fg">
+        <label>Período</label>
+        <select id="fPeriodo">
           <option value="">Todos</option>
-        </select></div>
-      <div class="fg"><label>Região</label><select id="fRegiao">
+        </select>
+      </div>
+      <div class="fg">
+        <label>Região</label>
+        <select id="fRegiao">
           <option value="">Todas</option>
-        </select></div>
-      <div class="fg"><label>Categoria</label><select id="fCat">
+        </select>
+      </div>
+      <div class="fg">
+        <label>Categoria</label>
+        <select id="fCat">
           <option value="">Todas</option>
-        </select></div>
+        </select>
+      </div>
       <span class="filter-note">dados ao vivo · Google Sheets</span>
     </div>
 
     <div class="page">
+
+      <!-- KPIs -->
       <div class="kpis">
         <div class="kpi">
           <div class="kpi-label">Total de Serviços</div>
@@ -65,116 +76,103 @@
         <div class="kpi">
           <div class="kpi-label">Concluídos</div>
           <div class="kpi-row"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value" id="kOk">—</span></div>
-          <div class="kpi-sub" id="kOkPct">COUNTIF Situação = OK</div>
+          <div class="kpi-sub" id="kOkPct">—</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Em Atendimento</div>
           <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="kAt">—</span></div>
-          <div class="kpi-sub">COUNTIF Situação = Em Atendimento</div>
+          <div class="kpi-sub" id="kAtPct">—</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Em Atraso</div>
           <div class="kpi-row"><span class="kpi-accent" style="background:var(--red)"></span><span class="kpi-value" id="kAr">—</span></div>
-          <div class="kpi-sub">COUNTIF Situação = Em Atraso</div>
+          <div class="kpi-sub" id="kArPct">—</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Reaberturas</div>
           <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="kReab">—</span></div>
-          <div class="kpi-sub" id="kReabPct">Ocorrências > 1</div>
+          <div class="kpi-sub" id="kReabPct">—</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Tempo Médio</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:#888780"></span><span class="kpi-value" id="kMedia">—</span></div>
-          <div class="kpi-sub" id="kMediaSub">AVERAGE Dias Execução</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--gray)"></span><span class="kpi-value" id="kMedia">—</span></div>
+          <div class="kpi-sub" id="kMediaSub">—</div>
         </div>
       </div>
 
-      <div class="g3">
-        <div class="card">
-          <div class="ct">Situação atual <span class="tag tag-native">dim. Situação</span></div>
-          <div class="sit-g">
-            <div class="sit-c">
-              <div class="sit-n" style="color:var(--green)" id="sOk">—</div>
-              <div class="sit-l">OK</div>
-            </div>
-            <div class="sit-c">
-              <div class="sit-n" style="color:var(--amber)" id="sAt">—</div>
-              <div class="sit-l">Em atendimento</div>
-            </div>
-            <div class="sit-c">
-              <div class="sit-n" style="color:var(--red)" id="sAr">—</div>
-              <div class="sit-l">Em atraso</div>
-            </div>
-            <div class="sit-c">
-              <div class="sit-n" style="color:var(--text3)" id="sTaxa">—</div>
-              <div class="sit-l">taxa de sucesso</div>
-            </div>
-          </div>
-          <div class="leg-row">
-            <span class="leg"><span class="leg-sq" style="background:var(--green)"></span>OK</span>
-            <span class="leg"><span class="leg-sq" style="background:var(--amber)"></span>Em atendimento</span>
-            <span class="leg"><span class="leg-sq" style="background:var(--red)"></span>Em atraso</span>
-          </div>
-          <div style="position:relative;height:110px"><canvas id="cSit" role="img" aria-label="Donut situação"></canvas></div>
+      <!-- Linha 1: categorias full width -->
+      <div class="card">
+        <div class="ct">Categorias</div>
+        <div class="cat-top">
+          <span id="catTop">—</span>
+          <span id="catTopVal">—</span>
         </div>
-
-        <div class="card">
-          <div class="ct">Categorias <span class="tag tag-native">dim. Categoria</span></div>
-          <div id="catDestaque" style="margin-bottom:8px;padding:6px 8px;background:var(--surface2);border-radius:var(--radius);display:flex;justify-content:space-between;align-items:center">
-            <span style="font-size:11px;color:var(--text2)" id="catTop">—</span>
-            <span style="font-size:12px;font-weight:500;color:var(--text)" id="catTopVal">—</span>
-          </div>
-          <div id="catBars"></div>
-        </div>
-
-        <div class="card">
-          <div class="ct">Serviços por região <span class="tag tag-native">dim. Região</span></div>
-          <div style="position:relative;height:170px"><canvas id="cReg" role="img" aria-label="Regiões"></canvas></div>
-        </div>
+        <div id="catBars"></div>
       </div>
 
-      <div class="g3">
+      <!-- Linha 2: reaberturas + faixas -->
+      <div class="g2">
         <div class="card">
-          <div class="ct">Reaberturas <span class="tag tag-calc">Ocorrências > 1</span></div>
-          <div class="stat-inline">
+          <div class="ct">Reaberturas</div>
+          <div style="display:flex;align-items:baseline;gap:10px;margin-bottom:2px">
             <span class="stat-n" id="rTotal">—</span>
-            <span class="stat-s" id="rPct">—</span>
+            <span style="font-size:12px;color:var(--text2)" id="rPct">—</span>
           </div>
+          <div style="font-size:11px;color:var(--text3);margin-bottom:10px" id="rEventos">—</div>
           <div id="reabList"></div>
-          <div style="margin-top:10px;padding-top:8px;border-top:.5px solid var(--border)">
-            <div class="ct" style="margin-bottom:6px">Por região <span class="tag tag-extra">extra</span></div>
+          <div style="margin-top:12px;padding-top:10px;border-top:.5px solid var(--border)">
+            <div class="ct" style="margin-bottom:8px">Por região</div>
             <div id="reabRegBars"></div>
           </div>
         </div>
 
         <div class="card">
-          <div class="ct">Tempo de execução <span class="tag tag-native">dim. Faixa Execução</span></div>
-          <div style="margin-bottom:10px">
-            <div style="font-size:10px;color:var(--text2);margin-bottom:6px">Distribuição por faixa · concluídos</div>
-            <div id="faixaList"></div>
+          <div class="ct">Tempo de execução · concluídos</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:8px">Distribuição por faixa</div>
+          <div style="position:relative;height:200px">
+            <canvas id="cFaixas" role="img" aria-label="Faixas de execução"></canvas>
           </div>
-          <div style="font-size:10px;color:var(--text2);margin-bottom:6px">Tempo médio por categoria <span class="tag tag-native">média Dias Execução</span></div>
-          <div style="position:relative;height:110px"><canvas id="cTempo" role="img" aria-label="Tempo médio"></canvas></div>
+          <div style="font-size:11px;color:var(--text2);margin:14px 0 6px">
+            Tempo médio por categoria
+            <span style="color:var(--text3);font-size:10px"> · mín. 10 registros</span>
+          </div>
+          <div style="position:relative;height:130px">
+            <canvas id="cTempo" role="img" aria-label="Tempo médio por categoria"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Linha 3: regiões + bairros -->
+      <div class="g2">
+        <div class="card">
+          <div class="ct">Serviços por região</div>
+          <div style="position:relative;height:240px">
+            <canvas id="cReg" role="img" aria-label="Distribuição por região"></canvas>
+          </div>
         </div>
 
         <div class="card">
-          <div class="ct">Top 8 bairros <span class="tag tag-extra">dim. Bairro</span></div>
+          <div class="ct">Top 8 bairros</div>
           <div id="bairroList"></div>
         </div>
       </div>
 
-      <div class="card fw">
+      <!-- Volume mensal -->
+      <div class="card">
         <div class="ct" style="justify-content:space-between">
-          <span>Volume mensal de demandas <span class="tag tag-extra">dim. Data Saída</span></span>
-          <span style="font-size:10px;color:var(--text2);font-weight:400;text-transform:none" id="pico-label"></span>
+          <span>Volume mensal de demandas</span>
+          <span class="ct-note" id="pico-label"></span>
         </div>
-        <div style="position:relative;height:140px"><canvas id="cMensal" role="img" aria-label="Volume mensal"></canvas></div>
+        <div style="position:relative;height:200px">
+          <canvas id="cMensal" role="img" aria-label="Volume mensal de demandas"></canvas>
+        </div>
       </div>
-    </div>
 
-  </div><!-- /#app -->
+    </div>
+  </div>
 
   <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
   <script src="js/data.js"></script>
   <script src="js/charts.js"></script>
   <script src="js/filters.js"></script>
