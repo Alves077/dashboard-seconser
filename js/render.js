@@ -311,26 +311,130 @@ function render(rows) {
       .join(""),
   );
 
-  // ── Volume mensal ──────────────────────────────────────────────────────────
+  // ── Volume mensal — entrada (Data Saída) + conclusão (Data Retorno) ─────────
   const mensalEntries = buildMensalMap(rows);
   const mensalLabels = mensalEntries.map(([, v]) => v.lbl);
   const mensalVals = mensalEntries.map(([, v]) => v.rows.length);
   const picoIdx = mensalVals.indexOf(Math.max(...mensalVals));
 
-  setText(
+  // Agrupa concluídos por Data Retorno
+  const retornoMap = {};
+  mensalEntries.forEach(([k, v]) => {
+    retornoMap[v.lbl] = 0;
+  }); // garante mesma ordem
+  rows.forEach((r) => {
+    if ((r["Situação"] || "").trim() !== "OK") return;
+    const d = parseDate(r["Data Retorno"]);
+    if (!d || isNaN(d)) return;
+    const lbl = mesLabel(d);
+    if (lbl in retornoMap) retornoMap[lbl] = (retornoMap[lbl] || 0) + 1;
+  });
+  const retornoVals = mensalLabels.map((lbl) => retornoMap[lbl] || 0);
+
+  // Pico de retornos
+  const picoRetIdx = retornoVals.indexOf(Math.max(...retornoVals));
+  const picoEntLabel = mensalEntries.length
+    ? "entrada: " + mensalLabels[picoIdx] + " · " + fmt(mensalVals[picoIdx])
+    : "";
+  const picoRetLabel = retornoVals.length
+    ? "conclusão: " +
+      mensalLabels[picoRetIdx] +
+      " · " +
+      fmt(retornoVals[picoRetIdx])
+    : "";
+  setHTML(
     "pico-label",
-    mensalEntries.length
-      ? "pico: " + mensalLabels[picoIdx] + " · " + fmt(mensalVals[picoIdx])
-      : "",
+    picoEntLabel && picoRetLabel
+      ? `<span>pico ${picoEntLabel}</span><span style="color:var(--text3);margin:0 6px">·</span><span style="color:var(--green)">pico ${picoRetLabel}</span>`
+      : picoEntLabel || picoRetLabel,
   );
 
-  makeBarV(
-    "cMensal",
-    mensalLabels,
-    mensalVals,
-    mensalVals.map((_, i) => (i === picoIdx ? COLORS.red : COLORS.blue)),
-    { suffix: " demandas", showLegend: true, legendLabel: "Demandas abertas" },
-  );
+  // Volume mensal — linha com Y a partir de 0
+  destroyChart("cMensal");
+  charts["cMensal"] = new Chart(document.getElementById("cMensal"), {
+    type: "line",
+    data: {
+      labels: mensalLabels,
+      datasets: [
+        {
+          label: "Entradas",
+          data: mensalVals,
+          borderColor: COLORS.blue,
+          backgroundColor: COLORS.blue + "22",
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          tension: 0.3,
+          fill: false,
+        },
+        {
+          label: "Concluídos",
+          data: retornoVals,
+          borderColor: COLORS.green,
+          backgroundColor: COLORS.green + "22",
+          borderWidth: 2,
+          pointRadius: 3,
+          pointHoverRadius: 5,
+          tension: 0.3,
+          fill: false,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      layout: { padding: { left: 8, right: 16 } },
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: "#555550",
+            font: { size: 11 },
+            boxWidth: 10,
+            padding: 12,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            afterBody: (items) => {
+              if (items.length < 2) return "";
+              const entradas =
+                items.find((i) => i.dataset.label === "Entradas")?.parsed.y ??
+                0;
+              const concluidos =
+                items.find((i) => i.dataset.label === "Concluídos")?.parsed.y ??
+                0;
+              const saldo = concluidos - entradas;
+              const sinal = saldo >= 0 ? "+" : "";
+              return [
+                "",
+                "Saldo: " +
+                  sinal +
+                  fmt(saldo) +
+                  (saldo >= 0 ? " ✓" : " ↑ estoque"),
+              ];
+            },
+          },
+        },
+      },
+      scales: {
+        x: {
+          ticks: { color: "#6b6b66", font: { size: 11 }, maxRotation: 0 },
+          grid: { display: false },
+          border: { display: false },
+          offset: true,
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: "#6b6b66", font: { size: 11 } },
+          grid: { color: "rgba(0,0,0,0.06)" },
+          border: { display: false },
+        },
+      },
+    },
+  });
 }
 
 function setText(id, val) {
