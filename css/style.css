@@ -409,7 +409,7 @@ body {
   text-overflow: ellipsis;
 }
 .rank-bar-wrap {
-  width: 80px;
+  flex: 1;
   background: var(--surface2);
   border-radius: 2px;
   height: 5px;
@@ -725,4 +725,93 @@ body {
 .bar-label-fixed {
   width: 160px !important;
   flex-shrink: 0;
+}
+
+/* ── Regiões — tabela de barras com colunas fixas ────────── */
+/* cabeçalho de colunas */
+.reg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.reg-header span {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+.reg-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.reg-label {
+  font-size: 11px;
+  color: var(--text2);
+  width: 110px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* colunas numéricas — todas com tabular-nums e text-align right */
+.reg-col-vol {
+  font-size: 11px;
+  color: var(--text2);
+  width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-pct {
+  font-size: 10px;
+  color: var(--text3);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-tempo {
+  font-size: 11px;
+  color: var(--text2);
+  width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-ar {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red);
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-at {
+  font-size: 11px;
+  color: var(--amber);
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-zero {
+  color: var(--text3) !important;
+  font-weight: 400 !important;
+}
+
+/* ── Centralização vertical de cards pareados ────────────── */
+.card-vcenter {
+  display: flex;
+  flex-direction: column;
+}
+.card-vcenter-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }

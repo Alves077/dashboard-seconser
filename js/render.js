@@ -108,15 +108,59 @@ function render(rows) {
   }
   setHTML("catBars", catsHTML);
 
-  // ── Regiões — rosca ────────────────────────────────────────────────────────
+  // ── Regiões — barras horizontais com volume + % + tempo médio ─────────────
   const regs = groupBy(rows, "Região");
-  makeDonut(
-    "cReg",
-    regs.map((r) => r[0]),
-    regs.map((r) => r[1]),
-    regs.map((_, i) => COLORS.regioes[i] || COLORS.gray),
-    { cutout: "55%" },
-  );
+  const maxReg = regs.length ? regs[0][1] : 1;
+
+  // Tempo médio por região (só concluídos)
+  const regTempoSum = {},
+    regTempoCnt = {};
+  okRows.forEach((r) => {
+    const reg = (r["Região"] || "").trim();
+    const v = parseFloat(
+      (r["Dias Execução"] || "").toString().replace(",", "."),
+    );
+    if (!reg || isNaN(v) || v < 0) return;
+    regTempoSum[reg] = (regTempoSum[reg] || 0) + v;
+    regTempoCnt[reg] = (regTempoCnt[reg] || 0) + 1;
+  });
+
+  // Abertos por região (Em Atendimento + Em Atraso)
+  const regAbertos = {};
+  rows.forEach((r) => {
+    const sit = (r["Situação"] || "").trim();
+    if (sit !== "Em Atendimento" && sit !== "Em Atraso") return;
+    const reg = (r["Região"] || "").trim();
+    if (!reg) return;
+    if (!regAbertos[reg]) regAbertos[reg] = { at: 0, ar: 0 };
+    if (sit === "Em Atendimento") regAbertos[reg].at++;
+    else regAbertos[reg].ar++;
+  });
+
+  const regListEl = document.getElementById("regList");
+  if (regListEl) {
+    regListEl.innerHTML = regs
+      .map(([lbl, n]) => {
+        const fillPct = Math.round((n / maxReg) * 100);
+        const tempo =
+          regTempoCnt[lbl] >= 3
+            ? (regTempoSum[lbl] / regTempoCnt[lbl]).toFixed(1) + "d"
+            : "—";
+        const ab = regAbertos[lbl] || { at: 0, ar: 0 };
+
+        return `
+        <div class="reg-row">
+          <span class="reg-label" title="${lbl}">${lbl}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.max(fillPct, 1)}%;background:var(--blue)"></div></div>
+          <span class="reg-col-vol">${fmt(n)}</span>
+          <span class="reg-col-pct">${pct(n, total)}</span>
+          <span class="reg-col-tempo">${tempo}</span>
+          <span class="reg-col-ar ${ab.ar > 0 ? "" : "reg-col-zero"}">${ab.ar > 0 ? fmt(ab.ar) : "—"}</span>
+          <span class="reg-col-at ${ab.at > 0 ? "" : "reg-col-zero"}">${ab.at > 0 ? fmt(ab.at) : "—"}</span>
+        </div>`;
+      })
+      .join("");
+  }
 
   // ── Reaberturas ────────────────────────────────────────────────────────────
   // Agrega eventos de reabertura (Ocorrências - 1) por ID único
@@ -249,7 +293,7 @@ function render(rows) {
   }
 
   // ── Top 8 bairros — com % do total ────────────────────────────────────────
-  const bairros = groupBy(rows, "Bairro").slice(0, 8);
+  const bairros = groupBy(rows, "Bairro").slice(0, 10);
   const maxB = bairros.length ? bairros[0][1] : 1;
   setHTML(
     "bairroList",
