@@ -1,5 +1,29 @@
 // ─── Render — Visão Geral ────────────────────────────────────────────────────
 
+// Helper: barra HTML com valor absoluto + percentual
+function barRow(label, n, total, color, labelWidth) {
+  const w = labelWidth || "200px";
+  const maxN = n; // caller passes pre-computed max; we receive fill% directly
+  return `
+    <div class="bar-row">
+      <span class="bar-label" style="color:var(--text2);width:${w}" title="${label}">${label}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${n}%;background:${color}"></div></div>
+      <span class="bar-val">${arguments[1] === undefined ? "—" : fmt(arguments[6] !== undefined ? arguments[6] : n)}</span>
+      <span class="bar-pct">${pct(arguments[6] !== undefined ? arguments[6] : n, total)}</span>
+    </div>`;
+}
+
+function makeBar(label, fillPct, absVal, total, color, labelWidth) {
+  const w = labelWidth || "160px";
+  return `
+    <div class="bar-row">
+      <span class="bar-label" style="color:var(--text2);width:${w}" title="${label}">${label}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(fillPct, 1)}%;background:${color}"></div></div>
+      <span class="bar-val">${fmt(absVal)}</span>
+      <span class="bar-pct">${pct(absVal, total)}</span>
+    </div>`;
+}
+
 function render(rows) {
   const total = rows.length;
   if (!total) {
@@ -50,32 +74,7 @@ function render(rows) {
   setText("badge-at", fmt(at) + " em atendimento");
   setText("badge-ar", fmt(ar) + " em atraso");
 
-  // ── Situação — display simples sem canvas ─────────────────────────────────
-  destroyChart("cSit");
-  const taxaOk = total ? (ok / total) * 100 : 0;
-  setHTML(
-    "cSitDisplay",
-    `
-    <div class="sit-display">
-      <div class="sit-display-pct" style="color:var(--green)">${taxaOk.toFixed(1)}%</div>
-      <div class="sit-display-label">taxa de sucesso</div>
-      <div class="sit-display-row">
-        <span class="sit-display-item">
-          <span class="sit-display-dot" style="background:var(--amber)"></span>
-          <span style="color:var(--amber);font-weight:500">${fmt(at)}</span>
-          <span>em atendimento</span>
-        </span>
-        <span class="sit-display-item">
-          <span class="sit-display-dot" style="background:var(--red)"></span>
-          <span style="color:var(--red);font-weight:500">${fmt(ar)}</span>
-          <span>em atraso</span>
-        </span>
-      </div>
-    </div>
-  `,
-  );
-
-  // ── Categorias — só as com ≥ 10 registros + nota das demais ───────────────
+  // ── Categorias ─────────────────────────────────────────────────────────────
   const cats = groupBy(rows, "Categoria");
   const topCat = cats[0] || ["—", 0];
   const mainCats = cats.slice(1).filter(([, n]) => n >= 5);
@@ -92,20 +91,21 @@ function render(rows) {
 
   const maxCat = mainCats.length ? mainCats[0][1] : topCat[1];
   let catsHTML = mainCats
-    .map(
-      ([lbl, n]) => `
-    <div class="bar-row">
-      <span class="bar-label" style="color:var(--text2);width:200px" title="${lbl}">${lbl}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round((n / maxCat) * 100)}%;background:var(--purple)"></div></div>
-      <span class="bar-n">${fmt(n)}</span>
-    </div>`,
+    .map(([lbl, n]) =>
+      makeBar(
+        lbl,
+        Math.round((n / maxCat) * 100),
+        n,
+        total,
+        "var(--purple)",
+        "200px",
+      ),
     )
     .join("");
 
   if (skipped > 0) {
     catsHTML += `<div class="cats-note">+ ${skipped} categoria${skipped > 1 ? "s" : ""} com menos de 5 registros</div>`;
   }
-
   setHTML("catBars", catsHTML);
 
   // ── Regiões — rosca ────────────────────────────────────────────────────────
@@ -119,37 +119,76 @@ function render(rows) {
   );
 
   // ── Reaberturas ────────────────────────────────────────────────────────────
-  const reabRows = rows.filter((r) => parseInt(r["Ocorrências"] || 1) > 1);
-  const reabCats = groupBy(reabRows, "Categoria").slice(0, 4);
+  // Agrega eventos de reabertura (Ocorrências - 1) por ID único
+  // Evita dupla contagem de linhas do mesmo ID
+  const reabByCat = {},
+    reabByReg = {};
+  const seenReabIds = new Set();
+  rows.forEach((r) => {
+    const occ = parseInt(r["Ocorrências"] || 1);
+    if (occ <= 1) return;
+    const id = r["ID Colab"];
+    if (seenReabIds.has(id)) return;
+    seenReabIds.add(id);
+    const eventos = occ - 1;
+    const cat = (r["Categoria"] || "").trim();
+    const reg = (r["Região"] || "").trim();
+    reabByCat[cat] = (reabByCat[cat] || 0) + eventos;
+    reabByReg[reg] = (reabByReg[reg] || 0) + eventos;
+  });
+
+  // Ordena por eventos desc
+  const reabCatEntries = Object.entries(reabByCat)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 4);
+  const reabRegEntries = Object.entries(reabByReg).sort((a, b) => b[1] - a[1]);
+  const maxReabCat = reabCatEntries.length ? reabCatEntries[0][1] : 1;
+  const maxReabReg = reabRegEntries.length ? reabRegEntries[0][1] : 1;
+
   setText("rTotal", fmt(reabIds));
-  setText("rEventos", fmt(reabTotal) + " eventos de reabertura");
+  setText("rEventos", fmt(reabTotal) + " reaberturas totais");
   setText("rPct", pct(reabIds, total) + " dos serviços");
 
-  const badgeCls = ["b-red", "b-amb", "b-blue", "b-blue"];
+  // % sobre reabTotal (263 eventos)
   setHTML(
     "reabList",
-    reabCats
-      .map(
-        ([lbl, n], i) =>
-          `<div class="list-row"><span>${lbl}</span><span class="badge ${badgeCls[i] || "b-blue"}">${fmt(n)}</span></div>`,
+    reabCatEntries
+      .map(([lbl, n]) =>
+        makeBar(
+          lbl,
+          Math.round((n / maxReabCat) * 100),
+          n,
+          reabTotal,
+          "var(--purple)",
+          "160px",
+        ),
       )
       .join(""),
   );
 
-  const reabRegs = groupBy(reabRows, "Região");
-  const maxRR = reabRegs.length ? reabRegs[0][1] : 1;
+  // Taxa de reabertura por região = reaberturas da região / total de serviços da região
+  const totalByReg = {};
+  rows.forEach((r) => {
+    const reg = (r["Região"] || "").trim();
+    if (reg) totalByReg[reg] = (totalByReg[reg] || 0) + 1;
+  });
+
   setHTML(
     "reabRegBars",
-    reabRegs
+    reabRegEntries
       .slice(0, 5)
-      .map(
-        ([lbl, n]) => `
+      .map(([lbl, n]) => {
+        const regTotal = totalByReg[lbl] || 1;
+        const taxa = ((n / regTotal) * 100).toFixed(1) + "%";
+        const fillPct = Math.round((n / maxReabReg) * 100);
+        return `
     <div class="bar-row">
-      <span class="bar-label">${lbl}</span>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round((n / maxRR) * 100)}%;background:var(--blue)"></div></div>
-      <span class="bar-n">${fmt(n)}</span>
-    </div>`,
-      )
+      <span class="bar-label" style="color:var(--text2);width:160px" title="${lbl}">${lbl}</span>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.max(fillPct, 1)}%;background:var(--blue)"></div></div>
+      <span class="bar-val">${fmt(n)}</span>
+      <span class="bar-pct" title="taxa de reabertura da região" style="color:var(--amber);font-weight:500">${taxa}</span>
+    </div>`;
+      })
       .join(""),
   );
 
@@ -168,32 +207,48 @@ function render(rows) {
     faixas.map(([k]) => faixaLabelMap[k] || k),
     faixas.map(([, v]) => v),
     faixas.map((_, i) => COLORS.faixas[i] || COLORS.gray),
-    { cutout: "60%" },
+    { cutout: "65%", externalLegendId: "cFaixasLegend" },
   );
 
-  // ── Tempo médio por categoria — mín. 10 registros ─────────────────────────
-  const tempoData = avgBy(okRows, "Categoria", "Dias Execução", 10).slice(0, 5);
-  if (tempoData.length) {
-    makeBarH(
-      "cTempo",
-      tempoData.map(([k]) =>
-        k
-          .replace("Lâmpada", "Lâmp.")
-          .replace("Iluminação", "Ilum.")
-          .replace("Irregular", "Irr."),
-      ),
-      tempoData.map(([, v]) => +v.toFixed(1)),
-      COLORS.purple,
-      { suffix: " dias" },
-    );
-  } else {
-    const el = document.getElementById("cTempo");
-    if (el)
-      el.parentElement.innerHTML =
+  // ── Tempo médio por categoria — barras HTML com data labels ─────────────
+  const tempoMap = {},
+    tempoCnt = {};
+  okRows.forEach((r) => {
+    const cat = (r["Categoria"] || "").trim();
+    const raw = (r["Dias Execução"] || "").toString().replace(",", ".").trim();
+    const v = parseFloat(raw);
+    if (!cat || isNaN(v) || v < 0) return;
+    tempoMap[cat] = (tempoMap[cat] || 0) + v;
+    tempoCnt[cat] = (tempoCnt[cat] || 0) + 1;
+  });
+  const tempoData = Object.entries(tempoMap)
+    .filter(([k]) => tempoCnt[k] >= 10)
+    .map(([k, v]) => [k, +(v / tempoCnt[k]).toFixed(1), tempoCnt[k]])
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  const tempoEl = document.getElementById("cTempoHTML");
+  if (tempoEl) {
+    if (!tempoData.length) {
+      tempoEl.innerHTML =
         '<p style="font-size:11px;color:var(--text3);padding:8px 0">Dados insuficientes para calcular média.</p>';
+    } else {
+      const maxTempo = tempoData[0][1];
+      tempoEl.innerHTML = tempoData
+        .map(
+          ([lbl, dias, cnt]) => `
+        <div class="bar-row">
+          <span class="bar-label" style="color:var(--text2);width:160px" title="${lbl}">${lbl}</span>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round((dias / maxTempo) * 100)}%;background:var(--purple)"></div></div>
+          <span class="bar-val">${dias}d</span>
+          <span class="bar-pct" style="color:var(--text3);white-space:nowrap">${fmt(cnt)} serv.</span>
+        </div>`,
+        )
+        .join("");
+    }
   }
 
-  // ── Top 8 bairros ──────────────────────────────────────────────────────────
+  // ── Top 8 bairros — com % do total ────────────────────────────────────────
   const bairros = groupBy(rows, "Bairro").slice(0, 8);
   const maxB = bairros.length ? bairros[0][1] : 1;
   setHTML(
@@ -205,7 +260,8 @@ function render(rows) {
       <span class="rank-num">${i + 1}</span>
       <span class="rank-name" title="${lbl}">${lbl}</span>
       <div class="rank-bar-wrap"><div class="rank-bar" style="width:${Math.round((n / maxB) * 100)}%"></div></div>
-      <span class="rank-n">${fmt(n)}</span>
+      <span class="bar-val" style="width:36px">${fmt(n)}</span>
+      <span class="bar-pct">${pct(n, total)}</span>
     </div>`,
       )
       .join(""),
