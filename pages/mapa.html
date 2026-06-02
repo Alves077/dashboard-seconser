@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,118 +8,494 @@
   <link rel="stylesheet" href="../css/style.css">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <style>
-    /* Garante que o app ocupa a tela toda sem scroll */
-    html, body { height: 100%; overflow: hidden; }
-    #app { display: flex; flex-direction: column; height: 100%; }
-    #map { flex: 1; min-height: 0; }
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    #app {
+      display: block;
+    }
+
+    /* ── Layout principal: mapa + painel ── */
+    /* topbar ~57px + map-legend ~37px = ~94px */
+    .map-body {
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      height: calc(100vh - 94px);
+      overflow: hidden;
+      gap: 0;
+    }
+
+    /* ── Container do mapa ── */
+    .map-wrap {
+      position: relative;
+      min-height: 0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* ── Painel lateral ── */
+    .map-panel {
+      background: var(--surface);
+      border-left: 0.5px solid var(--border2);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 1rem;
+      gap: 1rem;
+    }
+
+    .map-panel-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .map-panel-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding-bottom: 6px;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    /* ── KPIs do painel ── */
+    .map-kpis {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .map-kpi {
+      background: var(--surface2);
+      border-radius: var(--radius);
+      padding: 8px 10px;
+      text-align: center;
+    }
+
+    .map-kpi-n {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .map-kpi-l {
+      font-size: 10px;
+      color: var(--text2);
+      margin-top: 3px;
+    }
+
+    /* ── Legenda/filtro ── */
+    .map-legend {
+      display: flex;
+      gap: 6px;
+      padding: 8px var(--page-px);
+      background: var(--surface);
+      border-bottom: 0.5px solid var(--border2);
+      font-size: 12px;
+      color: var(--text2);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .map-legend-btn {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--surface2);
+      color: var(--text2);
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .map-legend-btn.active {
+      border-color: currentColor;
+      color: var(--text);
+      background: var(--surface);
+    }
+
+    .map-legend-btn.active .map-dot {
+      opacity: 1;
+    }
+
+    .map-legend-btn:not(.active) .map-dot {
+      opacity: 0.35;
+    }
+
+    .map-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .map-count {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    /* ── Barras do painel ── */
+    .panel-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 5px;
+    }
+
+    .panel-bar-label {
+      font-size: 11px;
+      color: var(--text2);
+      width: 100px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel-bar-track {
+      flex: 1;
+      background: var(--surface2);
+      border-radius: 2px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .panel-bar-fill {
+      height: 100%;
+      border-radius: 2px;
+    }
+
+    .panel-bar-val {
+      font-size: 11px;
+      color: var(--text2);
+      width: 28px;
+      text-align: right;
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+    }
   </style>
 </head>
+
 <body>
 
-<div id="loading">
-  <div class="spinner"></div>
-  <p>Carregando dados da planilha…</p>
-  <p id="error-msg"></p>
-</div>
-
-<div id="app" style="display:none">
-
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">DIP · Seconser Niterói</div>
-      <div class="topbar-sub" id="sub-periodo">carregando…</div>
-    </div>
-    <nav class="topbar-nav">
-      <a class="nav-link" href="../index.html">Visão Geral</a>
-      <a class="nav-link nav-active" href="mapa.html">Mapa</a>
-      <a class="nav-link" href="qualidade.html">Qualidade</a>
-      <a class="nav-link" href="tendencia.html">Tendência</a>
-    </nav>
-    <div class="topbar-right">
-      <span class="last-update" id="last-update"></span>
-      <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
-    </div>
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Carregando dados da planilha…</p>
+    <p id="error-msg"></p>
   </div>
 
-  <div class="map-legend">
-    <span><span class="map-dot" style="background:#639922"></span>OK</span>
-    <span><span class="map-dot" style="background:#BA7517"></span>Em Atendimento</span>
-    <span><span class="map-dot" style="background:#E24B4A"></span>Em Atraso</span>
-    <span style="margin-left:auto;font-size:11px;color:var(--text3)" id="map-count"></span>
+  <div id="app" style="display:none">
+
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">DIP · Seconser Niterói</div>
+        <div class="topbar-sub" id="sub-periodo">carregando…</div>
+      </div>
+      <nav class="topbar-nav">
+        <a class="nav-link" href="../index.html">Visão Geral</a>
+        <a class="nav-link nav-active" href="mapa.html">Mapa</a>
+        <a class="nav-link" href="qualidade.html">Qualidade</a>
+        <a class="nav-link" href="tendencia.html">Tendência</a>
+      </nav>
+      <div class="topbar-right">
+        <span class="last-update" id="last-update"></span>
+        <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
+      </div>
+    </div>
+
+    <!-- Legenda / filtro por situação -->
+    <div class="map-legend">
+      <button class="map-legend-btn active" data-sit="OK" onclick="toggleSit('OK', this)">
+        <span class="map-dot" style="background:#639922"></span>OK
+      </button>
+      <button class="map-legend-btn active" data-sit="Em Atendimento" onclick="toggleSit('Em Atendimento', this)">
+        <span class="map-dot" style="background:#BA7517"></span>Em Atendimento
+      </button>
+      <button class="map-legend-btn active" data-sit="Em Atraso" onclick="toggleSit('Em Atraso', this)">
+        <span class="map-dot" style="background:#E24B4A"></span>Em Atraso
+      </button>
+      <div class="fg" style="margin-left:12px">
+        <label style="font-size:11px;color:var(--text2)">Região</label>
+        <select id="fMapRegiao" style="font-size:11px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer" onchange="applyMapFilter()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <span class="map-count" id="map-count"></span>
+    </div>
+
+    <!-- Mapa + painel lateral -->
+    <div class="map-body">
+      <div class="map-wrap">
+        <div id="map"></div>
+      </div>
+
+      <div class="map-panel">
+
+        <!-- KPIs de abertos -->
+        <div class="map-panel-section">
+          <div class="map-panel-title">Situação atual</div>
+          <div class="map-kpis">
+            <div class="map-kpi">
+              <div class="map-kpi-n" id="pOk" style="color:var(--green)">—</div>
+              <div class="map-kpi-l">Concluídos</div>
+            </div>
+            <div class="map-kpi">
+              <div class="map-kpi-n" id="pAt" style="color:var(--amber)">—</div>
+              <div class="map-kpi-l">Em atend.</div>
+            </div>
+            <div class="map-kpi">
+              <div class="map-kpi-n" id="pAr" style="color:var(--red)">—</div>
+              <div class="map-kpi-l">Em atraso</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Abertos por região -->
+        <div class="map-panel-section">
+          <div class="map-panel-title">Abertos por região</div>
+          <div id="pRegList"></div>
+        </div>
+
+        <!-- Top bairros com abertos -->
+        <div class="map-panel-section">
+          <div class="map-panel-title">Top bairros · em aberto</div>
+          <div id="pBairroList"></div>
+        </div>
+
+        <!-- Abertos por categoria -->
+        <div class="map-panel-section">
+          <div class="map-panel-title">Abertos por categoria</div>
+          <div id="pCatList"></div>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
-  <div id="map"></div>
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/data.js"></script>
+  <script>
+    let map, markersLayer;
+    let visibleSits = new Set(['OK', 'Em Atendimento', 'Em Atraso']);
+    let currentRows = [];
 
-</div>
+    const SIT_COLORS = {
+      'OK': '#639922',
+      'Em Atendimento': '#BA7517',
+      'Em Atraso': '#E24B4A',
+    };
 
-<script src="../js/config.js"></script>
-<script src="../js/utils.js"></script>
-<script src="../js/data.js"></script>
-<script>
-  let map, markersLayer;
+    function toggleSit(sit, btn) {
+      if (visibleSits.has(sit)) {
+        if (visibleSits.size === 1) return; // mínimo 1 ativo
+        visibleSits.delete(sit);
+        btn.classList.remove('active');
+      } else {
+        visibleSits.add(sit);
+        btn.classList.add('active');
+      }
+      plotPoints(currentRows);
+    }
 
-  const SIT_COLORS = {
-    'OK':             '#639922',
-    'Em Atendimento': '#BA7517',
-    'Em Atraso':      '#E24B4A',
-  };
+    function initMap() {
+      if (map) return;
+      map = L.map('map', {
+        preferCanvas: true,
+        minZoom: 11,
+      }).setView([-22.910, -43.085], 13);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 18,
+      }).addTo(map);
+      markersLayer = L.layerGroup().addTo(map);
+    }
 
-  function initMap() {
-    if (map) return;
-    map = L.map('map', { preferCanvas: true }).setView([-22.903, -43.172], 12);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 18,
-    }).addTo(map);
-    markersLayer = L.layerGroup().addTo(map);
-  }
-
-  function plotPoints(rows) {
-    markersLayer.clearLayers();
-    let plotted = 0;
-    rows.forEach(r => {
-      const lat = parseFloat((r['Latitude']  || '').replace(',', '.'));
-      const lng = parseFloat((r['Longitude'] || '').replace(',', '.'));
-      if (isNaN(lat) || isNaN(lng)) return;
-      const sit   = (r['Situação'] || '').trim();
-      const color = SIT_COLORS[sit] || '#888780';
-      L.circleMarker([lat, lng], {
-        radius: 5, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.85,
-      }).bindPopup(`
+    function plotPoints(rows) {
+      markersLayer.clearLayers();
+      let plotted = 0;
+      // Renderiza OK primeiro (base), abertos por cima (destaque)
+      const sorted = [
+        ...rows.filter(r => (r['Situação'] || '').trim() === 'OK'),
+        ...rows.filter(r => (r['Situação'] || '').trim() === 'Em Atendimento'),
+        ...rows.filter(r => (r['Situação'] || '').trim() === 'Em Atraso'),
+      ];
+      sorted.forEach(r => {
+        const lat = parseFloat((r['Latitude'] || '').replace(',', '.'));
+        const lng = parseFloat((r['Longitude'] || '').replace(',', '.'));
+        if (isNaN(lat) || isNaN(lng)) return;
+        const sit = (r['Situação'] || '').trim();
+        if (!visibleSits.has(sit)) return;
+        const color = SIT_COLORS[sit] || '#888780';
+        L.circleMarker([lat, lng], {
+          radius: 5, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.85,
+        }).bindPopup(`
         <b>${r['Categoria'] || '—'}</b><br>
+        <span style="color:#888">ID: ${r['ID Colab'] || '—'}</span><br>
         ${r['Bairro'] || '—'} · ${r['Região'] || '—'}<br>
         Situação: <b style="color:${color}">${sit || '—'}</b><br>
         Saída: ${r['Data Saída'] || '—'} · Retorno: ${r['Data Retorno'] || '—'}<br>
         Dias execução: ${r['Dias Execução'] || '—'}
       `).addTo(markersLayer);
-      plotted++;
-    });
-    document.getElementById('map-count').textContent = fmt(plotted) + ' pontos no mapa';
-    // Força o Leaflet a recalcular o tamanho após o app ficar visível
-    setTimeout(() => map.invalidateSize(), 100);
-  }
-
-  function render(rows) {
-    const range = dateRange(rows);
-    if (range) {
-      document.getElementById('sub-periodo').textContent =
-        mesLabel(range.min) + ' – ' + mesLabel(range.max) + ' · ' + fmt(rows.length) + ' registros';
+        plotted++;
+      });
+      document.getElementById('map-count').textContent = fmt(plotted) + ' pontos visíveis';
+      setTimeout(() => map.invalidateSize(), 100);
     }
-    document.getElementById('last-update').textContent =
-      'atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    initMap();
-    plotPoints(rows);
-  }
 
-  function onDataLoaded() {
-    render(allRows);
-  }
+    function renderPanel(rows) {
+      const ok = rows.filter(r => (r['Situação'] || '').trim() === 'OK').length;
+      const at = rows.filter(r => (r['Situação'] || '').trim() === 'Em Atendimento').length;
+      const ar = rows.filter(r => (r['Situação'] || '').trim() === 'Em Atraso').length;
 
-  function populateFilters() {}
+      document.getElementById('pOk').textContent = fmt(ok);
+      document.getElementById('pAt').textContent = fmt(at);
+      document.getElementById('pAr').textContent = fmt(ar);
 
-  loadData();
-</script>
+      const abertos = rows.filter(r => {
+        const s = (r['Situação'] || '').trim();
+        return s === 'Em Atendimento' || s === 'Em Atraso';
+      });
+
+      // Abertos por região
+      const regMap = {};
+      abertos.forEach(r => {
+        const reg = (r['Região'] || '').trim();
+        if (!reg) return;
+        if (!regMap[reg]) regMap[reg] = { at: 0, ar: 0 };
+        if ((r['Situação'] || '').trim() === 'Em Atraso') regMap[reg].ar++;
+        else regMap[reg].at++;
+      });
+      const regEntries = Object.entries(regMap)
+        .map(([k, v]) => [k, v.at + v.ar, v])
+        .sort((a, b) => b[1] - a[1]);
+      const maxReg = regEntries.length ? regEntries[0][1] : 1;
+
+      document.getElementById('pRegList').innerHTML = regEntries.map(([lbl, n, v]) => `
+      <div class="panel-bar-row">
+        <span class="panel-bar-label" title="${lbl}">${lbl}</span>
+        <div class="panel-bar-track">
+          <div class="panel-bar-fill" style="width:${Math.round(n / maxReg * 100)}%;background:var(--amber)"></div>
+        </div>
+        <span class="panel-bar-val">${n}</span>
+      </div>
+      <div style="font-size:10px;color:var(--text3);margin:-3px 0 6px 106px">
+        ${v.ar > 0 ? `<span style="color:var(--red)">${v.ar} atr.</span>` : ''}
+        ${v.at > 0 ? `<span style="color:var(--amber);margin-left:4px">${v.at} at.</span>` : ''}
+      </div>`).join('');
+
+      // Top bairros abertos
+      const bairroMap = {};
+      abertos.forEach(r => {
+        const b = (r['Bairro'] || '').trim();
+        if (b) bairroMap[b] = (bairroMap[b] || 0) + 1;
+      });
+      const bairroEntries = Object.entries(bairroMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      const maxB = bairroEntries.length ? bairroEntries[0][1] : 1;
+      document.getElementById('pBairroList').innerHTML = bairroEntries.map(([lbl, n]) => `
+      <div class="panel-bar-row">
+        <span class="panel-bar-label" title="${lbl}">${lbl}</span>
+        <div class="panel-bar-track">
+          <div class="panel-bar-fill" style="width:${Math.round(n / maxB * 100)}%;background:var(--red)"></div>
+        </div>
+        <span class="panel-bar-val">${n}</span>
+      </div>`).join('');
+
+      // Abertos por categoria
+      const catMap = {};
+      abertos.forEach(r => {
+        const c = (r['Categoria'] || '').trim();
+        if (c) catMap[c] = (catMap[c] || 0) + 1;
+      });
+      const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
+      const maxC = catEntries.length ? catEntries[0][1] : 1;
+      document.getElementById('pCatList').innerHTML = catEntries.map(([lbl, n]) => `
+      <div class="panel-bar-row">
+        <span class="panel-bar-label" title="${lbl}">${lbl}</span>
+        <div class="panel-bar-track">
+          <div class="panel-bar-fill" style="width:${Math.round(n / maxC * 100)}%;background:var(--purple)"></div>
+        </div>
+        <span class="panel-bar-val">${n}</span>
+      </div>`).join('');
+    }
+
+    function render(rows) {
+      currentRows = rows;
+      const range = dateRange(rows);
+      if (range) {
+        document.getElementById('sub-periodo').textContent =
+          mesLabel(range.min) + ' – ' + mesLabel(range.max) + ' · ' + fmt(rows.length) + ' registros';
+      }
+      document.getElementById('last-update').textContent =
+        'atualizado ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+      initMap();
+      plotPoints(rows);
+      renderPanel(rows);
+    }
+
+    function populateMapFilters() {
+      const sel = document.getElementById('fMapRegiao');
+      const regioes = [...new Set(allRows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
+      regioes.forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v; opt.textContent = v;
+        sel.appendChild(opt);
+      });
+    }
+
+    function applyMapFilter() {
+      const reg = document.getElementById('fMapRegiao')?.value || '';
+      const filtered = reg ? allRows.filter(r => (r['Região'] || '').trim() === reg) : allRows;
+      currentRows = filtered;
+      plotPoints(filtered);
+      renderPanel(filtered);
+
+      if (reg) {
+        // Calcula bounds a partir das coordenadas dos pontos filtrados
+        const coords = filtered
+          .map(r => [
+            parseFloat((r['Latitude'] || '').replace(',', '.')),
+            parseFloat((r['Longitude'] || '').replace(',', '.'))
+          ])
+          .filter(([lat, lng]) => !isNaN(lat) && !isNaN(lng));
+        if (coords.length) {
+          const bounds = L.latLngBounds(coords.map(([lat, lng]) => L.latLng(lat, lng)));
+          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+        }
+      } else {
+        // Volta para visão geral de Niterói
+        map.setView([-22.910, -43.085], 13);
+      }
+    }
+
+    function onDataLoaded() {
+      populateMapFilters();
+      render(allRows);
+    }
+    function populateFilters() { }
+
+    loadData();
+  </script>
 </body>
+
 </html>
