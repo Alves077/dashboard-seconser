@@ -1,7 +1,6 @@
 // ─── Configuração central ────────────────────────────────────────────────────
 // Altere CSV_URL ao trocar a planilha de origem
-const CSV_URL =
-  'https://docs.google.com/spreadsheets/d/e/2PACX-1vRdf3k8zVVJRakFS6Z87Gct-7RneG1INv--7a1lDCMvuO6qtwd57kpyxHsGAOfqcZe9Gf2RBCqYtDRu/pub?gid=0&single=true&output=csv';
+const CSV_URL = 'https://script.google.com/macros/s/AKfycbxuYGEryQj26BBs_9ocypkJGokMaOJXk4Bq6T47rEUMi823AvKZ1SB4oztNpG7KVH6V1Q/exec?token=seconser2026dip';
 
 // Estado global
 let allRows = [];
