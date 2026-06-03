@@ -551,7 +551,27 @@ body {
   .g3 {
     grid-template-columns: 1fr;
   }
+  /* Abas: mantém visíveis, esconde elementos secundários */
+  .topbar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
   .topbar-nav {
+    display: flex;
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 2px;
+    padding-bottom: 4px;
+  }
+  .nav-link {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+  .topbar-badges {
+    display: none;
+  }
+  .last-update {
     display: none;
   }
 }

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,107 +9,141 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 </head>
+
 <body>
 
-<div id="loading">
-  <div class="spinner"></div>
-  <p>Carregando dados da planilha…</p>
-  <p id="error-msg"></p>
-</div>
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Carregando dados da planilha…</p>
+    <p id="error-msg"></p>
+  </div>
 
-<div id="app" style="display:none">
+  <div id="app" style="display:none">
 
-  <div class="topbar">
-    <div>
-      <div class="topbar-title">DIP · Seconser Niterói</div>
-      <div class="topbar-sub" id="sub-periodo">carregando…</div>
+    <div class="topbar">
+      <div>
+        <div class="topbar-title">DIP · Seconser Niterói</div>
+        <div class="topbar-sub" id="sub-periodo">carregando…</div>
+      </div>
+      <nav class="topbar-nav">
+        <a class="nav-link" href="../index.html">Visão Geral</a>
+        <a class="nav-link" href="mapa.html">Mapa</a>
+        <a class="nav-link nav-active" href="qualidade.html">Qualidade</a>
+        <a class="nav-link" href="tendencia.html">Tendência</a>
+      </nav>
+      <div class="topbar-right">
+        <span class="last-update" id="last-update"></span>
+        <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
+      </div>
     </div>
-    <nav class="topbar-nav">
-      <a class="nav-link" href="../index.html">Visão Geral</a>
-      <a class="nav-link" href="mapa.html">Mapa</a>
-      <a class="nav-link nav-active" href="qualidade.html">Qualidade</a>
-      <a class="nav-link" href="tendencia.html">Tendência</a>
-    </nav>
-    <div class="topbar-right">
-      <span class="last-update" id="last-update"></span>
-      <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
+
+    <div class="page">
+
+      <!-- BLOCO 1 · KPIs -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">Taxa de Conclusão</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--green)"></span>
+            <span class="kpi-value" id="qTaxaOk">—</span>
+          </div>
+          <div class="kpi-sub" id="qTaxaOkSub">do total de serviços</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Reincidência</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--purple)"></span>
+            <span class="kpi-value" id="qTaxaReab">—</span>
+          </div>
+          <div class="kpi-sub" id="qTaxaReabSub">serviços reabertos</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Resolução Rápida ≤3 dias</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--blue)"></span>
+            <span class="kpi-value" id="qRapido">—</span>
+          </div>
+          <div class="kpi-sub" id="qRapidoSub">dos concluídos</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Cauda Longa &gt;15 dias</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--amber)"></span>
+            <span class="kpi-value" id="qLong">—</span>
+          </div>
+          <div class="kpi-sub" id="qLongSub">dos concluídos</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Tempo Médio</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--gray)"></span>
+            <span class="kpi-value" id="qMedia">—</span>
+          </div>
+          <div class="kpi-sub" id="qMediaSub">—</div>
+        </div>
+        <div class="kpi kpi-ar">
+          <div class="kpi-label">Em Atraso Agora</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--red)"></span>
+            <span class="kpi-value" id="qTaxaAr">—</span>
+          </div>
+          <div class="kpi-sub" id="qTaxaArSub">dos abertos</div>
+        </div>
+      </div>
+
+      <!-- BLOCO 2 · Desvio por região | Taxa de reabertura por categoria -->
+      <div class="g2">
+        <div class="card">
+          <div class="ct">Atraso por região
+            <span class="ct-note">% serviços em atraso · piores primeiro</span>
+          </div>
+          <div id="regDesvioList"></div>
+        </div>
+        <div class="card">
+          <div class="ct">Reincidência por categoria
+            <span class="ct-note">reaberturas / total da categoria · mín. 10 serv.</span>
+          </div>
+          <div id="catReabTaxaList"></div>
+        </div>
+      </div>
+
+      <!-- BLOCO 3 · Faixas execução | Distribuição por região -->
+      <div class="g2">
+        <div class="card">
+          <div class="ct">Distribuição do tempo de execução
+            <span class="ct-note">concluídos · frequência por dia</span>
+          </div>
+          <div style="position:relative;height:200px">
+            <canvas id="cHistograma" role="img" aria-label="Histograma de tempo de execução"></canvas>
+          </div>
+          <div id="histLegend"></div>
+        </div>
+        <div class="card">
+          <div class="ct">Distribuição de faixas por região
+            <span class="ct-note">só concluídos · ordem por % >15d</span>
+          </div>
+          <div id="faixaRegTable"></div>
+        </div>
+      </div>
+
+      <!-- BLOCO 4 · Evolução mensal (full width) -->
+      <div class="card">
+        <div class="ct">Evolução mensal
+          <span class="ct-note">tempo médio de execução · cauda longa >15d % · agrupado por mês de conclusão</span>
+        </div>
+        <div style="position:relative;height:240px">
+          <canvas id="cEvolucao" role="img" aria-label="Evolução mensal da qualidade"></canvas>
+        </div>
+      </div>
+
     </div>
   </div>
 
-  <div class="page">
-
-    <div class="kpis">
-      <div class="kpi">
-        <div class="kpi-label">Taxa de Conclusão</div>
-        <div class="kpi-row"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value" id="qTaxaOk">—</span></div>
-        <div class="kpi-sub">concluídos no prazo</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Taxa de Atraso</div>
-        <div class="kpi-row"><span class="kpi-accent" style="background:var(--red)"></span><span class="kpi-value" id="qTaxaAr">—</span></div>
-        <div class="kpi-sub">serviços em atraso</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Taxa de Reabertura</div>
-        <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="qTaxaReab">—</span></div>
-        <div class="kpi-sub">demandas reabertas</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Concluídos ≤ 7 dias</div>
-        <div class="kpi-row"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value" id="qSla7">—</span></div>
-        <div class="kpi-sub">dos concluídos</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Tempo Médio</div>
-        <div class="kpi-row"><span class="kpi-accent" style="background:var(--gray)"></span><span class="kpi-value" id="qMedia">—</span></div>
-        <div class="kpi-sub" id="qMediaSub">—</div>
-      </div>
-      <div class="kpi">
-        <div class="kpi-label">Acima de 15 dias</div>
-        <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="qLong">—</span></div>
-        <div class="kpi-sub">dos concluídos</div>
-      </div>
-    </div>
-
-    <div class="g3">
-      <div class="card">
-        <div class="ct">SLA por região</div>
-        <div id="slaRegList"></div>
-      </div>
-      <div class="card">
-        <div class="ct">SLA por categoria</div>
-        <div id="slaCatList"></div>
-      </div>
-      <div class="card">
-        <div class="ct">Reaberturas por categoria</div>
-        <div style="position:relative;height:220px">
-          <canvas id="cReabCat" role="img" aria-label="Reaberturas por categoria"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <div class="g2">
-      <div class="card">
-        <div class="ct">Faixa de execução · concluídos</div>
-        <div style="position:relative;height:220px">
-          <canvas id="cFaixaQ" role="img" aria-label="Faixas de execução"></canvas>
-        </div>
-      </div>
-      <div class="card">
-        <div class="ct">Tempo médio por região</div>
-        <div style="position:relative;height:220px">
-          <canvas id="cTempoReg" role="img" aria-label="Tempo médio por região"></canvas>
-        </div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script src="../js/config.js"></script>
-<script src="../js/utils.js"></script>
-<script src="../js/data.js"></script>
-<script src="../js/charts.js"></script>
-<script src="qualidade.js"></script>
+  <script src="../js/config.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/charts.js"></script>
+  <script src="qualidade.js"></script>
 </body>
+
 </html>
