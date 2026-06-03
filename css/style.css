@@ -835,3 +835,21 @@ body {
   flex-direction: column;
   justify-content: center;
 }
+
+/* ── Logo institucional ──────────────────────────────────── */
+.topbar-logo {
+  height: 36px;
+  width: auto;
+  display: block;
+  flex-shrink: 0;
+}
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+@media (max-width: 720px) {
+  .topbar-logo {
+    display: none;
+  }
+}
