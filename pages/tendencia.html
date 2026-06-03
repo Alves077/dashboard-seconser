@@ -39,75 +39,92 @@
 
     <div class="page">
 
+      <!-- BLOCO 1 · KPIs -->
       <div class="kpis">
         <div class="kpi">
-          <div class="kpi-label">Mês com mais demandas</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value" id="tPicoMes">—</span></div>
+          <div class="kpi-label">Mês de pico</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--blue)"></span>
+            <span class="kpi-value" id="tPicoMes">—</span>
+          </div>
           <div class="kpi-sub" id="tPicoVal">pico histórico</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Mês mais recente</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value" id="tUltMes">—</span></div>
-          <div class="kpi-sub" id="tUltVal">último período</div>
+          <div class="kpi-label">Último mês completo</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--green)"></span>
+            <span class="kpi-value" id="tUltMes">—</span>
+          </div>
+          <div class="kpi-sub" id="tUltVal">demandas</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Variação mensal</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="tVariacao">—</span></div>
-          <div class="kpi-sub" id="tVariacaoSub">último vs. penúltimo</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--purple)"></span>
+            <span class="kpi-value" id="tVariacao">—</span>
+          </div>
+          <div class="kpi-sub" id="tVariacaoSub">vs. mês anterior</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Média mensal</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--gray)"></span><span class="kpi-value" id="tMedia">—</span></div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--gray)"></span>
+            <span class="kpi-value" id="tMedia">—</span>
+          </div>
           <div class="kpi-sub">demandas por mês</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Categoria em alta</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="tCatAlta" style="font-size:14px;line-height:1.3">—</span></div>
-          <div class="kpi-sub" id="tCatAltaVal">último mês</div>
+          <div class="kpi-label">Saldo acumulado</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--red)"></span>
+            <span class="kpi-value" id="tSaldo">—</span>
+          </div>
+          <div class="kpi-sub" id="tSaldoSub">entradas − concluídos</div>
         </div>
         <div class="kpi">
-          <div class="kpi-label">Meses no histórico</div>
-          <div class="kpi-row"><span class="kpi-accent" style="background:var(--red)"></span><span class="kpi-value" id="tMeses">—</span></div>
-          <div class="kpi-sub">períodos com dados</div>
+          <div class="kpi-label">Cumprimento de prazo</div>
+          <div class="kpi-row">
+            <span class="kpi-accent" style="background:var(--amber)"></span>
+            <span class="kpi-value" id="tPrazoGlobal">—</span>
+          </div>
+          <div class="kpi-sub" id="tPrazoGlobalSub">concluídos ≤ 5 dias</div>
         </div>
       </div>
 
+      <!-- BLOCO 2 · Entradas vs Concluídos + saldo acumulado (full width) -->
       <div class="card">
-        <div class="ct" style="justify-content:space-between">
-          <span>Volume mensal de demandas</span>
-          <span class="ct-note" id="pico-label"></span>
+        <div class="ct">Fluxo de demandas
+          <span class="ct-note">entradas · concluídos · saldo acumulado (eixo direito)</span>
         </div>
-        <div style="position:relative;height:200px">
-          <canvas id="cVolMensal" role="img" aria-label="Volume mensal"></canvas>
-        </div>
-      </div>
-
-      <div class="g2">
-        <div class="card">
-          <div class="ct">Evolução por situação</div>
-          <div style="position:relative;height:200px">
-            <canvas id="cSitMensal" role="img" aria-label="Situação mensal"></canvas>
-          </div>
-        </div>
-        <div class="card">
-          <div class="ct">Top 5 categorias · evolução mensal</div>
-          <div style="position:relative;height:200px">
-            <canvas id="cCatMensal" role="img" aria-label="Categorias mensal"></canvas>
-          </div>
+        <div style="position:relative;height:220px">
+          <canvas id="cVolMensal" role="img" aria-label="Fluxo de demandas mensal"></canvas>
         </div>
       </div>
 
+      <!-- BLOCO 3 · Mapa de sazonalidade (full width) -->
+      <div class="card">
+        <div class="ct">Sazonalidade por categoria
+          <span class="ct-note">volume mensal · intensidade relativa por categoria · top 6</span>
+        </div>
+        <div id="heatSazon"></div>
+      </div>
+
+      <!-- BLOCO 4 · Cumprimento de prazo | Tempo médio mensal -->
       <div class="g2">
         <div class="card">
-          <div class="ct">Tempo médio de execução mensal</div>
-          <div style="position:relative;height:180px">
+          <div class="ct">Cumprimento de prazo mensal
+            <span class="ct-note">concluídos por Data Retorno · prazo = 5 dias</span>
+          </div>
+          <div style="position:relative;height:200px">
+            <canvas id="cPrazoMensal" role="img" aria-label="Cumprimento de prazo mensal"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ct">Tempo médio de execução mensal
+            <span class="ct-note">só concluídos</span>
+          </div>
+          <div style="position:relative;height:200px">
             <canvas id="cTempoMensal" role="img" aria-label="Tempo médio mensal"></canvas>
-          </div>
-        </div>
-        <div class="card">
-          <div class="ct">Taxa de atraso mensal</div>
-          <div style="position:relative;height:180px">
-            <canvas id="cAtrasoMensal" role="img" aria-label="Taxa de atraso mensal"></canvas>
           </div>
         </div>
       </div>
