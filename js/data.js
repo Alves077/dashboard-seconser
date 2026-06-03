@@ -22,6 +22,9 @@ const HEADER_MAP = {
   'Longitude':          'Longitude',
 };
 
+const CACHE_KEY = 'dip_csv_cache';
+const CACHE_TTL = 10 * 60 * 1000; // 10 minutos em ms
+
 function normalizeRow(row) {
   const out = {};
   Object.keys(row).forEach(k => {
@@ -31,19 +34,46 @@ function normalizeRow(row) {
   return out;
 }
 
+function processCSV(csvText) {
+  const results = Papa.parse(csvText, {
+    header:         true,
+    skipEmptyLines: true,
+  });
+  allRows = results.data.map(normalizeRow);
+  if (typeof onDataLoaded === 'function') onDataLoaded();
+  document.getElementById('loading').style.display = 'none';
+  document.getElementById('app').style.display     = 'block';
+}
+
 function loadData() {
   document.getElementById('loading').style.display = 'flex';
   document.getElementById('app').style.display     = 'none';
   const errEl = document.getElementById('error-msg');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
 
+  // Verifica cache
+  try {
+    const cached = sessionStorage.getItem(CACHE_KEY);
+    if (cached) {
+      const { ts, csv } = JSON.parse(cached);
+      if (Date.now() - ts < CACHE_TTL) {
+        processCSV(csv);
+        return;
+      }
+    }
+  } catch(e) {}
+
+  // Busca via PapaParse (contorna CORS do Apps Script)
   Papa.parse(CSV_URL, {
     download:       true,
     header:         true,
     skipEmptyLines: true,
     complete(results) {
+      const csv = Papa.unparse(results.data);
+      try {
+        sessionStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), csv }));
+      } catch(e) {}
       allRows = results.data.map(normalizeRow);
-      // onDataLoaded definido por cada página — sempre chamado após parse completo
       if (typeof onDataLoaded === 'function') onDataLoaded();
       document.getElementById('loading').style.display = 'none';
       document.getElementById('app').style.display     = 'block';
@@ -52,9 +82,7 @@ function loadData() {
       document.getElementById('loading').style.display = 'none';
       if (errEl) {
         errEl.style.display = 'block';
-        errEl.textContent   =
-          'Erro ao carregar dados. Verifique se a planilha está publicada publicamente. (' +
-          err.message + ')';
+        errEl.textContent   = 'Erro ao carregar dados. (' + err.message + ')';
       }
     },
   });
