@@ -50,7 +50,7 @@
       display: flex;
       flex-direction: column;
       overflow-y: auto;
-      padding: 1rem;
+      padding: 1rem 1rem 2rem;
       gap: 1rem;
     }
 
@@ -281,6 +281,12 @@
           <div id="pBairroList"></div>
         </div>
 
+        <!-- Mais antigos em atraso -->
+        <div class="map-panel-section">
+          <div class="map-panel-title">Mais antigos em atraso</div>
+          <div id="pAtrasadosList"></div>
+        </div>
+
         <!-- Abertos por categoria -->
         <div class="map-panel-section">
           <div class="map-panel-title">Abertos por categoria</div>
@@ -347,13 +353,26 @@
         const sit = (r['Situação'] || '').trim();
         if (!visibleSits.has(sit)) return;
         const color = SIT_COLORS[sit] || '#888780';
+        // Calcula dias em aberto para serviços não concluídos
+        let diasAberto = '';
+        if (sit === 'Em Atendimento' || sit === 'Em Atraso') {
+          const saida = (() => {
+            const p = (r['Data Saída'] || '').split('/');
+            return p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]) : null;
+          })();
+          if (saida && !isNaN(saida)) {
+            const diff = Math.floor((new Date() - saida) / 86400000);
+            diasAberto = `<br><b style="color:${color}">${diff} dia${diff !== 1 ? 's' : ''} em aberto</b>`;
+          }
+        }
+
         L.circleMarker([lat, lng], {
           radius: 5, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.85,
         }).bindPopup(`
         <b>${r['Categoria'] || '—'}</b><br>
         <span style="color:#888">ID: ${r['ID Colab'] || '—'}</span><br>
         ${r['Bairro'] || '—'} · ${r['Região'] || '—'}<br>
-        Situação: <b style="color:${color}">${sit || '—'}</b><br>
+        Situação: <b style="color:${color}">${sit || '—'}</b>${diasAberto}<br>
         Saída: ${r['Data Saída'] || '—'} · Retorno: ${r['Data Retorno'] || '—'}<br>
         Dias execução: ${r['Dias Execução'] || '—'}
       `).addTo(markersLayer);
@@ -421,6 +440,29 @@
         <span class="panel-bar-val">${n}</span>
       </div>`).join('');
 
+      // Top 5 mais antigos em atraso
+      const atrasados = rows
+        .filter(r => (r['Situação'] || '').trim() === 'Em Atraso')
+        .map(r => {
+          const p = (r['Data Saída'] || '').split('/');
+          const saida = p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]) : null;
+          const dias = saida && !isNaN(saida) ? Math.floor((new Date() - saida) / 86400000) : 0;
+          return { ...r, _dias: dias };
+        })
+        .sort((a, b) => b._dias - a._dias)
+        .slice(0, 5);
+
+      document.getElementById('pAtrasadosList').innerHTML = atrasados.length
+        ? atrasados.map(r => `
+        <div style="padding:7px 0;border-bottom:0.5px solid var(--border);font-size:11px">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <span style="color:var(--text);font-weight:600">${r['Categoria'] || '—'}</span>
+            <span style="color:var(--red);font-weight:700">${r._dias}d</span>
+          </div>
+          <div style="color:var(--text2);margin-top:2px">${r['Bairro'] || '—'} · ID ${r['ID Colab'] || '—'}</div>
+        </div>`).join('')
+        : '<div style="font-size:11px;color:var(--text3)">Nenhum serviço em atraso.</div>';
+
       // Abertos por categoria
       const catMap = {};
       abertos.forEach(r => {
@@ -455,6 +497,7 @@
 
     function populateMapFilters() {
       const sel = document.getElementById('fMapRegiao');
+      sel.innerHTML = '<option value="">Todas</option>';
       const regioes = [...new Set(allRows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
       regioes.forEach(v => {
         const opt = document.createElement('option');
@@ -480,7 +523,12 @@
           .filter(([lat, lng]) => !isNaN(lat) && !isNaN(lng));
         if (coords.length) {
           const bounds = L.latLngBounds(coords.map(([lat, lng]) => L.latLng(lat, lng)));
-          map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
+          map.invalidateSize();
+          setTimeout(() => {
+            if (bounds.isValid()) {
+              map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
+            }
+          }, 100);
         }
       } else {
         // Volta para visão geral de Niterói
