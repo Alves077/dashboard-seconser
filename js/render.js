@@ -13,11 +13,19 @@ function barRow(label, n, total, color, labelWidth) {
     </div>`;
 }
 
-function makeBar(label, fillPct, absVal, total, color, labelWidth) {
+function makeBar(
+  label,
+  fillPct,
+  absVal,
+  total,
+  color,
+  labelWidth,
+  showLabel = true,
+) {
   const w = labelWidth || "160px";
   return `
     <div class="bar-row">
-      <span class="bar-label" style="color:var(--text2);width:${w}" title="${label}">${label}</span>
+      ${showLabel ? `<span class="bar-label" style="color:var(--text2);width:${w}" title="${label}">${label}</span>` : ""}
       <div class="bar-track"><div class="bar-fill" style="width:${Math.max(fillPct, 1)}%;background:${color}"></div></div>
       <span class="bar-val">${fmt(absVal)}</span>
       <span class="bar-pct">${pct(absVal, total)}</span>

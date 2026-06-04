@@ -192,6 +192,107 @@
       flex-shrink: 0;
       font-variant-numeric: tabular-nums;
     }
+
+    /* ── Mobile: esconde mapa, mostra só painel ── */
+    @media (max-width: 720px) {
+
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .map-wrap {
+        display: none;
+      }
+
+      .map-legend-btn {
+        font-size: 10px;
+        padding: 2px 8px;
+      }
+
+      .map-body {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+
+      .map-panel {
+        border-left: none;
+        overflow-y: visible;
+        padding-bottom: 3rem;
+      }
+
+      /* Oculta botões de filtro de situação — sem mapa não fazem sentido */
+      .map-legend {
+        display: none;
+      }
+    }
+
+    /* ── Mobile: esconde mapa, mostra só painel ── */
+    @media (max-width: 720px) {
+
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .map-wrap {
+        display: none;
+      }
+
+      .map-body {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+
+      .map-panel {
+        border-left: none;
+        overflow-y: visible;
+        padding-bottom: 3rem;
+      }
+
+      /* Oculta botões OK/Atendimento/Atraso mas mantém filtro de região */
+      .map-legend-btn {
+        display: none;
+      }
+
+      .map-count {
+        display: none;
+      }
+    }
+
+    @media (max-width: 720px) {
+
+      html,
+      body {
+        overflow: auto;
+      }
+
+      .map-wrap {
+        display: none;
+      }
+
+      .map-body {
+        grid-template-columns: 1fr;
+        height: auto;
+        overflow: visible;
+      }
+
+      .map-panel {
+        border-left: none;
+        overflow-y: visible;
+        padding-bottom: 3rem;
+      }
+
+      .map-legend-btn {
+        display: none;
+      }
+
+      .map-count {
+        display: none;
+      }
+    }
   </style>
 </head>
 
@@ -262,8 +363,8 @@
               <div class="map-kpi-l">Concluídos</div>
             </div>
             <div class="map-kpi">
-              <div class="map-kpi-n" id="pAt" style="color:var(--amber)">—</div>
-              <div class="map-kpi-l">Em atend.</div>
+              <div class="map-kpi-n" id="pAberto" style="color:var(--amber)">—</div>
+              <div class="map-kpi-l">Em aberto</div>
             </div>
             <div class="map-kpi">
               <div class="map-kpi-n" id="pAr" style="color:var(--red)">—</div>
@@ -359,10 +460,7 @@
         // Calcula dias em aberto para serviços não concluídos
         let diasAberto = '';
         if (sit === 'Em Atendimento' || sit === 'Em Atraso') {
-          const saida = (() => {
-            const p = (r['Data Saída'] || '').split('/');
-            return p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]) : null;
-          })();
+          const saida = parseDate(r['Data Saída']);
           if (saida && !isNaN(saida)) {
             const diff = Math.floor((new Date() - saida) / 86400000);
             diasAberto = `<br><b style="color:${color}">${diff} dia${diff !== 1 ? 's' : ''} em aberto</b>`;
@@ -391,7 +489,7 @@
       const ar = rows.filter(r => (r['Situação'] || '').trim() === 'Em Atraso').length;
 
       document.getElementById('pOk').textContent = fmt(ok);
-      document.getElementById('pAt').textContent = fmt(at);
+      document.getElementById('pAberto').textContent = fmt(at + ar);
       document.getElementById('pAr').textContent = fmt(ar);
 
       const abertos = rows.filter(r => {
@@ -444,12 +542,12 @@
       </div>`).join('');
 
       // Top 5 mais antigos em atraso
+      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
       const atrasados = rows
         .filter(r => (r['Situação'] || '').trim() === 'Em Atraso')
         .map(r => {
-          const p = (r['Data Saída'] || '').split('/');
-          const saida = p.length === 3 ? new Date(+p[2], +p[1] - 1, +p[0]) : null;
-          const dias = saida && !isNaN(saida) ? Math.floor((new Date() - saida) / 86400000) : 0;
+          const saida = parseDate(r['Data Saída']);
+          const dias = saida && !isNaN(saida) ? Math.floor((hoje - saida) / 86400000) : 0;
           return { ...r, _dias: dias };
         })
         .sort((a, b) => b._dias - a._dias)

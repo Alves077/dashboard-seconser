@@ -531,50 +531,6 @@ body {
 }
 
 /* ── Responsive ──────────────────────────────────────────── */
-@media (max-width: 1100px) {
-  .kpis {
-    grid-template-columns: repeat(3, 1fr);
-  }
-  .g3 {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-@media (max-width: 720px) {
-  :root {
-    --page-px: 1rem;
-    --page-pt: 1rem;
-  }
-  .kpis {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .g2,
-  .g3 {
-    grid-template-columns: 1fr;
-  }
-  /* Abas: mantém visíveis, esconde elementos secundários */
-  .topbar {
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .topbar-nav {
-    display: flex;
-    order: 3;
-    width: 100%;
-    justify-content: center;
-    gap: 2px;
-    padding-bottom: 4px;
-  }
-  .nav-link {
-    font-size: 11px;
-    padding: 4px 10px;
-  }
-  .topbar-badges {
-    display: none;
-  }
-  .last-update {
-    display: none;
-  }
-}
 
 /* ── KPI — borda mais pronunciada ─────────────────────── */
 .kpi {
@@ -848,8 +804,100 @@ body {
   align-items: center;
   gap: 12px;
 }
+
+/* ── Mobile fixes ────────────────────────────────────────── */
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .kpis {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .g3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
 @media (max-width: 720px) {
+  :root {
+    --page-px: 1rem;
+    --page-pt: 1rem;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0.625rem var(--page-px) 0.5rem;
+  }
+  .topbar-brand {
+    gap: 8px;
+  }
   .topbar-logo {
     display: none;
+  }
+
+  .topbar-nav {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    gap: 2px;
+    padding-top: 6px;
+    padding-bottom: 2px;
+    border-top: 0.5px solid var(--border);
+    margin-top: 2px;
+  }
+  .nav-link {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  .topbar-badges {
+    display: none;
+  }
+  .last-update {
+    display: none;
+  }
+  .filter-note {
+    display: none;
+  }
+
+  /* Sticky filtros — fallback; JS ajusta dinamicamente */
+  .filters {
+    top: 90px;
+  }
+
+  /* KPIs 2 colunas */
+  .kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* Grids em coluna */
+  .g2,
+  .g3 {
+    grid-template-columns: 1fr;
+  }
+
+  /* Barras horizontais: esconde barra, empurra números para direita */
+  .bar-track {
+    display: none;
+  }
+  .bar-row .bar-val {
+    margin-left: auto;
+  }
+
+  /* Rosca empilha verticalmente */
+  .donut-mobile-stack {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .donut-mobile-stack > div:first-child {
+    height: 160px !important;
+  }
+  .donut-mobile-stack > div:last-child {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    justify-content: center;
+    align-self: auto !important;
   }
 }

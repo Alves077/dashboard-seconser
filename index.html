@@ -30,7 +30,7 @@
       </div>
       <nav class="topbar-nav">
         <a class="nav-link nav-active" href="index.html">Visão Geral</a>
-        <a class="nav-link" href="pages/mapa.html">Mapa</a>
+        <a class="nav-link nav-mapa" href="pages/mapa.html">Mapa</a>
         <a class="nav-link" href="pages/qualidade.html">Qualidade</a>
         <a class="nav-link" href="pages/tendencia.html">Tendência</a>
       </nav>
@@ -147,7 +147,7 @@
 
           <!-- Distribuição por faixa: rosca + legenda 2 colunas -->
           <div class="card-sub-title first">Distribuição por faixa</div>
-          <div style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:center;margin-bottom:4px">
+          <div class="donut-mobile-stack" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:center;margin-bottom:4px">
             <div style="position:relative;height:200px">
               <canvas id="cFaixas" role="img" aria-label="Faixas de execução"></canvas>
             </div>
@@ -207,6 +207,20 @@
   <script src="js/filters.js"></script>
   <script src="js/render.js"></script>
   <script src="js/main.js"></script>
+  <script>
+    function fixFiltersTop() {
+      const tb = document.querySelector('.topbar');
+      const fl = document.querySelector('.filters');
+      if (tb && fl) fl.style.top = tb.offsetHeight + 'px';
+    }
+    window.addEventListener('resize', fixFiltersTop);
+    window.addEventListener('load', fixFiltersTop);
+    // Também dispara quando o app fica visível
+    const _appEl = document.getElementById('app');
+    if (_appEl) {
+      new MutationObserver(fixFiltersTop).observe(_appEl, { attributes: true, attributeFilter: ['style'] });
+    }
+  </script>
 </body>
 
 </html>
