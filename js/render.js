@@ -36,6 +36,7 @@ function render(rows) {
   const ok = count(rows, "Situação", "OK");
   const at = count(rows, "Situação", "Em Atendimento");
   const ar = count(rows, "Situação", "Em Atraso");
+  const abertos = at + ar;
   const { reabIds, reabTotal } = calcReaberturas(rows);
 
   const okRows = rows.filter((r) => r["Situação"] === "OK");
@@ -54,8 +55,8 @@ function render(rows) {
   setText("kTotal", fmt(total));
   setText("kOk", fmt(ok));
   setText("kOkPct", pct(ok, total) + " do total");
-  setText("kAt", fmt(at));
-  setText("kAtPct", pct(at, total) + " do total");
+  setText("kAt", fmt(abertos));
+  setText("kAtPct", pct(abertos, total) + " do total");
   setText("kAr", fmt(ar));
   setText("kArPct", pct(ar, total) + " do total");
   setText("kReab", fmt(reabIds));
@@ -65,13 +66,13 @@ function render(rows) {
   );
   setHTML(
     "kMedia",
-    media.toFixed(1) +
+    fmtDec(media) +
       '<span style="font-size:15px;font-weight:400;color:var(--text2)"> d</span>',
   );
   setText("kMediaSub", "Mediana: " + Math.round(mediana) + " dias");
 
   setText("badge-ok", pct(ok, total) + " no prazo");
-  setText("badge-at", fmt(at) + " em atendimento");
+  setText("badge-at", fmt(abertos) + " em aberto");
   setText("badge-ar", fmt(ar) + " em atraso");
 
   // ── Categorias ─────────────────────────────────────────────────────────────
@@ -144,7 +145,7 @@ function render(rows) {
         const fillPct = Math.round((n / maxReg) * 100);
         const tempo =
           regTempoCnt[lbl] >= 3
-            ? (regTempoSum[lbl] / regTempoCnt[lbl]).toFixed(1) + "d"
+            ? fmtDec(regTempoSum[lbl] / regTempoCnt[lbl]) + "d"
             : "—";
         const ab = regAbertos[lbl] || { at: 0, ar: 0 };
 
@@ -163,8 +164,6 @@ function render(rows) {
   }
 
   // ── Reaberturas ────────────────────────────────────────────────────────────
-  // Agrega eventos de reabertura (Ocorrências - 1) por ID único
-  // Evita dupla contagem de linhas do mesmo ID
   const reabByCat = {},
     reabByReg = {};
   const seenReabIds = new Set();
@@ -181,7 +180,6 @@ function render(rows) {
     reabByReg[reg] = (reabByReg[reg] || 0) + eventos;
   });
 
-  // Ordena por eventos desc
   const reabCatEntries = Object.entries(reabByCat)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
@@ -193,7 +191,6 @@ function render(rows) {
   setText("rEventos", fmt(reabTotal) + " reaberturas totais");
   setText("rPct", pct(reabIds, total) + " dos serviços");
 
-  // % sobre reabTotal (263 eventos)
   setHTML(
     "reabList",
     reabCatEntries
@@ -210,7 +207,6 @@ function render(rows) {
       .join(""),
   );
 
-  // Taxa de reabertura por região = reaberturas da região / total de serviços da região
   const totalByReg = {};
   rows.forEach((r) => {
     const reg = (r["Região"] || "").trim();
@@ -223,7 +219,7 @@ function render(rows) {
       .slice(0, 5)
       .map(([lbl, n]) => {
         const regTotal = totalByReg[lbl] || 1;
-        const taxa = ((n / regTotal) * 100).toFixed(1) + "%";
+        const taxa = fmtDec((n / regTotal) * 100) + "%";
         const fillPct = Math.round((n / maxReabReg) * 100);
         return `
     <div class="bar-row">
@@ -254,7 +250,7 @@ function render(rows) {
     { cutout: "65%", externalLegendId: "cFaixasLegend" },
   );
 
-  // ── Tempo médio por categoria — barras HTML com data labels ─────────────
+  // ── Tempo médio por categoria ─────────────────────────────────────────────
   const tempoMap = {},
     tempoCnt = {};
   okRows.forEach((r) => {
@@ -284,7 +280,7 @@ function render(rows) {
         <div class="bar-row">
           <span class="bar-label" style="color:var(--text2);width:160px" title="${lbl}">${lbl}</span>
           <div class="bar-track"><div class="bar-fill" style="width:${Math.round((dias / maxTempo) * 100)}%;background:var(--purple)"></div></div>
-          <span class="bar-val">${dias}d</span>
+          <span class="bar-val">${fmtDec(dias)}d</span>
           <span class="bar-pct" style="color:var(--text3);white-space:nowrap">${fmt(cnt)} serv.</span>
         </div>`,
         )
@@ -292,7 +288,7 @@ function render(rows) {
     }
   }
 
-  // ── Top 8 bairros — com % do total ────────────────────────────────────────
+  // ── Top 10 bairros ────────────────────────────────────────────────────────
   const bairros = groupBy(rows, "Bairro").slice(0, 10);
   const maxB = bairros.length ? bairros[0][1] : 1;
   setHTML(
@@ -311,17 +307,16 @@ function render(rows) {
       .join(""),
   );
 
-  // ── Volume mensal — entrada (Data Saída) + conclusão (Data Retorno) ─────────
+  // ── Volume mensal ─────────────────────────────────────────────────────────
   const mensalEntries = buildMensalMap(rows);
   const mensalLabels = mensalEntries.map(([, v]) => v.lbl);
   const mensalVals = mensalEntries.map(([, v]) => v.rows.length);
   const picoIdx = mensalVals.indexOf(Math.max(...mensalVals));
 
-  // Agrupa concluídos por Data Retorno
   const retornoMap = {};
   mensalEntries.forEach(([k, v]) => {
     retornoMap[v.lbl] = 0;
-  }); // garante mesma ordem
+  });
   rows.forEach((r) => {
     if ((r["Situação"] || "").trim() !== "OK") return;
     const d = parseDate(r["Data Retorno"]);
@@ -331,7 +326,6 @@ function render(rows) {
   });
   const retornoVals = mensalLabels.map((lbl) => retornoMap[lbl] || 0);
 
-  // Pico de retornos
   const picoRetIdx = retornoVals.indexOf(Math.max(...retornoVals));
   const picoEntLabel = mensalEntries.length
     ? "entrada: " + mensalLabels[picoIdx] + " · " + fmt(mensalVals[picoIdx])
@@ -349,7 +343,6 @@ function render(rows) {
       : picoEntLabel || picoRetLabel,
   );
 
-  // Volume mensal — linha com Y a partir de 0
   destroyChart("cMensal");
   charts["cMensal"] = new Chart(document.getElementById("cMensal"), {
     type: "line",

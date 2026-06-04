@@ -96,7 +96,7 @@ function render(rows) {
   const totalConc = concluidos.reduce((a, b) => a + b, 0);
   const totalPrazo = noPrazo.reduce((a, b) => a + b, 0);
   const txPrazoGlobal = totalConc
-    ? ((totalPrazo / totalConc) * 100).toFixed(1)
+    ? fmtDec((totalPrazo / totalConc) * 100)
     : "—";
 
   // Variação último mês completo vs penúltimo
