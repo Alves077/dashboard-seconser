@@ -134,6 +134,14 @@
       'Em Atraso': '#E24B4A',
     };
 
+    // Bbox de Niterói — descarta coordenadas corrompidas antes de plotar
+    const NITEROI_BBOX = { latMin: -23.00, latMax: -22.82, lngMin: -43.15, lngMax: -42.95 };
+    function coordValida(lat, lng) {
+      return !isNaN(lat) && !isNaN(lng) &&
+        lat >= NITEROI_BBOX.latMin && lat <= NITEROI_BBOX.latMax &&
+        lng >= NITEROI_BBOX.lngMin && lng <= NITEROI_BBOX.lngMax;
+    }
+
     function toggleSit(sit, btn) {
       if (visibleSits.has(sit)) {
         if (visibleSits.size === 1) return; // mínimo 1 ativo
@@ -170,7 +178,7 @@
       sorted.forEach(r => {
         const lat = parseFloat((r['Latitude'] || '').replace(',', '.'));
         const lng = parseFloat((r['Longitude'] || '').replace(',', '.'));
-        if (isNaN(lat) || isNaN(lng)) return;
+        if (!coordValida(lat, lng)) return;
         const sit = (r['Situação'] || '').trim();
         if (!visibleSits.has(sit)) return;
         const color = SIT_COLORS[sit] || '#888780';
@@ -345,7 +353,7 @@
             parseFloat((r['Latitude'] || '').replace(',', '.')),
             parseFloat((r['Longitude'] || '').replace(',', '.'))
           ])
-          .filter(([lat, lng]) => !isNaN(lat) && !isNaN(lng));
+          .filter(([lat, lng]) => coordValida(lat, lng));
         if (coords.length) {
           const bounds = L.latLngBounds(coords.map(([lat, lng]) => L.latLng(lat, lng)));
           map.invalidateSize();
