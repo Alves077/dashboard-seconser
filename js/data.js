@@ -30,6 +30,23 @@ function normalizeRow(row) {
     const clean = HEADER_MAP[k.trim()] || k.trim();
     out[clean] = row[k];
   });
+
+  // Recalcula Situação dinamicamente — ignora valor estático do Sheets,
+  // que pode estar desatualizado em fins de semana/feriados.
+  const retorno = (out["Data Retorno"] || "").trim();
+  if (retorno) {
+    out["Situação"] = "OK";
+  } else {
+    const prazo = parseDate(out["Prazo"]);
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    if (prazo && !isNaN(prazo) && hoje > prazo) {
+      out["Situação"] = "Em Atraso";
+    } else {
+      out["Situação"] = "Em Atendimento";
+    }
+  }
+
   return out;
 }
 
