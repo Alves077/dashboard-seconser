@@ -1,0 +1,503 @@
+/* ── KPIs ────────────────────────────────────────────────── */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--card-gap);
+}
+.kpi {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 0.875rem 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.13);
+}
+.kpi-label {
+  font-size: 11px;
+  color: var(--text2);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+.kpi-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kpi-accent {
+  width: 5px;
+  height: 28px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.kpi-value {
+  font-size: 26px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.kpi-sub {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 4px;
+}
+.kpi-at {
+  box-shadow:
+    inset 3px 0 0 var(--amber),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+}
+.kpi-ar {
+  box-shadow:
+    inset 3px 0 0 var(--red),
+    0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Card ────────────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 1.125rem 1.25rem;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+}
+.ct {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.875rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.ct-note {
+  font-size: 11px;
+  color: var(--text3);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.card-vcenter {
+  display: flex;
+  flex-direction: column;
+}
+.card-vcenter-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.card-sub-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: 20px;
+  margin-bottom: 10px;
+  padding-top: 14px;
+  border-top: 0.5px solid var(--border);
+}
+.card-sub-title:first-of-type,
+.card-sub-title.first {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* ── Tags ────────────────────────────────────────────────── */
+.tag {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 7px;
+  border-radius: 4px;
+  font-weight: 500;
+}
+.tag-calc {
+  background: #e6f1fb;
+  color: #0c447c;
+}
+.tag-native {
+  background: #eaf3de;
+  color: #27500a;
+}
+.tag-extra {
+  background: #faeeda;
+  color: #633806;
+}
+
+/* ── Badges ──────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  padding: 3px 9px;
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+.b-red {
+  background: #fcebeb;
+  color: #791f1f;
+}
+.b-amb {
+  background: #faeeda;
+  color: #633806;
+}
+.b-blue {
+  background: #e6f1fb;
+  color: #0c447c;
+}
+.b-green {
+  background: #eaf3de;
+  color: #27500a;
+}
+
+/* ── Legenda ─────────────────────────────────────────────── */
+.leg-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.leg {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text2);
+}
+.leg-sq {
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Barras horizontais simples (HTML) ───────────────────── */
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 7px;
+}
+.bar-label {
+  font-size: 11px;
+  color: var(--text2);
+  width: 140px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bar-label-fixed {
+  width: 160px !important;
+  flex-shrink: 0;
+}
+.bar-track {
+  flex: 1;
+  background: var(--surface2);
+  border-radius: 2px;
+  height: 8px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+.bar-n {
+  font-size: 11px;
+  color: var(--text2);
+  width: 44px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.bar-val {
+  font-size: 11px;
+  color: var(--text2);
+  width: 44px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.bar-pct {
+  font-size: 10px;
+  color: var(--text3);
+  width: 38px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Lista (reaberturas, faixas) ─────────────────────────── */
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 0.5px solid var(--border);
+  font-size: 12px;
+}
+.list-row:last-child {
+  border-bottom: none;
+}
+.faixa-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Ranking bairros ─────────────────────────────────────── */
+.rank-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  border-bottom: 0.5px solid var(--border);
+}
+.rank-row:last-child {
+  border-bottom: none;
+}
+.rank-num {
+  font-size: 11px;
+  color: var(--text3);
+  width: 16px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.rank-name {
+  font-size: 12px;
+  color: var(--text);
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rank-bar-wrap {
+  flex: 1;
+  background: var(--surface2);
+  border-radius: 2px;
+  height: 5px;
+}
+.rank-bar {
+  height: 5px;
+  border-radius: 2px;
+  background: var(--purple);
+  transition: width 0.4s ease;
+}
+.rank-n {
+  font-size: 11px;
+  color: var(--text2);
+  width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+/* ── Stat inline (reaberturas) ───────────────────────────── */
+.stat-inline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.stat-n {
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--text);
+}
+.stat-s {
+  font-size: 12px;
+  color: var(--text2);
+}
+
+/* ── Situação card ───────────────────────────────────────── */
+.sit-g {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.sit-c {
+  background: var(--surface2);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  text-align: center;
+}
+.sit-n {
+  font-size: 22px;
+  font-weight: 500;
+}
+.sit-l {
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 3px;
+}
+.sit-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  gap: 6px;
+  text-align: center;
+}
+.sit-display-pct {
+  font-size: 52px;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.sit-display-label {
+  font-size: 12px;
+  color: var(--text2);
+  margin-bottom: 16px;
+}
+.sit-display-row {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+}
+.sit-display-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text2);
+}
+.sit-display-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Reaberturas KPI principal ───────────────────────────── */
+.reab-kpi {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding-bottom: 14px;
+  border-bottom: 0.5px solid var(--border);
+}
+.reab-kpi-n {
+  font-size: 42px;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+.reab-kpi-meta {
+  display: flex;
+  flex-direction: row;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text2);
+  margin-top: 3px;
+}
+.reab-sep {
+  color: var(--text3);
+}
+
+/* ── Categoria destaque ────────────────────────────────────── */
+.cat-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--surface2);
+  border-radius: var(--radius);
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.cat-top span:first-child {
+  color: var(--text2);
+}
+.cat-top span:last-child {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text);
+}
+.cats-note {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 0.5px solid var(--border);
+}
+
+/* ── Regiões — tabela de barras com colunas fixas ────────── */
+.reg-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.reg-header span {
+  font-size: 10px;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 500;
+}
+.reg-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 9px;
+}
+.reg-label {
+  font-size: 11px;
+  color: var(--text2);
+  width: 110px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reg-col-vol {
+  font-size: 11px;
+  color: var(--text2);
+  width: 40px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-pct {
+  font-size: 10px;
+  color: var(--text3);
+  width: 36px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-tempo {
+  font-size: 11px;
+  color: var(--text2);
+  width: 34px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-ar {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--red);
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-at {
+  font-size: 11px;
+  color: var(--amber);
+  width: 30px;
+  text-align: right;
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+.reg-col-zero {
+  color: var(--text3) !important;
+  font-weight: 400 !important;
+}

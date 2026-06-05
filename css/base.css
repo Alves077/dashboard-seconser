@@ -1,0 +1,95 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  --bg: #f5f4f0;
+  --surface: #ffffff;
+  --surface2: #f0efe9;
+  --border: rgba(0, 0, 0, 0.08);
+  --border2: rgba(0, 0, 0, 0.14);
+  --text: #1a1a18;
+  --text2: #6b6b66;
+  --text3: #9e9e98;
+  --radius: 8px;
+  --radius-lg: 14px;
+  --blue: #378add;
+  --green: #639922;
+  --amber: #ba7517;
+  --red: #e24b4a;
+  --purple: #7f77dd;
+  --gray: #888780;
+  --page-px: 2rem;
+  --page-pt: 1.5rem;
+  --card-gap: 14px;
+}
+
+body {
+  font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Loading overlay ─────────────────────────────────────── */
+#loading {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  z-index: 999;
+}
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 2px solid var(--border2);
+  border-top-color: var(--blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+#loading p {
+  font-size: 13px;
+  color: var(--text2);
+}
+#error-msg {
+  display: none;
+  color: var(--red);
+  font-size: 12px;
+  text-align: center;
+  max-width: 360px;
+}
+
+/* ── Botões ──────────────────────────────────────────────── */
+.refresh-btn {
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  border: 0.5px solid var(--border2);
+  background: var(--surface);
+  color: var(--text2);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.refresh-btn:hover {
+  background: var(--surface2);
+  color: var(--text);
+}
+.last-update {
+  font-size: 11px;
+  color: var(--text3);
+}
