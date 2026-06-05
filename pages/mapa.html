@@ -270,7 +270,7 @@
         <span class="map-dot" style="background:#639922"></span>OK
       </button>
       <button class="map-legend-btn active" data-sit="Em Atendimento" onclick="toggleSit('Em Atendimento', this)">
-        <span class="map-dot" style="background:#BA7517"></span>Em Atendimento
+        <span class="map-dot" style="background:#BA7517"></span>No Prazo
       </button>
       <button class="map-legend-btn active" data-sit="Em Atraso" onclick="toggleSit('Em Atraso', this)">
         <span class="map-dot" style="background:#E24B4A"></span>Em Atraso
@@ -399,19 +399,31 @@
           const saida = parseDate(r['Data Saída']);
           if (saida && !isNaN(saida)) {
             const diff = Math.floor((new Date() - saida) / 86400000);
-            diasAberto = `<br><b style="color:${color}">${diff} dia${diff !== 1 ? 's' : ''} em aberto</b>`;
+            const sufixo = sit === 'Em Atendimento' ? 'no prazo' : 'em atraso';
+            diasAberto = `<br><b style="color:${color}">${diff} dia${diff !== 1 ? 's' : ''} · ${sufixo}</b>`;
           }
         }
+
+        const fmtDate = (val) => {
+          if (!val) return '—';
+          // Se já está em dd/mm/aaaa, retorna direto
+          if (/^\d{2}\/\d{2}\/\d{4}$/.test(val.trim())) return val.trim();
+          const d = parseDate(val);
+          if (!d || isNaN(d)) return val;
+          return d.getDate().toString().padStart(2, '0') + '/' +
+            (d.getMonth() + 1).toString().padStart(2, '0') + '/' +
+            d.getFullYear();
+        };
 
         L.circleMarker([lat, lng], {
           radius: 5, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.85,
         }).bindPopup(`
-        <b>${r['Categoria'] || '—'}</b><br>
-        <span style="color:#888">ID: ${r['ID Colab'] || '—'}</span><br>
+        <b>ID ${r['ID Colab'] || '—'}</b><br>
+        <span style="color:#555">${r['Categoria'] || '—'}</span><br>
         ${r['Bairro'] || '—'} · ${r['Região'] || '—'}<br>
         Situação: <b style="color:${color}">${sit || '—'}</b>${diasAberto}<br>
-        Saída: ${r['Data Saída'] || '—'} · Retorno: ${r['Data Retorno'] || '—'}<br>
-        Dias execução: ${r['Dias Execução'] || '—'}
+        Saída: ${fmtDate(r['Data Saída'])} · Retorno: ${fmtDate(r['Data Retorno'])}<br>
+        Dias para execução: ${r['Dias Execução'] || '—'}
       `).addTo(markersLayer);
         plotted++;
       });
@@ -448,16 +460,13 @@
       const maxReg = regEntries.length ? regEntries[0][1] : 1;
 
       document.getElementById('pRegList').innerHTML = regEntries.map(([lbl, n, v]) => `
-      <div class="panel-bar-row">
+      <div class="panel-bar-row" style="margin-bottom:8px">
         <span class="panel-bar-label" title="${lbl}">${lbl}</span>
         <div class="panel-bar-track">
           <div class="panel-bar-fill" style="width:${Math.round(n / maxReg * 100)}%;background:var(--amber)"></div>
         </div>
         <span class="panel-bar-val">${n}</span>
-      </div>
-      <div style="font-size:10px;color:var(--text3);margin:-3px 0 6px 106px">
-        ${v.ar > 0 ? `<span style="color:var(--red)">${v.ar} atr.</span>` : ''}
-        ${v.at > 0 ? `<span style="color:var(--amber);margin-left:4px">${v.at} at.</span>` : ''}
+        <span style="font-size:10px;color:var(--red);width:48px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums">${v.ar > 0 ? v.ar + ' atr.' : ''}</span>
       </div>`).join('');
 
       // Top bairros abertos
