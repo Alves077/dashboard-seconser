@@ -11,7 +11,6 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-
 </head>
 
 <body>
@@ -37,10 +36,11 @@
         <a class="nav-link nav-active" href="mapa.html">Mapa</a>
         <a class="nav-link" href="qualidade.html">Qualidade</a>
         <a class="nav-link" href="tendencia.html">Tendência</a>
+        <a class="nav-link nav-rel" href="../relatorio.html">Relatório</a>
       </nav>
       <div class="topbar-right">
         <span class="last-update" id="last-update"></span>
-        <button class="refresh-btn" onclick="loadData()">↺ Atualizar</button>
+        <button class="refresh-btn" onclick="refreshData()">↺ Atualizar</button>
       </div>
     </div>
 
@@ -71,8 +71,6 @@
       </div>
 
       <div class="map-panel">
-
-        <!-- KPIs de abertos -->
         <div class="map-panel-section">
           <div class="map-panel-title">Situação atual</div>
           <div class="map-kpis">
@@ -90,31 +88,22 @@
             </div>
           </div>
         </div>
-
-        <!-- Abertos por região -->
         <div class="map-panel-section">
           <div class="map-panel-title">Abertos por região</div>
           <div id="pRegList"></div>
         </div>
-
-        <!-- Top bairros com abertos -->
         <div class="map-panel-section">
           <div class="map-panel-title">Top bairros · em aberto</div>
           <div id="pBairroList"></div>
         </div>
-
-        <!-- Mais antigos em atraso -->
         <div class="map-panel-section">
           <div class="map-panel-title">Mais antigos em atraso</div>
           <div id="pAtrasadosList"></div>
         </div>
-
-        <!-- Abertos por categoria -->
         <div class="map-panel-section">
           <div class="map-panel-title">Abertos por categoria</div>
           <div id="pCatList"></div>
         </div>
-
       </div>
     </div>
 
@@ -134,7 +123,6 @@
       'Em Atraso': '#E24B4A',
     };
 
-    // Bbox de Niterói — descarta coordenadas corrompidas antes de plotar
     const NITEROI_BBOX = { latMin: -23.00, latMax: -22.82, lngMin: -43.15, lngMax: -42.95 };
     function coordValida(lat, lng) {
       return !isNaN(lat) && !isNaN(lng) &&
@@ -144,7 +132,7 @@
 
     function toggleSit(sit, btn) {
       if (visibleSits.has(sit)) {
-        if (visibleSits.size === 1) return; // mínimo 1 ativo
+        if (visibleSits.size === 1) return;
         visibleSits.delete(sit);
         btn.classList.remove('active');
       } else {
@@ -156,10 +144,7 @@
 
     function initMap() {
       if (map) return;
-      map = L.map('map', {
-        preferCanvas: true,
-        minZoom: 11,
-      }).setView([-22.910, -43.085], 13);
+      map = L.map('map', { preferCanvas: true, minZoom: 11 }).setView([-22.910, -43.085], 13);
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 18,
@@ -191,28 +176,24 @@
             diasAberto = `<br><b style="color:${color}">${diff} dia${diff !== 1 ? 's' : ''} · ${sufixo}</b>`;
           }
         }
-
         const fmtDate = (val) => {
           if (!val) return '—';
-          // Se já está em dd/mm/aaaa, retorna direto
           if (/^\d{2}\/\d{2}\/\d{4}$/.test(val.trim())) return val.trim();
           const d = parseDate(val);
           if (!d || isNaN(d)) return val;
-          return d.getDate().toString().padStart(2, '0') + '/' +
-            (d.getMonth() + 1).toString().padStart(2, '0') + '/' +
-            d.getFullYear();
+          return d.getDate().toString().padStart(2,'0') + '/' +
+            (d.getMonth()+1).toString().padStart(2,'0') + '/' + d.getFullYear();
         };
-
         L.circleMarker([lat, lng], {
           radius: 5, fillColor: color, color: '#fff', weight: 1, fillOpacity: 0.85,
         }).bindPopup(`
-        <b>ID ${r['ID Colab'] || '—'}</b><br>
-        <span style="color:#555">${r['Categoria'] || '—'}</span><br>
-        ${r['Bairro'] || '—'} · ${r['Região'] || '—'}<br>
-        Situação: <b style="color:${color}">${sit || '—'}</b>${diasAberto}<br>
-        Saída: ${fmtDate(r['Data Saída'])} · Retorno: ${fmtDate(r['Data Retorno'])}<br>
-        Dias para execução: ${r['Dias Execução'] || '—'}
-      `).addTo(markersLayer);
+          <b>ID ${r['ID Colab'] || '—'}</b><br>
+          <span style="color:#555">${r['Categoria'] || '—'}</span><br>
+          ${r['Bairro'] || '—'} · ${r['Região'] || '—'}<br>
+          Situação: <b style="color:${color}">${sit || '—'}</b>${diasAberto}<br>
+          Saída: ${fmtDate(r['Data Saída'])} · Retorno: ${fmtDate(r['Data Retorno'])}<br>
+          Dias para execução: ${r['Dias Execução'] || '—'}
+        `).addTo(markersLayer);
         plotted++;
       });
       document.getElementById('map-count').textContent = fmt(plotted) + ' pontos visíveis';
@@ -223,7 +204,6 @@
       const ok = rows.filter(r => (r['Situação'] || '').trim() === 'OK').length;
       const at = rows.filter(r => (r['Situação'] || '').trim() === 'Em Atendimento').length;
       const ar = rows.filter(r => (r['Situação'] || '').trim() === 'Em Atraso').length;
-
       document.getElementById('pOk').textContent = fmt(ok);
       document.getElementById('pAberto').textContent = fmt(at + ar);
       document.getElementById('pAr').textContent = fmt(ar);
@@ -233,7 +213,6 @@
         return s === 'Em Atendimento' || s === 'Em Atraso';
       });
 
-      // Abertos por região
       const regMap = {};
       abertos.forEach(r => {
         const reg = (r['Região'] || '').trim();
@@ -242,77 +221,52 @@
         if ((r['Situação'] || '').trim() === 'Em Atraso') regMap[reg].ar++;
         else regMap[reg].at++;
       });
-      const regEntries = Object.entries(regMap)
-        .map(([k, v]) => [k, v.at + v.ar, v])
-        .sort((a, b) => b[1] - a[1]);
+      const regEntries = Object.entries(regMap).map(([k,v]) => [k, v.at+v.ar, v]).sort((a,b) => b[1]-a[1]);
       const maxReg = regEntries.length ? regEntries[0][1] : 1;
+      document.getElementById('pRegList').innerHTML = regEntries.map(([lbl,n,v]) => `
+        <div class="panel-bar-row" style="margin-bottom:8px">
+          <span class="panel-bar-label" title="${lbl}">${lbl}</span>
+          <div class="panel-bar-track"><div class="panel-bar-fill" style="width:${Math.round(n/maxReg*100)}%;background:var(--amber)"></div></div>
+          <span class="panel-bar-val">${n}</span>
+          <span style="font-size:10px;color:var(--red);width:48px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums">${v.ar > 0 ? v.ar+' atr.' : ''}</span>
+        </div>`).join('');
 
-      document.getElementById('pRegList').innerHTML = regEntries.map(([lbl, n, v]) => `
-      <div class="panel-bar-row" style="margin-bottom:8px">
-        <span class="panel-bar-label" title="${lbl}">${lbl}</span>
-        <div class="panel-bar-track">
-          <div class="panel-bar-fill" style="width:${Math.round(n / maxReg * 100)}%;background:var(--amber)"></div>
-        </div>
-        <span class="panel-bar-val">${n}</span>
-        <span style="font-size:10px;color:var(--red);width:48px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums">${v.ar > 0 ? v.ar + ' atr.' : ''}</span>
-      </div>`).join('');
-
-      // Top bairros abertos
       const bairroMap = {};
-      abertos.forEach(r => {
-        const b = (r['Bairro'] || '').trim();
-        if (b) bairroMap[b] = (bairroMap[b] || 0) + 1;
-      });
-      const bairroEntries = Object.entries(bairroMap).sort((a, b) => b[1] - a[1]).slice(0, 8);
+      abertos.forEach(r => { const b=(r['Bairro']||'').trim(); if(b) bairroMap[b]=(bairroMap[b]||0)+1; });
+      const bairroEntries = Object.entries(bairroMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
       const maxB = bairroEntries.length ? bairroEntries[0][1] : 1;
-      document.getElementById('pBairroList').innerHTML = bairroEntries.map(([lbl, n]) => `
-      <div class="panel-bar-row">
-        <span class="panel-bar-label" title="${lbl}">${lbl}</span>
-        <div class="panel-bar-track">
-          <div class="panel-bar-fill" style="width:${Math.round(n / maxB * 100)}%;background:var(--red)"></div>
-        </div>
-        <span class="panel-bar-val">${n}</span>
-      </div>`).join('');
+      document.getElementById('pBairroList').innerHTML = bairroEntries.map(([lbl,n]) => `
+        <div class="panel-bar-row">
+          <span class="panel-bar-label" title="${lbl}">${lbl}</span>
+          <div class="panel-bar-track"><div class="panel-bar-fill" style="width:${Math.round(n/maxB*100)}%;background:var(--red)"></div></div>
+          <span class="panel-bar-val">${n}</span>
+        </div>`).join('');
 
-      // Top 5 mais antigos em atraso
-      const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-      const atrasados = rows
-        .filter(r => (r['Situação'] || '').trim() === 'Em Atraso')
-        .map(r => {
-          const saida = parseDate(r['Data Saída']);
-          const dias = saida && !isNaN(saida) ? Math.floor((hoje - saida) / 86400000) : 0;
-          return { ...r, _dias: dias };
-        })
-        .sort((a, b) => b._dias - a._dias)
-        .slice(0, 5);
-
+      const hoje = new Date(); hoje.setHours(0,0,0,0);
+      const atrasados = rows.filter(r=>(r['Situação']||'').trim()==='Em Atraso')
+        .map(r=>{ const saida=parseDate(r['Data Saída']); const dias=saida&&!isNaN(saida)?Math.floor((hoje-saida)/86400000):0; return {...r,_dias:dias}; })
+        .sort((a,b)=>b._dias-a._dias).slice(0,5);
       document.getElementById('pAtrasadosList').innerHTML = atrasados.length
-        ? atrasados.map(r => `
-        <div style="padding:7px 0;border-bottom:0.5px solid var(--border);font-size:11px">
-          <div style="display:flex;justify-content:space-between;align-items:baseline">
-            <span style="color:var(--text);font-weight:600">${r['Categoria'] || '—'}</span>
-            <span style="color:var(--red);font-weight:700">${r._dias}d</span>
-          </div>
-          <div style="color:var(--text2);margin-top:2px">${r['Bairro'] || '—'} · ID ${r['ID Colab'] || '—'}</div>
-        </div>`).join('')
+        ? atrasados.map(r=>`
+          <div style="padding:7px 0;border-bottom:0.5px solid var(--border);font-size:11px">
+            <div style="display:flex;justify-content:space-between;align-items:baseline">
+              <span style="color:var(--text);font-weight:600">${r['Categoria']||'—'}</span>
+              <span style="color:var(--red);font-weight:700">${r._dias}d</span>
+            </div>
+            <div style="color:var(--text2);margin-top:2px">${r['Bairro']||'—'} · ID ${r['ID Colab']||'—'}</div>
+          </div>`).join('')
         : '<div style="font-size:11px;color:var(--text3)">Nenhum serviço em atraso.</div>';
 
-      // Abertos por categoria
       const catMap = {};
-      abertos.forEach(r => {
-        const c = (r['Categoria'] || '').trim();
-        if (c) catMap[c] = (catMap[c] || 0) + 1;
-      });
-      const catEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 6);
+      abertos.forEach(r=>{ const c=(r['Categoria']||'').trim(); if(c) catMap[c]=(catMap[c]||0)+1; });
+      const catEntries = Object.entries(catMap).sort((a,b)=>b[1]-a[1]).slice(0,6);
       const maxC = catEntries.length ? catEntries[0][1] : 1;
-      document.getElementById('pCatList').innerHTML = catEntries.map(([lbl, n]) => `
-      <div class="panel-bar-row">
-        <span class="panel-bar-label" title="${lbl}">${lbl}</span>
-        <div class="panel-bar-track">
-          <div class="panel-bar-fill" style="width:${Math.round(n / maxC * 100)}%;background:var(--purple)"></div>
-        </div>
-        <span class="panel-bar-val">${n}</span>
-      </div>`).join('');
+      document.getElementById('pCatList').innerHTML = catEntries.map(([lbl,n]) => `
+        <div class="panel-bar-row">
+          <span class="panel-bar-label" title="${lbl}">${lbl}</span>
+          <div class="panel-bar-track"><div class="panel-bar-fill" style="width:${Math.round(n/maxC*100)}%;background:var(--purple)"></div></div>
+          <span class="panel-bar-val">${n}</span>
+        </div>`).join('');
     }
 
     function render(rows) {
@@ -332,50 +286,33 @@
     function populateMapFilters() {
       const sel = document.getElementById('fMapRegiao');
       sel.innerHTML = '<option value="">Todas</option>';
-      const regioes = [...new Set(allRows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
-      regioes.forEach(v => {
-        const opt = document.createElement('option');
-        opt.value = v; opt.textContent = v;
-        sel.appendChild(opt);
-      });
+      [...new Set(allRows.map(r=>(r['Região']||'').trim()).filter(Boolean))].sort()
+        .forEach(v => { const opt=document.createElement('option'); opt.value=v; opt.textContent=v; sel.appendChild(opt); });
     }
 
     function applyMapFilter() {
       const reg = document.getElementById('fMapRegiao')?.value || '';
-      const filtered = reg ? allRows.filter(r => (r['Região'] || '').trim() === reg) : allRows;
+      const filtered = reg ? allRows.filter(r=>(r['Região']||'').trim()===reg) : allRows;
       currentRows = filtered;
       plotPoints(filtered);
       renderPanel(filtered);
-
       if (reg) {
-        const coords = filtered
-          .map(r => [
-            parseFloat((r['Latitude'] || '').replace(',', '.')),
-            parseFloat((r['Longitude'] || '').replace(',', '.'))
-          ])
-          .filter(([lat, lng]) => coordValida(lat, lng));
+        const coords = filtered.map(r=>[parseFloat((r['Latitude']||'').replace(',','.')),parseFloat((r['Longitude']||'').replace(',','.'))])
+          .filter(([lat,lng])=>coordValida(lat,lng));
         if (coords.length) {
-          const bounds = L.latLngBounds(coords.map(([lat, lng]) => L.latLng(lat, lng)));
+          const bounds = L.latLngBounds(coords.map(([lat,lng])=>L.latLng(lat,lng)));
           map.invalidateSize();
-          setTimeout(() => {
-            if (bounds.isValid()) {
-              map.fitBounds(bounds, { padding: [60, 60], maxZoom: 14 });
-            }
-          }, 100);
+          setTimeout(()=>{ if(bounds.isValid()) map.fitBounds(bounds,{padding:[60,60],maxZoom:14}); },100);
         }
       } else {
-        map.setView([-22.910, -43.085], 13);
+        map.setView([-22.910,-43.085],13);
       }
     }
 
-    function onDataLoaded() {
-      populateMapFilters();
-      render(allRows);
-    }
-    function populateFilters() { }
+    function onDataLoaded() { populateMapFilters(); render(allRows); }
+    function populateFilters() {}
 
     loadData();
   </script>
 </body>
-
 </html>

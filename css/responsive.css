@@ -40,6 +40,11 @@
     padding: 4px 10px;
   }
 
+  /* Link de relatório oculto em mobile */
+  .nav-rel {
+    display: none;
+  }
+
   .topbar-badges {
     display: none;
   }
