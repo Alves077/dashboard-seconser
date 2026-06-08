@@ -66,7 +66,7 @@ function render(rows) {
   setText("kAt", fmt(abertos));
   setText("kAtPct", pct(abertos, total) + " do total");
   setText("kAr", fmt(ar));
-  setText("kArPct", pct(ar, total) + " do total");
+  setText("kArPct", pct(ar, abertos) + " dos abertos");
   setText("kReab", fmt(reabIds));
   setText(
     "kReabPct",
@@ -121,7 +121,6 @@ function render(rows) {
   const regs = groupBy(rows, "Região");
   const maxReg = regs.length ? regs[0][1] : 1;
 
-  // Tempo médio por região (só concluídos)
   const regTempoSum = {},
     regTempoCnt = {};
   okRows.forEach((r) => {
@@ -134,7 +133,6 @@ function render(rows) {
     regTempoCnt[reg] = (regTempoCnt[reg] || 0) + 1;
   });
 
-  // Abertos por região (Em Atendimento + Em Atraso)
   const regAbertos = {};
   rows.forEach((r) => {
     const sit = (r["Situação"] || "").trim();
