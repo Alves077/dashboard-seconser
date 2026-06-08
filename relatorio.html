@@ -6,6 +6,7 @@
   <title>Relatório Mensal · DIP Seconser</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+
   <style>
     /* ── Variáveis — mesma paleta do dashboard ── */
     :root {
@@ -326,12 +327,6 @@
     .reg-table td:first-child { text-align: left; color: var(--text); font-weight: 500; }
     .reg-table tr:last-child td { border-bottom: none; }
 
-    /* Chart */
-    .chart-wrap {
-      position: relative;
-      height: 180px;
-      margin-top: 4px;
-    }
 
     /* Observações */
     .obs-section {
@@ -429,7 +424,7 @@
 
 <!-- Barra de controle -->
 <div class="control-bar">
-  <div class="control-bar-brand">DIP · Seconser — Relatório Mensal</div>
+  <a href="index.html" class="control-bar-brand" style="text-decoration:none;color:inherit">← DIP · Seconser</a>
   <label>Mês de referência</label>
   <select id="selMes">
     <option value="">Carregando…</option>
@@ -454,11 +449,6 @@
   const CACHE_KEY = 'dip_csv_v2';
   let allRows = [];
   let charts = {};
-
-  const COLORS = {
-    blue: '#378ADD', green: '#639922', amber: '#BA7517',
-    red: '#E24B4A', purple: '#7F77DD', gray: '#888780',
-  };
 
   function fmt(n) {
     return Number(n).toLocaleString('pt-BR');
@@ -589,14 +579,10 @@
     }
   }
 
-  // ── Render do relatório ──────────────────────────────────────────────────
-  function destroyCharts() {
+  function renderRelatorio(mesK, mesesMap) {
+    // Destrói charts anteriores
     Object.values(charts).forEach(c => c.destroy());
     charts = {};
-  }
-
-  function renderRelatorio(mesK, mesesMap) {
-    destroyCharts();
     const rel = document.getElementById('relatorio');
     rel.style.display = 'block';
 
@@ -652,14 +638,17 @@
     let reabIds = 0, reabTotal = 0;
     seen.forEach(occ => { if (occ > 1) { reabIds++; reabTotal += occ - 1; } });
 
-    // Distribuição por categoria
+    // Distribuição por categoria com OK e Atraso
     const catMap = {};
+    const catOkMap = {}, catArMap = {};
     rowsMes.forEach(r => {
       const c = (r['Categoria'] || '').trim();
-      if (c) catMap[c] = (catMap[c] || 0) + 1;
+      if (!c) return;
+      catMap[c] = (catMap[c] || 0) + 1;
+      if (r['Situação'] === 'OK') catOkMap[c] = (catOkMap[c] || 0) + 1;
+      if (r['Situação'] === 'Em Atraso') catArMap[c] = (catArMap[c] || 0) + 1;
     });
     const cats = Object.entries(catMap).sort((a,b) => b[1]-a[1]);
-    const maxCat = cats.length ? cats[0][1] : 1;
 
     // Distribuição por região
     const regMap = {};
@@ -673,20 +662,34 @@
     });
     const regs = Object.entries(regMap).sort((a,b) => b[1]-a[1]);
 
-    // Tempo médio por categoria (mín 3 registros)
-    const tempoSum = {}, tempoCnt = {};
-    okRows.forEach(r => {
-      const cat = (r['Categoria'] || '').trim();
-      const v = parseFloat((r['Dias Execução'] || '').toString().replace(',','.'));
-      if (!cat || isNaN(v) || v < 0) return;
-      tempoSum[cat] = (tempoSum[cat] || 0) + v;
-      tempoCnt[cat] = (tempoCnt[cat] || 0) + 1;
+    // Top bairros com OK e Atraso
+    const bairroMap = {};
+    const bairroOkMap = {}, bairroArMap = {};
+    rowsMes.forEach(r => {
+      const b = (r['Bairro'] || '').trim();
+      if (!b) return;
+      bairroMap[b] = (bairroMap[b] || 0) + 1;
+      if (r['Situação'] === 'OK') bairroOkMap[b] = (bairroOkMap[b] || 0) + 1;
+      if (r['Situação'] === 'Em Atraso') bairroArMap[b] = (bairroArMap[b] || 0) + 1;
     });
-    const tempoData = Object.entries(tempoSum)
-      .filter(([k]) => tempoCnt[k] >= 3)
-      .map(([k,v]) => [k, +(v/tempoCnt[k]).toFixed(1)])
-      .sort((a,b) => b[1]-a[1])
-      .slice(0, 6);
+    const bairros = Object.entries(bairroMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
+
+    // Faixas de execução
+    const faixaKeyMap = {
+      '1. Até 3 dias': 'Até 3 dias',
+      '2. 4 a 7 dias': '4 a 7 dias',
+      '3. 8 a 15 dias': '8 a 15 dias',
+      '4. Mais de 15 dias': 'Mais de 15 dias',
+    };
+    const faixaOrdem = ['Até 3 dias', '4 a 7 dias', '8 a 15 dias', 'Mais de 15 dias'];
+    const faixaCores = ['#639922', '#378ADD', '#BA7517', '#E24B4A'];
+    const faixaMap = { 'Até 3 dias': 0, '4 a 7 dias': 0, '8 a 15 dias': 0, 'Mais de 15 dias': 0 };
+    okRows.forEach(r => {
+      const f = faixaKeyMap[(r['Faixa Execução'] || '').trim()];
+      if (f) faixaMap[f]++;
+    });
+    const faixaVals = faixaOrdem.map(k => faixaMap[k]);
+    const totalFaixas = faixaVals.reduce((a,b) => a+b, 0);
 
     // ── Monta HTML ──────────────────────────────────────────────────────────
     const dataGeracao = new Date().toLocaleDateString('pt-BR', {
@@ -769,21 +772,71 @@
         </div>
       </div>
 
-      <!-- Categorias + Regiões -->
+      <!-- Grid 1: Categorias + Bairros -->
       <div class="rel-section">
         <div class="rel-section-title">Distribuição</div>
         <div class="g2">
           <div class="card">
             <div class="card-title">Por categoria</div>
-            ${cats.slice(0, 8).map(([lbl, n]) => `
-              <div class="bar-row">
-                <span class="bar-label" title="${lbl}">${lbl}</span>
-                <div class="bar-track">
-                  <div class="bar-fill" style="width:${Math.round(n/maxCat*100)}%;background:var(--purple)"></div>
-                </div>
-                <span class="bar-val">${fmt(n)}</span>
-                <span class="bar-pct">${pct(n, total)}</span>
-              </div>`).join('')}
+            <table class="reg-table">
+              <thead>
+                <tr>
+                  <th>Categoria</th>
+                  <th>Total</th>
+                  <th>%</th>
+                  <th>Concluídos</th>
+                  <th>Em Atraso</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${cats.map(([cat, n]) => `
+                  <tr>
+                    <td>${cat}</td>
+                    <td>${fmt(n)}</td>
+                    <td>${pct(n, total)}</td>
+                    <td style="color:var(--green)">${fmt(catOkMap[cat] || 0)}</td>
+                    <td style="color:${(catArMap[cat]||0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(catArMap[cat]||0) > 0 ? fmt(catArMap[cat]) : '—'}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+          <div class="card">
+            <div class="card-title">Top bairros</div>
+            <table class="reg-table">
+              <thead>
+                <tr>
+                  <th>Bairro</th>
+                  <th>Total</th>
+                  <th>%</th>
+                  <th>Concluídos</th>
+                  <th>Em Atraso</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${bairros.map(([b, n]) => `
+                  <tr>
+                    <td>${b}</td>
+                    <td>${fmt(n)}</td>
+                    <td>${pct(n, total)}</td>
+                    <td style="color:var(--green)">${fmt(bairroOkMap[b] || 0)}</td>
+                    <td style="color:${(bairroArMap[b]||0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(bairroArMap[b]||0) > 0 ? fmt(bairroArMap[b]) : '—'}</td>
+                  </tr>`).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid 2: Faixas + Regiões -->
+      <div class="rel-section">
+        <div class="rel-section-title">Detalhamento</div>
+        <div class="g2">
+          <div class="card">
+            <div class="card-title">Distribuição por faixa · só concluídos</div>
+            <div style="position:relative;height:180px;margin-bottom:12px">
+              <canvas id="cFaixas"></canvas>
+            </div>
+            <div id="cFaixasLegend" style="display:flex;flex-direction:column;gap:8px"></div>
           </div>
           <div class="card">
             <div class="card-title">Por região</div>
@@ -812,18 +865,6 @@
         </div>
       </div>
 
-      <!-- Tempo médio por categoria -->
-      ${tempoData.length ? `
-      <div class="rel-section">
-        <div class="rel-section-title">Tempo médio de execução</div>
-        <div class="card">
-          <div class="card-title">Por categoria · só concluídos · mín. 3 registros</div>
-          <div class="chart-wrap">
-            <canvas id="cTempo"></canvas>
-          </div>
-        </div>
-      </div>` : ''}
-
       <!-- Observações -->
       <div class="rel-section obs-section">
         <div class="rel-section-title">Observações</div>
@@ -843,46 +884,52 @@
       </div>
     `;
 
-    // ── Gráfico de tempo médio por categoria ──────────────────────────────
-    if (tempoData.length) {
-      const ctx = document.getElementById('cTempo');
-      if (ctx) {
-        charts['cTempo'] = new Chart(ctx, {
-          type: 'bar',
-          indexAxis: 'y',
-          data: {
-            labels: tempoData.map(([l]) => l),
-            datasets: [{
-              data: tempoData.map(([,v]) => v),
-              backgroundColor: tempoData.map(([,v]) =>
-                v > 10 ? COLORS.red : v > 5 ? COLORS.amber : COLORS.blue
-              ),
-              borderRadius: 4,
-            }],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: { display: false },
-              tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.x} dias` } },
-            },
-            scales: {
-              x: {
-                beginAtZero: true,
-                ticks: { color: '#6b6b66', font: { size: 10 }, callback: v => v + 'd' },
-                grid: { color: 'rgba(0,0,0,0.06)' },
-                border: { display: false },
-              },
-              y: {
-                ticks: { color: '#6b6b66', font: { size: 10 } },
-                grid: { display: false },
-                border: { display: false },
-              },
+    // Render donut de faixas (precisa do DOM já montado)
+    renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas);
+
+  } // fim renderRelatorio
+
+  // ── Donut de faixas ───────────────────────────────────────────────────────
+  function renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas) {
+    const ctx = document.getElementById('cFaixas');
+    if (!ctx) return;
+    charts['cFaixas'] = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: faixaOrdem,
+        datasets: [{
+          data: faixaVals,
+          backgroundColor: faixaCores,
+          borderWidth: 2,
+          borderColor: '#ffffff',
+          hoverOffset: 6,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '65%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ` ${ctx.label}: ${fmt(ctx.parsed)} (${pct(ctx.parsed, totalFaixas)})`,
             },
           },
-        });
-      }
+        },
+      },
+    });
+
+    // Legenda externa
+    const leg = document.getElementById('cFaixasLegend');
+    if (leg) {
+      leg.innerHTML = faixaOrdem.map((lbl, i) => `
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="width:9px;height:9px;border-radius:2px;background:${faixaCores[i]};flex-shrink:0"></span>
+          <span style="flex:1;font-size:11px;color:var(--text2)">${lbl}</span>
+          <span style="font-size:11px;color:var(--text3);margin-right:4px">${fmt(faixaVals[i])}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--text);width:36px;text-align:right">${pct(faixaVals[i], totalFaixas)}</span>
+        </div>`).join('');
     }
   }
 
