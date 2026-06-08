@@ -61,6 +61,12 @@ function processCSV(csvText) {
   document.getElementById("app").style.display = "block";
 }
 
+function refreshData() {
+  // Força busca nova ignorando o cache — usado pelo botão Atualizar
+  try { localStorage.removeItem(CACHE_KEY); } catch(e) {}
+  loadData();
+}
+
 function loadData() {
   document.getElementById("loading").style.display = "flex";
   document.getElementById("app").style.display = "none";
@@ -90,7 +96,6 @@ function loadData() {
     header: true,
     skipEmptyLines: true,
     complete(results) {
-      // Guarda CSV raw — muito menor que JSON de objetos (~341KB vs ~3,8MB)
       const csv = Papa.unparse(results.data);
       try {
         localStorage.setItem(
