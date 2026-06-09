@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,23 +11,27 @@
   <style>
     /* ── Variáveis — mesma paleta do dashboard ── */
     :root {
-      --blue:   #378ADD;
-      --green:  #639922;
-      --amber:  #BA7517;
-      --red:    #E24B4A;
+      --blue: #378ADD;
+      --green: #639922;
+      --amber: #BA7517;
+      --red: #E24B4A;
       --purple: #7F77DD;
-      --gray:   #888780;
-      --text:   #1a1a18;
-      --text2:  #555550;
-      --text3:  #888780;
-      --surface:  #ffffff;
+      --gray: #888780;
+      --text: #1a1a18;
+      --text2: #555550;
+      --text3: #888780;
+      --surface: #ffffff;
       --surface2: #f5f5f3;
-      --border:   rgba(0,0,0,0.08);
-      --border2:  rgba(0,0,0,0.12);
+      --border: rgba(0, 0, 0, 0.08);
+      --border2: rgba(0, 0, 0, 0.12);
       --radius: 8px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -83,7 +88,9 @@
       cursor: pointer;
     }
 
-    .btn-print:hover { opacity: 0.88; }
+    .btn-print:hover {
+      opacity: 0.88;
+    }
 
     /* ── Loading ── */
     #loading {
@@ -98,13 +105,19 @@
     }
 
     .spinner {
-      width: 28px; height: 28px;
+      width: 28px;
+      height: 28px;
       border: 2.5px solid var(--border2);
       border-top-color: var(--blue);
       border-radius: 50%;
       animation: spin 0.7s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* ── Relatório ── */
     #relatorio {
@@ -239,7 +252,9 @@
       color: var(--text2);
     }
 
-    .context-box strong { color: var(--text); }
+    .context-box strong {
+      color: var(--text);
+    }
 
     /* Grid 2 colunas */
     .g2 {
@@ -315,7 +330,9 @@
       border-bottom: 1px solid var(--border);
     }
 
-    .reg-table th:first-child { text-align: left; }
+    .reg-table th:first-child {
+      text-align: left;
+    }
 
     .reg-table td {
       padding: 7px 6px;
@@ -324,8 +341,15 @@
       color: var(--text2);
     }
 
-    .reg-table td:first-child { text-align: left; color: var(--text); font-weight: 500; }
-    .reg-table tr:last-child td { border-bottom: none; }
+    .reg-table td:first-child {
+      text-align: left;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .reg-table tr:last-child td {
+      border-bottom: none;
+    }
 
 
     /* Observações */
@@ -366,7 +390,10 @@
       background: var(--surface);
     }
 
-    .obs-textarea:focus { outline: none; border-color: var(--blue); }
+    .obs-textarea:focus {
+      outline: none;
+      border-color: var(--blue);
+    }
 
     .obs-print {
       display: none;
@@ -380,323 +407,395 @@
       min-height: 48px;
     }
 
-    /* Rodapé */
-    .rel-footer {
-      text-align: center;
-      font-size: 10px;
-      color: var(--text3);
-      margin-top: 32px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
-
     /* ── Print ── */
     @media print {
-      body { background: #fff; font-size: 11px; }
+      body {
+        background: #fff;
+        font-size: 11px;
+      }
 
-      .control-bar { display: none !important; }
-      .obs-section .obs-label .obs-badge { display: none; }
-      .obs-textarea { display: none !important; }
-      .obs-print { display: block !important; }
+      .control-bar {
+        display: none !important;
+      }
+
+      .obs-section .obs-label .obs-badge {
+        display: none;
+      }
+
+      .obs-textarea {
+        display: none !important;
+      }
+
+      .obs-print {
+        display: block !important;
+      }
 
       #relatorio {
         margin: 0;
-        padding: 20px 24px 40px;
+        padding: 12px 16px 32px;
         max-width: 100%;
       }
 
-      .kpi-grid { grid-template-columns: repeat(6, 1fr); }
+      /* KPIs compactos */
+      .kpi-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 6px;
+      }
 
-      .card, .kpi {
+      .kpi {
+        padding: 10px 8px;
+      }
+
+      .kpi-label {
+        font-size: 8px;
+      }
+
+      .kpi-value {
+        font-size: 18px;
+      }
+
+      .kpi-sub {
+        font-size: 9px;
+      }
+
+      /* Tabelas compactas — resolve coluna cortada */
+      .reg-table {
+        font-size: 9px;
+        width: 100%;
+      }
+
+      .reg-table th {
+        padding: 3px 2px;
+        white-space: nowrap;
+      }
+
+      .reg-table td {
+        padding: 4px 2px;
+        white-space: nowrap;
+      }
+
+      .reg-table td:first-child {
+        white-space: normal;
+      }
+
+      /* Cards sem quebra interna */
+      .card {
         border: 1px solid #ddd;
         break-inside: avoid;
       }
 
-      .g2 { break-inside: avoid; }
+      .kpi {
+        border: 1px solid #ddd;
+      }
 
-      .chart-wrap { height: 160px; }
+      /* Grids: permite quebrar entre páginas mas não dentro do card */
+      .g2 {
+        break-inside: auto;
+      }
 
-      .rel-footer { margin-top: 20px; }
+      /* Seções: não força quebra, só evita cortar no meio */
+      .rel-section {
+        break-inside: avoid;
+      }
+
+      /* Observações: some no print se vazia */
+      .obs-section {
+        break-before: auto;
+      }
+
+      .obs-vazia {
+        display: none !important;
+      }
+
+      .rel-header {
+        padding: 16px 20px;
+      }
+
+      .context-box {
+        font-size: 11px;
+        padding: 8px 12px;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<!-- Barra de controle -->
-<div class="control-bar">
-  <a href="index.html" class="control-bar-brand" style="text-decoration:none;color:inherit">← DIP · Seconser</a>
-  <label>Mês de referência</label>
-  <select id="selMes">
-    <option value="">Carregando…</option>
-  </select>
-  <button class="btn-print" onclick="window.print()">⎙ Imprimir / PDF</button>
-</div>
+  <!-- Barra de controle -->
+  <div class="control-bar">
+    <a href="index.html" class="control-bar-brand" style="text-decoration:none;color:inherit">← DIP · Seconser</a>
+    <label>Mês de referência</label>
+    <select id="selMes">
+      <option value="">Carregando…</option>
+    </select>
+    <button class="btn-print" onclick="window.print()">⎙ Imprimir / PDF</button>
+  </div>
 
-<!-- Loading -->
-<div id="loading">
-  <div class="spinner"></div>
-  <span>Carregando dados…</span>
-</div>
+  <!-- Loading -->
+  <div id="loading">
+    <div class="spinner"></div>
+    <span>Carregando dados…</span>
+  </div>
 
-<!-- Relatório -->
-<div id="relatorio"></div>
+  <!-- Relatório -->
+  <div id="relatorio"></div>
 
-<!-- Scripts do dashboard -->
-<script>
-  // ── Inline de config.js e utils.js para standalone ──────────────────────
-  const CSV_URL = 'https://script.google.com/macros/s/AKfycbxuYGEryQj26BBs_9ocypkJGokMaOJXk4Bq6T47rEUMi823AvKZ1SB4oztNpG7KVH6V1Q/exec?token=seconser2026dip';
-  const CACHE_TTL_MS = 30 * 60 * 1000;
-  const CACHE_KEY = 'dip_csv_v2';
-  let allRows = [];
-  let charts = {};
+  <!-- Scripts do dashboard -->
+  <script>
+    // ── Inline de config.js e utils.js para standalone ──────────────────────
+    const CSV_URL = 'https://script.google.com/macros/s/AKfycbxuYGEryQj26BBs_9ocypkJGokMaOJXk4Bq6T47rEUMi823AvKZ1SB4oztNpG7KVH6V1Q/exec?token=seconser2026dip';
+    const CACHE_TTL_MS = 30 * 60 * 1000;
+    const CACHE_KEY = 'dip_csv_v2';
+    let allRows = [];
+    let charts = {};
 
-  function fmt(n) {
-    return Number(n).toLocaleString('pt-BR');
-  }
-  function fmtDec(n, casas) {
-    return Number(n).toLocaleString('pt-BR', {
-      minimumFractionDigits: casas ?? 1,
-      maximumFractionDigits: casas ?? 1,
-    });
-  }
-  function pct(a, b) {
-    if (!b) return '—';
-    return fmtDec((a / b) * 100) + '%';
-  }
-  function parseDate(s) {
-    if (!s) return null;
-    const p = s.split('/');
-    if (p.length === 3) return new Date(+p[2], +p[1] - 1, +p[0]);
-    return new Date(s);
-  }
-  function mesLabel(d) {
-    const m = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-    return m[d.getMonth()] + '/' + String(d.getFullYear()).slice(2);
-  }
-  function mesKey(d) {
-    return d.getFullYear() * 100 + d.getMonth();
-  }
-
-  const HEADER_MAP = {
-    'ID Colab':'ID Colab','Categoria':'Categoria','Bairro':'Bairro',
-    'Regi\u00e3o':'Região','RegiÃ£o':'Região',
-    'Data Sa\u00edda':'Data Saída','Data SaÃ\xadda':'Data Saída',
-    'Data Retorno':'Data Retorno','Prazo':'Prazo',
-    'Situa\u00e7\u00e3o':'Situação','SituaÃ§Ã£o':'Situação',
-    'Dias Execu\u00e7\u00e3o':'Dias Execução','Dias ExecuÃ§Ã£o':'Dias Execução',
-    'Faixa Execu\u00e7\u00e3o':'Faixa Execução','Faixa ExecuÃ§Ã£o':'Faixa Execução',
-    'Ocorr\u00eancias':'Ocorrências','OcorrÃªncias':'Ocorrências',
-    'Latitude':'Latitude','Longitude':'Longitude',
-  };
-
-  function normalizeRow(row) {
-    const out = {};
-    Object.keys(row).forEach(k => {
-      const clean = HEADER_MAP[k.trim()] || k.trim();
-      out[clean] = row[k];
-    });
-    const retorno = (out['Data Retorno'] || '').trim();
-    if (retorno) {
-      out['Situação'] = 'OK';
-    } else {
-      const prazo = parseDate(out['Prazo']);
-      const hoje = new Date(); hoje.setHours(0,0,0,0);
-      out['Situação'] = (prazo && !isNaN(prazo) && hoje > prazo) ? 'Em Atraso' : 'Em Atendimento';
+    function fmt(n) {
+      return Number(n).toLocaleString('pt-BR');
     }
-    return out;
-  }
-
-  function loadData() {
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (raw) {
-        const { ts, url, csv } = JSON.parse(raw);
-        if (url === CSV_URL && (Date.now() - ts) < CACHE_TTL_MS && csv) {
-          processCSV(csv); return;
-        }
-      }
-    } catch(e) {}
-
-    Papa.parse(CSV_URL, {
-      download: true, header: true, skipEmptyLines: true,
-      complete(results) {
-        const csv = Papa.unparse(results.data);
-        try {
-          localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), url: CSV_URL, csv }));
-        } catch(e) {}
-        allRows = results.data.map(normalizeRow);
-        onDataLoaded();
-      },
-      error(err) {
-        document.getElementById('loading').innerHTML =
-          '<span style="color:var(--red)">Erro ao carregar dados: ' + err.message + '</span>';
-      },
-    });
-  }
-
-  function processCSV(csvText) {
-    const results = Papa.parse(csvText, { header: true, skipEmptyLines: true });
-    allRows = results.data.map(normalizeRow);
-    onDataLoaded();
-  }
-
-  // ── Após carregar dados ──────────────────────────────────────────────────
-  function onDataLoaded() {
-    document.getElementById('loading').style.display = 'none';
-
-    // Monta lista de meses anteriores ao atual
-    const hoje = new Date();
-    const mesAtual = mesKey(hoje);
-    const mesesMap = {};
-
-    allRows.forEach(r => {
-      const d = parseDate(r['Data Saída']);
-      if (!d || isNaN(d)) return;
-      const k = mesKey(d);
-      if (k >= mesAtual) return; // exclui mês corrente
-      if (!mesesMap[k]) mesesMap[k] = mesLabel(d);
-    });
-
-    const meses = Object.entries(mesesMap).sort((a, b) => +b[0] - +a[0]); // mais recente primeiro
-
-    const sel = document.getElementById('selMes');
-    sel.innerHTML = '<option value="">Selecione o mês…</option>';
-    meses.forEach(([k, lbl]) => {
-      const opt = document.createElement('option');
-      opt.value = k; opt.textContent = lbl;
-      sel.appendChild(opt);
-    });
-
-    sel.addEventListener('change', () => {
-      if (sel.value) renderRelatorio(+sel.value, mesesMap);
-      else document.getElementById('relatorio').style.display = 'none';
-    });
-
-    // Seleciona automaticamente o mês mais recente
-    if (meses.length) {
-      sel.value = meses[0][0];
-      renderRelatorio(+meses[0][0], mesesMap);
+    function fmtDec(n, casas) {
+      return Number(n).toLocaleString('pt-BR', {
+        minimumFractionDigits: casas ?? 1,
+        maximumFractionDigits: casas ?? 1,
+      });
     }
-  }
+    function pct(a, b) {
+      if (!b) return '—';
+      return fmtDec((a / b) * 100) + '%';
+    }
+    function parseDate(s) {
+      if (!s) return null;
+      const p = s.split('/');
+      if (p.length === 3) return new Date(+p[2], +p[1] - 1, +p[0]);
+      return new Date(s);
+    }
+    function mesLabel(d) {
+      const m = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+      return m[d.getMonth()] + '/' + String(d.getFullYear()).slice(2);
+    }
+    function mesKey(d) {
+      return d.getFullYear() * 100 + d.getMonth();
+    }
 
-  function renderRelatorio(mesK, mesesMap) {
-    // Destrói charts anteriores
-    Object.values(charts).forEach(c => c.destroy());
-    charts = {};
-    const rel = document.getElementById('relatorio');
-    rel.style.display = 'block';
-
-    const ano  = Math.floor(mesK / 100);
-    const mes  = mesK % 100;
-    const lbl  = mesesMap[mesK];
-
-    // Filtra linhas do mês selecionado (por Data Saída)
-    const rowsMes = allRows.filter(r => {
-      const d = parseDate(r['Data Saída']);
-      return d && !isNaN(d) && d.getFullYear() === ano && d.getMonth() === mes;
-    });
-
-    // Mês anterior para contexto de saldo
-    const mesAnteriorK = mes === 0
-      ? (ano - 1) * 100 + 11
-      : ano * 100 + (mes - 1);
-    const lblAnterior = mesesMap[mesAnteriorK] || null;
-
-    // Saldo acumulado até o fim do mês anterior
-    // = total de serviços abertos (sem Data Retorno) cujo Data Saída <= último dia do mês anterior
-    const ultimoDiaMesAnterior = new Date(ano, mes, 0); // último dia do mês anterior
-    ultimoDiaMesAnterior.setHours(23,59,59,999);
-    const saldoAnterior = allRows.filter(r => {
-      const saida = parseDate(r['Data Saída']);
-      if (!saida || isNaN(saida) || saida > ultimoDiaMesAnterior) return false;
-      const retorno = parseDate(r['Data Retorno']);
-      // aberto = sem retorno, ou retorno após o fim do mês anterior
-      return !retorno || isNaN(retorno) || retorno > ultimoDiaMesAnterior;
-    }).length;
-
-    // Métricas do mês
-    const total     = rowsMes.length;
-    const concluidos = rowsMes.filter(r => r['Situação'] === 'OK').length;
-    const abertos   = rowsMes.filter(r => r['Situação'] !== 'OK').length;
-
-    // Concluídos no prazo (Dias Execução <= 5, só OK)
-    const okRows = rowsMes.filter(r => r['Situação'] === 'OK');
-    const diasVals = okRows.map(r =>
-      parseFloat((r['Dias Execução'] || '').toString().replace(',', '.'))
-    ).filter(v => !isNaN(v) && v >= 0);
-
-    const noPrazo  = diasVals.filter(v => v <= 5).length;
-    const media    = diasVals.length ? diasVals.reduce((a,b) => a+b, 0) / diasVals.length : 0;
-
-    // Reaberturas
-    const seen = new Map();
-    rowsMes.forEach(r => {
-      const id = r['ID Colab'];
-      const occ = parseInt(r['Ocorrências'] || 1);
-      if (!seen.has(id)) seen.set(id, occ);
-    });
-    let reabIds = 0, reabTotal = 0;
-    seen.forEach(occ => { if (occ > 1) { reabIds++; reabTotal += occ - 1; } });
-
-    // Distribuição por categoria com OK e Atraso
-    const catMap = {};
-    const catOkMap = {}, catArMap = {};
-    rowsMes.forEach(r => {
-      const c = (r['Categoria'] || '').trim();
-      if (!c) return;
-      catMap[c] = (catMap[c] || 0) + 1;
-      if (r['Situação'] === 'OK') catOkMap[c] = (catOkMap[c] || 0) + 1;
-      if (r['Situação'] === 'Em Atraso') catArMap[c] = (catArMap[c] || 0) + 1;
-    });
-    const cats = Object.entries(catMap).sort((a,b) => b[1]-a[1]);
-
-    // Distribuição por região
-    const regMap = {};
-    const regOkMap = {}, regArMap = {};
-    rowsMes.forEach(r => {
-      const reg = (r['Região'] || '').trim();
-      if (!reg) return;
-      regMap[reg] = (regMap[reg] || 0) + 1;
-      if (r['Situação'] === 'OK') regOkMap[reg] = (regOkMap[reg] || 0) + 1;
-      if (r['Situação'] === 'Em Atraso') regArMap[reg] = (regArMap[reg] || 0) + 1;
-    });
-    const regs = Object.entries(regMap).sort((a,b) => b[1]-a[1]);
-
-    // Top bairros com OK e Atraso
-    const bairroMap = {};
-    const bairroOkMap = {}, bairroArMap = {};
-    rowsMes.forEach(r => {
-      const b = (r['Bairro'] || '').trim();
-      if (!b) return;
-      bairroMap[b] = (bairroMap[b] || 0) + 1;
-      if (r['Situação'] === 'OK') bairroOkMap[b] = (bairroOkMap[b] || 0) + 1;
-      if (r['Situação'] === 'Em Atraso') bairroArMap[b] = (bairroArMap[b] || 0) + 1;
-    });
-    const bairros = Object.entries(bairroMap).sort((a,b) => b[1]-a[1]).slice(0, 10);
-
-    // Faixas de execução
-    const faixaKeyMap = {
-      '1. Até 3 dias': 'Até 3 dias',
-      '2. 4 a 7 dias': '4 a 7 dias',
-      '3. 8 a 15 dias': '8 a 15 dias',
-      '4. Mais de 15 dias': 'Mais de 15 dias',
+    const HEADER_MAP = {
+      'ID Colab': 'ID Colab', 'Categoria': 'Categoria', 'Bairro': 'Bairro',
+      'Regi\u00e3o': 'Região', 'RegiÃ£o': 'Região',
+      'Data Sa\u00edda': 'Data Saída', 'Data SaÃ\xadda': 'Data Saída',
+      'Data Retorno': 'Data Retorno', 'Prazo': 'Prazo',
+      'Situa\u00e7\u00e3o': 'Situação', 'SituaÃ§Ã£o': 'Situação',
+      'Dias Execu\u00e7\u00e3o': 'Dias Execução', 'Dias ExecuÃ§Ã£o': 'Dias Execução',
+      'Faixa Execu\u00e7\u00e3o': 'Faixa Execução', 'Faixa ExecuÃ§Ã£o': 'Faixa Execução',
+      'Ocorr\u00eancias': 'Ocorrências', 'OcorrÃªncias': 'Ocorrências',
+      'Latitude': 'Latitude', 'Longitude': 'Longitude',
     };
-    const faixaOrdem = ['Até 3 dias', '4 a 7 dias', '8 a 15 dias', 'Mais de 15 dias'];
-    const faixaCores = ['#639922', '#378ADD', '#BA7517', '#E24B4A'];
-    const faixaMap = { 'Até 3 dias': 0, '4 a 7 dias': 0, '8 a 15 dias': 0, 'Mais de 15 dias': 0 };
-    okRows.forEach(r => {
-      const f = faixaKeyMap[(r['Faixa Execução'] || '').trim()];
-      if (f) faixaMap[f]++;
-    });
-    const faixaVals = faixaOrdem.map(k => faixaMap[k]);
-    const totalFaixas = faixaVals.reduce((a,b) => a+b, 0);
 
-    // ── Monta HTML ──────────────────────────────────────────────────────────
-    const dataGeracao = new Date().toLocaleDateString('pt-BR', {
-      day: '2-digit', month: 'long', year: 'numeric'
-    });
+    function normalizeRow(row) {
+      const out = {};
+      Object.keys(row).forEach(k => {
+        const clean = HEADER_MAP[k.trim()] || k.trim();
+        out[clean] = row[k];
+      });
+      const retorno = (out['Data Retorno'] || '').trim();
+      if (retorno) {
+        out['Situação'] = 'OK';
+      } else {
+        const prazo = parseDate(out['Prazo']);
+        const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+        out['Situação'] = (prazo && !isNaN(prazo) && hoje > prazo) ? 'Em Atraso' : 'Em Atendimento';
+      }
+      return out;
+    }
 
-    rel.innerHTML = `
+    function loadData() {
+      try {
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (raw) {
+          const { ts, url, csv } = JSON.parse(raw);
+          if (url === CSV_URL && (Date.now() - ts) < CACHE_TTL_MS && csv) {
+            processCSV(csv); return;
+          }
+        }
+      } catch (e) { }
+
+      Papa.parse(CSV_URL, {
+        download: true, header: true, skipEmptyLines: true,
+        complete(results) {
+          const csv = Papa.unparse(results.data);
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), url: CSV_URL, csv }));
+          } catch (e) { }
+          allRows = results.data.map(normalizeRow);
+          onDataLoaded();
+        },
+        error(err) {
+          document.getElementById('loading').innerHTML =
+            '<span style="color:var(--red)">Erro ao carregar dados: ' + err.message + '</span>';
+        },
+      });
+    }
+
+    function processCSV(csvText) {
+      const results = Papa.parse(csvText, { header: true, skipEmptyLines: true });
+      allRows = results.data.map(normalizeRow);
+      onDataLoaded();
+    }
+
+    // ── Após carregar dados ──────────────────────────────────────────────────
+    function onDataLoaded() {
+      document.getElementById('loading').style.display = 'none';
+
+      // Monta lista de meses anteriores ao atual
+      const hoje = new Date();
+      const mesAtual = mesKey(hoje);
+      const mesesMap = {};
+
+      allRows.forEach(r => {
+        const d = parseDate(r['Data Saída']);
+        if (!d || isNaN(d)) return;
+        const k = mesKey(d);
+        if (k >= mesAtual) return; // exclui mês corrente
+        if (!mesesMap[k]) mesesMap[k] = mesLabel(d);
+      });
+
+      const meses = Object.entries(mesesMap).sort((a, b) => +b[0] - +a[0]); // mais recente primeiro
+
+      const sel = document.getElementById('selMes');
+      sel.innerHTML = '<option value="">Selecione o mês…</option>';
+      meses.forEach(([k, lbl]) => {
+        const opt = document.createElement('option');
+        opt.value = k; opt.textContent = lbl;
+        sel.appendChild(opt);
+      });
+
+      sel.addEventListener('change', () => {
+        if (sel.value) renderRelatorio(+sel.value, mesesMap);
+        else document.getElementById('relatorio').style.display = 'none';
+      });
+
+      // Seleciona automaticamente o mês mais recente
+      if (meses.length) {
+        sel.value = meses[0][0];
+        renderRelatorio(+meses[0][0], mesesMap);
+      }
+    }
+
+    function renderRelatorio(mesK, mesesMap) {
+      // Destrói charts anteriores
+      Object.values(charts).forEach(c => c.destroy());
+      charts = {};
+      const rel = document.getElementById('relatorio');
+      rel.style.display = 'block';
+
+      const ano = Math.floor(mesK / 100);
+      const mes = mesK % 100;
+      const lbl = mesesMap[mesK];
+
+      // Filtra linhas do mês selecionado (por Data Saída)
+      const rowsMes = allRows.filter(r => {
+        const d = parseDate(r['Data Saída']);
+        return d && !isNaN(d) && d.getFullYear() === ano && d.getMonth() === mes;
+      });
+
+      // Mês anterior para contexto de saldo
+      const mesAnteriorK = mes === 0
+        ? (ano - 1) * 100 + 11
+        : ano * 100 + (mes - 1);
+      const lblAnterior = mesesMap[mesAnteriorK] || null;
+
+      // Saldo acumulado até o fim do mês anterior
+      // = total de serviços abertos (sem Data Retorno) cujo Data Saída <= último dia do mês anterior
+      const ultimoDiaMesAnterior = new Date(ano, mes, 0); // último dia do mês anterior
+      ultimoDiaMesAnterior.setHours(23, 59, 59, 999);
+      const saldoAnterior = allRows.filter(r => {
+        const saida = parseDate(r['Data Saída']);
+        if (!saida || isNaN(saida) || saida > ultimoDiaMesAnterior) return false;
+        const retorno = parseDate(r['Data Retorno']);
+        // aberto = sem retorno, ou retorno após o fim do mês anterior
+        return !retorno || isNaN(retorno) || retorno > ultimoDiaMesAnterior;
+      }).length;
+
+      // Métricas do mês
+      const total = rowsMes.length;
+      const concluidos = rowsMes.filter(r => r['Situação'] === 'OK').length;
+      const abertos = rowsMes.filter(r => r['Situação'] !== 'OK').length;
+
+      // Concluídos no prazo (Dias Execução <= 5, só OK)
+      const okRows = rowsMes.filter(r => r['Situação'] === 'OK');
+      const diasVals = okRows.map(r =>
+        parseFloat((r['Dias Execução'] || '').toString().replace(',', '.'))
+      ).filter(v => !isNaN(v) && v >= 0);
+
+      const noPrazo = diasVals.filter(v => v <= 5).length;
+      const media = diasVals.length ? diasVals.reduce((a, b) => a + b, 0) / diasVals.length : 0;
+
+      // Reaberturas
+      const seen = new Map();
+      rowsMes.forEach(r => {
+        const id = r['ID Colab'];
+        const occ = parseInt(r['Ocorrências'] || 1);
+        if (!seen.has(id)) seen.set(id, occ);
+      });
+      let reabIds = 0, reabTotal = 0;
+      seen.forEach(occ => { if (occ > 1) { reabIds++; reabTotal += occ - 1; } });
+
+      // Distribuição por categoria com OK e Atraso
+      const catMap = {};
+      const catOkMap = {}, catArMap = {};
+      rowsMes.forEach(r => {
+        const c = (r['Categoria'] || '').trim();
+        if (!c) return;
+        catMap[c] = (catMap[c] || 0) + 1;
+        if (r['Situação'] === 'OK') catOkMap[c] = (catOkMap[c] || 0) + 1;
+        if (r['Situação'] === 'Em Atraso') catArMap[c] = (catArMap[c] || 0) + 1;
+      });
+      const cats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+
+      // Distribuição por região
+      const regMap = {};
+      const regOkMap = {}, regArMap = {};
+      rowsMes.forEach(r => {
+        const reg = (r['Região'] || '').trim();
+        if (!reg) return;
+        regMap[reg] = (regMap[reg] || 0) + 1;
+        if (r['Situação'] === 'OK') regOkMap[reg] = (regOkMap[reg] || 0) + 1;
+        if (r['Situação'] === 'Em Atraso') regArMap[reg] = (regArMap[reg] || 0) + 1;
+      });
+      const regs = Object.entries(regMap).sort((a, b) => b[1] - a[1]);
+
+      // Top bairros com OK e Atraso
+      const bairroMap = {};
+      const bairroOkMap = {}, bairroArMap = {};
+      rowsMes.forEach(r => {
+        const b = (r['Bairro'] || '').trim();
+        if (!b) return;
+        bairroMap[b] = (bairroMap[b] || 0) + 1;
+        if (r['Situação'] === 'OK') bairroOkMap[b] = (bairroOkMap[b] || 0) + 1;
+        if (r['Situação'] === 'Em Atraso') bairroArMap[b] = (bairroArMap[b] || 0) + 1;
+      });
+      const bairros = Object.entries(bairroMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+      // Faixas de execução
+      const faixaKeyMap = {
+        '1. Até 3 dias': 'Até 3 dias',
+        '2. 4 a 7 dias': '4 a 7 dias',
+        '3. 8 a 15 dias': '8 a 15 dias',
+        '4. Mais de 15 dias': 'Mais de 15 dias',
+      };
+      const faixaOrdem = ['Até 3 dias', '4 a 7 dias', '8 a 15 dias', 'Mais de 15 dias'];
+      const faixaCores = ['#639922', '#378ADD', '#BA7517', '#E24B4A'];
+      const faixaMap = { 'Até 3 dias': 0, '4 a 7 dias': 0, '8 a 15 dias': 0, 'Mais de 15 dias': 0 };
+      okRows.forEach(r => {
+        const f = faixaKeyMap[(r['Faixa Execução'] || '').trim()];
+        if (f) faixaMap[f]++;
+      });
+      const faixaVals = faixaOrdem.map(k => faixaMap[k]);
+      const totalFaixas = faixaVals.reduce((a, b) => a + b, 0);
+
+      // ── Monta HTML ──────────────────────────────────────────────────────────
+      const dataGeracao = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit', month: 'long', year: 'numeric'
+      });
+
+      rel.innerHTML = `
       <!-- Cabeçalho -->
       <div class="rel-header">
         <div>
@@ -795,7 +894,7 @@
                     <td>${fmt(n)}</td>
                     <td>${pct(n, total)}</td>
                     <td style="color:var(--green)">${fmt(catOkMap[cat] || 0)}</td>
-                    <td style="color:${(catArMap[cat]||0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(catArMap[cat]||0) > 0 ? fmt(catArMap[cat]) : '—'}</td>
+                    <td style="color:${(catArMap[cat] || 0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(catArMap[cat] || 0) > 0 ? fmt(catArMap[cat]) : '—'}</td>
                   </tr>`).join('')}
               </tbody>
             </table>
@@ -819,7 +918,7 @@
                     <td>${fmt(n)}</td>
                     <td>${pct(n, total)}</td>
                     <td style="color:var(--green)">${fmt(bairroOkMap[b] || 0)}</td>
-                    <td style="color:${(bairroArMap[b]||0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(bairroArMap[b]||0) > 0 ? fmt(bairroArMap[b]) : '—'}</td>
+                    <td style="color:${(bairroArMap[b] || 0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(bairroArMap[b] || 0) > 0 ? fmt(bairroArMap[b]) : '—'}</td>
                   </tr>`).join('')}
               </tbody>
             </table>
@@ -857,7 +956,7 @@
                     <td>${fmt(n)}</td>
                     <td>${pct(n, total)}</td>
                     <td style="color:var(--green)">${fmt(regOkMap[reg] || 0)}</td>
-                    <td style="color:${(regArMap[reg]||0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(regArMap[reg]||0) > 0 ? fmt(regArMap[reg]) : '—'}</td>
+                    <td style="color:${(regArMap[reg] || 0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(regArMap[reg] || 0) > 0 ? fmt(regArMap[reg]) : '—'}</td>
                   </tr>`).join('')}
               </tbody>
             </table>
@@ -879,62 +978,71 @@
       </div>
 
       <!-- Rodapé -->
-      <div class="rel-footer">
-        Departamento de Iluminação Pública · Seconser Niterói · Relatório gerado em ${dataGeracao}
-      </div>
     `;
 
-    // Render donut de faixas (precisa do DOM já montado)
-    renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas);
+      // Render donut de faixas (precisa do DOM já montado)
+      renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas);
 
-  } // fim renderRelatorio
+    } // fim renderRelatorio
 
-  // ── Donut de faixas ───────────────────────────────────────────────────────
-  function renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas) {
-    const ctx = document.getElementById('cFaixas');
-    if (!ctx) return;
-    charts['cFaixas'] = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: faixaOrdem,
-        datasets: [{
-          data: faixaVals,
-          backgroundColor: faixaCores,
-          borderWidth: 2,
-          borderColor: '#ffffff',
-          hoverOffset: 6,
-        }],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '65%',
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => ` ${ctx.label}: ${fmt(ctx.parsed)} (${pct(ctx.parsed, totalFaixas)})`,
+    // ── Donut de faixas ───────────────────────────────────────────────────────
+    function renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas) {
+      const ctx = document.getElementById('cFaixas');
+      if (!ctx) return;
+      charts['cFaixas'] = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: faixaOrdem,
+          datasets: [{
+            data: faixaVals,
+            backgroundColor: faixaCores,
+            borderWidth: 2,
+            borderColor: '#ffffff',
+            hoverOffset: 6,
+          }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '65%',
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ` ${ctx.label}: ${fmt(ctx.parsed)} (${pct(ctx.parsed, totalFaixas)})`,
+              },
             },
           },
         },
-      },
-    });
+      });
 
-    // Legenda externa
-    const leg = document.getElementById('cFaixasLegend');
-    if (leg) {
-      leg.innerHTML = faixaOrdem.map((lbl, i) => `
+      // Legenda externa
+      const leg = document.getElementById('cFaixasLegend');
+      if (leg) {
+        leg.innerHTML = faixaOrdem.map((lbl, i) => `
         <div style="display:flex;align-items:center;gap:6px">
           <span style="width:9px;height:9px;border-radius:2px;background:${faixaCores[i]};flex-shrink:0"></span>
           <span style="flex:1;font-size:11px;color:var(--text2)">${lbl}</span>
           <span style="font-size:11px;color:var(--text3);margin-right:4px">${fmt(faixaVals[i])}</span>
           <span style="font-size:12px;font-weight:600;color:var(--text);width:36px;text-align:right">${pct(faixaVals[i], totalFaixas)}</span>
         </div>`).join('');
+      }
     }
-  }
 
-  // Inicia
-  loadData();
-</script>
+    // Esconde seção de observações no print se vazia
+    window.addEventListener('beforeprint', () => {
+      const obs = document.getElementById('obsText');
+      const sec = document.querySelector('.obs-section');
+      if (sec) sec.classList.toggle('obs-vazia', !obs || !obs.value.trim());
+    });
+    window.addEventListener('afterprint', () => {
+      const sec = document.querySelector('.obs-section');
+      if (sec) sec.classList.remove('obs-vazia');
+    });
+
+    // Inicia
+    loadData();
+  </script>
 </body>
+
 </html>
