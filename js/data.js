@@ -63,7 +63,9 @@ function processCSV(csvText) {
 
 function refreshData() {
   // Força busca nova ignorando o cache — usado pelo botão Atualizar
-  try { localStorage.removeItem(CACHE_KEY); } catch(e) {}
+  try {
+    localStorage.removeItem(CACHE_KEY);
+  } catch (e) {}
   loadData();
 }
 
