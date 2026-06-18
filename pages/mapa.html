@@ -229,7 +229,7 @@
           <span class="panel-bar-label" title="${lbl}">${lbl}</span>
           <div class="panel-bar-track"><div class="panel-bar-fill" style="width:${Math.round(n/maxReg*100)}%;background:var(--amber)"></div></div>
           <span class="panel-bar-val">${n}</span>
-          <span style="font-size:10px;color:var(--red);width:48px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums">${v.ar > 0 ? v.ar+' atr.' : ''}</span>
+          <span class="bar-sub" style="font-size:10px;color:var(--red);width:48px;text-align:right;flex-shrink:0;font-variant-numeric:tabular-nums">${v.ar > 0 ? v.ar+' atr.' : ''}</span>
         </div>`).join('');
 
       const bairroMap = {};
@@ -252,9 +252,9 @@
           <div style="padding:7px 0;border-bottom:0.5px solid var(--border);font-size:11px">
             <div style="display:flex;justify-content:space-between;align-items:baseline">
               <span style="color:var(--text);font-weight:600">${r['Categoria']||'—'}</span>
-              <span style="color:var(--red);font-weight:700">${r._dias}d</span>
+              <span class="bar-val" style="color:var(--red);font-weight:700">${r._dias}d</span>
             </div>
-            <div style="color:var(--text2);margin-top:2px">${r['Bairro']||'—'} · ID ${r['ID Colab']||'—'}</div>
+            <div class="bar-sub" style="color:var(--text2);margin-top:2px">${r['Bairro']||'—'} · ID ${r['ID Colab']||'—'}</div>
           </div>`).join('')
         : '<div style="font-size:11px;color:var(--text3)">Nenhum serviço em atraso.</div>';
 
