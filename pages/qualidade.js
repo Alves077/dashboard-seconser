@@ -1,14 +1,5 @@
 // ─── Qualidade ────────────────────────────────────────────────────────────────
 
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-function setHTML(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = val;
-}
-
 function populateFilters() {}
 
 function onDataLoaded() {
@@ -131,8 +122,8 @@ function render(rows) {
         <div class="bar-track">
           <div class="bar-fill" style="width:${fillPct.toFixed(0)}%;background:${cor}"></div>
         </div>
-        <span class="bar-n" style="color:${cor};font-weight:600;width:38px">${fmtDec(txAr)}%</span>
-        <span style="font-size:10px;color:var(--text3);width:80px;text-align:right;flex-shrink:0">${regAr > 0 ? fmt(regAr) + " em atraso" : "nenhum em atraso"}</span>
+        <span class="bar-val" style="color:${cor};font-weight:600;width:38px">${fmtDec(txAr)}%</span>
+        <span class="bar-sub" style="font-size:10px;color:var(--text3);width:80px;text-align:right;flex-shrink:0">${regAr > 0 ? fmt(regAr) + " em atraso" : "nenhum em atraso"}</span>
       </div>`;
       })
       .join(""),
@@ -189,8 +180,8 @@ function render(rows) {
         <div class="bar-track">
           <div class="bar-fill" style="width:${fillPct.toFixed(0)}%;background:${cor}"></div>
         </div>
-        <span class="bar-n" style="color:${cor};font-weight:600;width:38px">${fmtDec(taxa)}%</span>
-        <span style="font-size:10px;color:var(--text3);width:72px;text-align:right;flex-shrink:0">${fmt(reab)} reaberto${reab !== 1 ? "s" : ""}</span>
+        <span class="bar-val" style="color:${cor};font-weight:600;width:38px">${fmtDec(taxa)}%</span>
+        <span class="bar-sub" style="font-size:10px;color:var(--text3);width:72px;text-align:right;flex-shrink:0">${fmt(reab)} reaberto${reab !== 1 ? "s" : ""}</span>
       </div>`;
           })
           .join("")
@@ -367,7 +358,7 @@ function render(rows) {
           .map(
             (n, i) => `
           <div style="flex:1;text-align:center">
-            <span style="display:inline-block;min-width:32px;padding:2px 4px;border-radius:4px;
+            <span class="faixa-cell" style="display:inline-block;min-width:32px;padding:2px 4px;border-radius:4px;
                          font-size:11px;font-weight:${n > 0 ? "600" : "400"};
                          color:${n > 0 ? faixaCores[i] : "var(--text3)"};
                          background:${n > 0 ? faixaCores[i] + "22" : "transparent"}">
@@ -376,7 +367,7 @@ function render(rows) {
           </div>`,
           )
           .join("")}
-        <span style="width:44px;flex-shrink:0;font-size:11px;color:var(--text2);
+        <span class="bar-val" style="width:44px;flex-shrink:0;font-size:11px;color:var(--text2);
                      text-align:right;font-variant-numeric:tabular-nums">${fmt(regTotal)}</span>
       </div>`;
   });

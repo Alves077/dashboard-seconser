@@ -117,3 +117,12 @@ function dateRange(rows) {
     max: new Date(Math.max(...datas)),
   };
 }
+
+function setText(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = val;
+}
+function setHTML(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.innerHTML = val;
+}

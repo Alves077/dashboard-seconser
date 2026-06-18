@@ -1,14 +1,5 @@
 // ─── Tendência ────────────────────────────────────────────────────────────────
 
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-function setHTML(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = val;
-}
-
 function populateFilters() {}
 
 function onDataLoaded() {
@@ -306,7 +297,7 @@ function render(rows) {
           const bg = heatColors(p);
           const col = heatTextColor(p);
           return `<td style="text-align:center;padding:3px 2px">
-          <span style="display:block;padding:3px 2px;border-radius:3px;
+          <span class="heat-cell" style="display:block;padding:3px 2px;border-radius:3px;
                        background:${bg};color:${col};font-weight:${v > 0 ? "500" : "400"}">
             ${v > 0 ? fmt(v) : "—"}
           </span>

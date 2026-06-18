@@ -436,11 +436,3 @@ function render(rows) {
   });
 }
 
-function setText(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.textContent = val;
-}
-function setHTML(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.innerHTML = val;
-}
