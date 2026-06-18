@@ -57,8 +57,7 @@ function processCSV(csvText) {
   });
   allRows = results.data.map(normalizeRow);
   if (typeof onDataLoaded === "function") onDataLoaded();
-  document.getElementById("loading").style.display = "none";
-  document.getElementById("app").style.display = "block";
+  document.getElementById("app").classList.remove("sk-loading");
 }
 
 function refreshData() {
@@ -70,8 +69,9 @@ function refreshData() {
 }
 
 function loadData() {
-  document.getElementById("loading").style.display = "flex";
-  document.getElementById("app").style.display = "none";
+  const appEl = document.getElementById("app");
+  if (appEl) appEl.classList.add("sk-loading");
+  document.getElementById("loading").style.display = "none";
   const errEl = document.getElementById("error-msg");
   if (errEl) {
     errEl.style.display = "none";
@@ -114,11 +114,11 @@ function loadData() {
 
       allRows = results.data.map(normalizeRow);
       if (typeof onDataLoaded === "function") onDataLoaded();
-      document.getElementById("loading").style.display = "none";
-      document.getElementById("app").style.display = "block";
+      document.getElementById("app").classList.remove("sk-loading");
     },
     error(err) {
-      document.getElementById("loading").style.display = "none";
+      if (appEl) appEl.classList.remove("sk-loading");
+      document.getElementById("loading").style.display = "flex";
       if (errEl) {
         errEl.style.display = "block";
         errEl.textContent = "Erro ao carregar dados. (" + err.message + ")";
