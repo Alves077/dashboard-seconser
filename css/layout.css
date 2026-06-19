@@ -40,6 +40,10 @@
   display: block;
   flex-shrink: 0;
 }
+[data-theme="dark"] .topbar-logo {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
 .topbar-brand {
   display: flex;
   align-items: center;
