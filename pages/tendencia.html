@@ -45,6 +45,29 @@
       </div>
     </div>
 
+    <div class="filters">
+      <div class="fg">
+        <label>Período</label>
+        <select id="tFiltPeriodo" onchange="applyFilters()">
+          <option value="0">Todo o período</option>
+          <option value="6">Últimos 6 meses</option>
+          <option value="12">Últimos 12 meses</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Região</label>
+        <select id="tFiltReg" onchange="applyFilters()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Categoria</label>
+        <select id="tFiltCat" onchange="applyFilters()">
+          <option value="">Todas</option>
+        </select>
+      </div>
+    </div>
+
     <div class="page">
 
       <div class="kpis">

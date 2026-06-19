@@ -1,8 +1,30 @@
 // ─── Tendência ────────────────────────────────────────────────────────────────
 
-function populateFilters() {}
+function populateFilters() {
+  const selReg = document.getElementById('tFiltReg');
+  const selCat = document.getElementById('tFiltCat');
+  if (!selReg || !selCat) return;
+
+  selReg.innerHTML = '<option value="">Todas</option>';
+  [...new Set(allRows.map(r => (r['Região']||'').trim()).filter(Boolean))].sort()
+    .forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; selReg.appendChild(o); });
+
+  selCat.innerHTML = '<option value="">Todas</option>';
+  groupBy(allRows, 'Categoria').map(([k]) => k).filter(Boolean)
+    .forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; selCat.appendChild(o); });
+}
+
+function applyFilters() {
+  const reg = document.getElementById('tFiltReg')?.value || '';
+  const cat = document.getElementById('tFiltCat')?.value || '';
+  let rows = allRows;
+  if (reg) rows = rows.filter(r => (r['Região']||'').trim() === reg);
+  if (cat) rows = rows.filter(r => (r['Categoria']||'').trim() === cat);
+  render(rows);
+}
 
 function onDataLoaded() {
+  populateFilters();
   render(allRows);
 }
 
@@ -37,8 +59,10 @@ function render(rows) {
     });
 
   // ── Agrupamento base — por Data Saída ─────────────────────────────────────────
+  const nMeses = parseInt(document.getElementById('tFiltPeriodo')?.value || '0') || 0;
   const mensalRaw = buildMensalMap(rows);
-  const mensalEntries = filtrarMesIncompleto(mensalRaw);
+  const mensalTrimmed = filtrarMesIncompleto(mensalRaw);
+  const mensalEntries = nMeses > 0 ? mensalTrimmed.slice(-nMeses) : mensalTrimmed;
   const labels = mensalEntries.map(([, v]) => v.lbl);
   const volumes = mensalEntries.map(([, v]) => v.rows.length);
 
@@ -189,7 +213,7 @@ function render(rows) {
           display: true,
           position: "bottom",
           labels: {
-            color: "#555550",
+            color: _legendColor(),
             font: { size: 11 },
             boxWidth: 10,
             padding: 14,
@@ -207,15 +231,15 @@ function render(rows) {
       },
       scales: {
         x: {
-          ticks: { color: "#6b6b66", font: { size: 11 }, maxRotation: 0 },
+          ticks: { color: _tickColor(), font: { size: 11 }, maxRotation: 0 },
           grid: { display: false },
           border: { display: false },
           offset: true,
         },
         y: {
           beginAtZero: true,
-          ticks: { color: "#6b6b66", font: { size: 11 } },
-          grid: { color: "rgba(0,0,0,0.06)" },
+          ticks: { color: _tickColor(), font: { size: 11 } },
+          grid: { color: _gridColor() },
           border: { display: false },
         },
         ySaldo: {
@@ -264,7 +288,7 @@ function render(rows) {
     return `rgb(${r},${g},${b})`;
   };
 
-  const heatTextColor = (pct) => (pct > 0.55 ? "#fff" : "var(--text)");
+  const heatTextColor = (pct) => (pct > 0.55 ? "#fff" : "#333");
 
   let heatHTML = `
     <div style="overflow-x:auto">
@@ -350,7 +374,7 @@ function render(rows) {
           display: true,
           position: "bottom",
           labels: {
-            color: "#555550",
+            color: _legendColor(),
             font: { size: 11 },
             boxWidth: 10,
             padding: 14,
@@ -370,7 +394,7 @@ function render(rows) {
       },
       scales: {
         x: {
-          ticks: { color: "#6b6b66", font: { size: 11 }, maxRotation: 0 },
+          ticks: { color: _tickColor(), font: { size: 11 }, maxRotation: 0 },
           grid: { display: false },
           border: { display: false },
           offset: true,
@@ -380,11 +404,11 @@ function render(rows) {
           position: "left",
           beginAtZero: true,
           ticks: {
-            color: "#6b6b66",
+            color: _tickColor(),
             font: { size: 11 },
             callback: (v) => v + "%",
           },
-          grid: { color: "rgba(0,0,0,0.06)" },
+          grid: { color: _gridColor() },
           border: { display: false },
         },
       },
@@ -444,18 +468,18 @@ function render(rows) {
       },
       scales: {
         x: {
-          ticks: { color: "#6b6b66", font: { size: 11 }, maxRotation: 0 },
+          ticks: { color: _tickColor(), font: { size: 11 }, maxRotation: 0 },
           grid: { display: false },
           border: { display: false },
         },
         y: {
           beginAtZero: true,
           ticks: {
-            color: "#6b6b66",
+            color: _tickColor(),
             font: { size: 11 },
             callback: (v) => v + "d",
           },
-          grid: { color: "rgba(0,0,0,0.06)" },
+          grid: { color: _gridColor() },
           border: { display: false },
         },
       },
