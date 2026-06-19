@@ -212,20 +212,7 @@
   <script src="js/filters.js"></script>
   <script src="js/render.js"></script>
   <script src="js/main.js"></script>
-  <script>
-    initTheme();
-    function fixFiltersTop() {
-      const tb = document.querySelector('.topbar');
-      const fl = document.querySelector('.filters');
-      if (tb && fl) fl.style.top = tb.offsetHeight + 'px';
-    }
-    window.addEventListener('resize', fixFiltersTop);
-    window.addEventListener('load', fixFiltersTop);
-    const _appEl = document.getElementById('app');
-    if (_appEl) {
-      new MutationObserver(fixFiltersTop).observe(_appEl, { attributes: true, attributeFilter: ['style'] });
-    }
-  </script>
+  <script>initTheme();</script>
 </body>
 
 </html>

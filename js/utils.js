@@ -211,3 +211,11 @@ function _updateThemeBtn() {
   btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '◑' : '◐';
   btn.title = document.documentElement.getAttribute('data-theme') === 'dark' ? 'Tema claro' : 'Tema escuro';
 }
+
+function fixFiltersTop() {
+  const tb = document.querySelector('.topbar');
+  const fl = document.querySelector('.filters');
+  if (tb && fl) fl.style.top = tb.offsetHeight + 'px';
+}
+window.addEventListener('resize', fixFiltersTop);
+window.addEventListener('load', fixFiltersTop);
