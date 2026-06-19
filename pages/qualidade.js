@@ -1,8 +1,32 @@
 // ─── Qualidade ────────────────────────────────────────────────────────────────
 
-function populateFilters() {}
+function populateFilters() {
+  const selCat = document.getElementById('qFiltCat');
+  if (!selCat) return;
+  selCat.innerHTML = '<option value="">Todas</option>';
+  groupBy(allRows, 'Categoria').map(([k]) => k).filter(Boolean)
+    .forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; selCat.appendChild(o); });
+}
+
+function applyFilters() {
+  const nMeses = parseInt(document.getElementById('qFiltPeriodo')?.value || '0') || 0;
+  const cat = document.getElementById('qFiltCat')?.value || '';
+  let rows = allRows;
+  if (cat) rows = rows.filter(r => (r['Categoria'] || '').trim() === cat);
+  if (nMeses > 0) {
+    const datas = rows.map(r => parseDate(r['Data Saída'])).filter(d => d && !isNaN(d));
+    if (datas.length) {
+      const maxD = new Date(Math.max(...datas));
+      const cutoff = new Date(maxD);
+      cutoff.setMonth(cutoff.getMonth() - nMeses);
+      rows = rows.filter(r => { const d = parseDate(r['Data Saída']); return d && !isNaN(d) && d >= cutoff; });
+    }
+  }
+  render(rows);
+}
 
 function onDataLoaded() {
+  populateFilters();
   render(allRows);
 }
 
@@ -260,21 +284,21 @@ function render(rows) {
       },
       scales: {
         x: {
-          ticks: { color: "#6b6b66", font: { size: 10 }, maxRotation: 0 },
+          ticks: { color: _tickColor(), font: { size: 10 }, maxRotation: 0 },
           grid: { display: false },
           border: { display: false },
           title: {
             display: true,
             text: "Dias de execução",
-            color: "#9e9e98",
+            color: _tickColor(),
             font: { size: 10 },
             padding: { top: 4 },
           },
         },
         y: {
           beginAtZero: true,
-          ticks: { color: "#6b6b66", font: { size: 10 } },
-          grid: { color: "rgba(0,0,0,0.06)" },
+          ticks: { color: _tickColor(), font: { size: 10 } },
+          grid: { color: _gridColor() },
           border: { display: false },
         },
       },
@@ -477,7 +501,7 @@ function render(rows) {
           display: true,
           position: "bottom",
           labels: {
-            color: "#555550",
+            color: _legendColor(),
             font: { size: 11 },
             boxWidth: 10,
             padding: 14,
@@ -497,7 +521,7 @@ function render(rows) {
       },
       scales: {
         x: {
-          ticks: { color: "#6b6b66", font: { size: 11 }, maxRotation: 0 },
+          ticks: { color: _tickColor(), font: { size: 11 }, maxRotation: 0 },
           grid: { display: false },
           border: { display: false },
           offset: true,
@@ -511,7 +535,7 @@ function render(rows) {
             font: { size: 11 },
             callback: (v) => v + "d",
           },
-          grid: { color: "rgba(0,0,0,0.06)" },
+          grid: { color: _gridColor() },
           border: { display: false },
         },
         yCauda: {
