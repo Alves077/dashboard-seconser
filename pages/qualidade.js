@@ -536,5 +536,7 @@ function render(rows) {
   });
 }
 
-// ── Fix do bug: chama loadData() automaticamente ao carregar a página ─────────
+document.getElementById('qFiltPeriodo')?.addEventListener('change', applyFilters);
+document.getElementById('qFiltCat')?.addEventListener('change', applyFilters);
+
 loadData();

@@ -493,4 +493,8 @@ function render(rows) {
   });
 }
 
+document.getElementById('tFiltPeriodo')?.addEventListener('change', applyFilters);
+document.getElementById('tFiltReg')?.addEventListener('change', applyFilters);
+document.getElementById('tFiltCat')?.addEventListener('change', applyFilters);
+
 loadData();
