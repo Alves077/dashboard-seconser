@@ -12,8 +12,14 @@
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .kpi:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+.kpi-at:hover {
+  box-shadow: inset 3px 0 0 var(--amber), 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+.kpi-ar:hover {
+  box-shadow: inset 3px 0 0 var(--red), 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 .kpi-label {
   font-size: 11px;
