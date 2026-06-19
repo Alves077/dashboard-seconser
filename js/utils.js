@@ -208,8 +208,10 @@ function toggleTheme() {
 function _updateThemeBtn() {
   const btn = document.getElementById('themeBtn');
   if (!btn) return;
-  btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '◑' : '◐';
-  btn.title = document.documentElement.getAttribute('data-theme') === 'dark' ? 'Tema claro' : 'Tema escuro';
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  btn.textContent = isDark ? '◑' : '◐';
+  btn.title = isDark ? 'Tema claro' : 'Tema escuro';
+  btn.setAttribute('aria-label', isDark ? 'Tema claro' : 'Tema escuro');
 }
 
 function fixFiltersTop() {

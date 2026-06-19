@@ -41,13 +41,13 @@
       <div class="topbar-right">
         <span class="last-update" id="last-update"></span>
         <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">◐</button>
-        <button class="refresh-btn" onclick="refreshData()">↺ Atualizar</button>
+        <button class="refresh-btn" onclick="refreshData()" aria-label="Atualizar dados">↺ Atualizar</button>
       </div>
     </div>
 
     <div class="filters">
       <div class="fg">
-        <label>Período</label>
+        <label for="tFiltPeriodo">Período</label>
         <select id="tFiltPeriodo">
           <option value="0">Todo o período</option>
           <option value="3">Últimos 3 meses</option>
@@ -56,13 +56,13 @@
         </select>
       </div>
       <div class="fg">
-        <label>Região</label>
+        <label for="tFiltReg">Região</label>
         <select id="tFiltReg">
           <option value="">Todas</option>
         </select>
       </div>
       <div class="fg">
-        <label>Categoria</label>
+        <label for="tFiltCat">Categoria</label>
         <select id="tFiltCat">
           <option value="">Todas</option>
         </select>

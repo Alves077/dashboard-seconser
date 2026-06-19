@@ -24,6 +24,17 @@ const HEADER_MAP = {
 
 const CACHE_KEY = "dip_csv_v2";
 
+const REQUIRED_COLS = [
+  'ID Colab', 'Categoria', 'Bairro', 'Região',
+  'Data Saída', 'Data Retorno', 'Prazo',
+  'Dias Execução', 'Faixa Execução', 'Ocorrências',
+];
+function _validateSchema(rows) {
+  if (!rows.length) return;
+  const missing = REQUIRED_COLS.filter(c => !(c in rows[0]));
+  if (missing.length) console.warn('[DIP] Colunas ausentes no CSV:', missing.join(', '));
+}
+
 function normalizeRow(row) {
   const out = {};
   Object.keys(row).forEach((k) => {
@@ -56,6 +67,7 @@ function processCSV(csvText) {
     skipEmptyLines: true,
   });
   allRows = results.data.map(normalizeRow);
+  _validateSchema(allRows);
   if (typeof onDataLoaded === "function") onDataLoaded();
   document.getElementById("app").classList.remove("sk-loading");
 }
@@ -113,6 +125,7 @@ function loadData() {
       }
 
       allRows = results.data.map(normalizeRow);
+      _validateSchema(allRows);
       if (typeof onDataLoaded === "function") onDataLoaded();
       document.getElementById("app").classList.remove("sk-loading");
     },

@@ -44,7 +44,7 @@
       <div class="topbar-right">
         <span class="last-update" id="last-update"></span>
         <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">◐</button>
-        <button class="refresh-btn" onclick="refreshData()">↺ Atualizar</button>
+        <button class="refresh-btn" onclick="refreshData()" aria-label="Atualizar dados">↺ Atualizar</button>
       </div>
     </div>
 
@@ -60,13 +60,13 @@
         <span class="map-dot" style="background:#E24B4A"></span>Em Atraso
       </button>
       <div class="fg" style="margin-left:12px">
-        <label style="font-size:11px;color:var(--text2)">Região</label>
+        <label for="fMapRegiao" style="font-size:11px;color:var(--text2)">Região</label>
         <select id="fMapRegiao" style="font-size:11px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer">
           <option value="">Todas</option>
         </select>
       </div>
       <div class="fg" style="margin-left:8px">
-        <label style="font-size:11px;color:var(--text2)">Categoria</label>
+        <label for="fMapCat" style="font-size:11px;color:var(--text2)">Categoria</label>
         <select id="fMapCat" style="font-size:11px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer">
           <option value="">Todas</option>
         </select>
