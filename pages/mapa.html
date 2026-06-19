@@ -63,6 +63,12 @@
           <option value="">Todas</option>
         </select>
       </div>
+      <div class="fg" style="margin-left:8px">
+        <label style="font-size:11px;color:var(--text2)">Categoria</label>
+        <select id="fMapCat" style="font-size:11px;padding:3px 8px;border-radius:6px;border:0.5px solid var(--border2);background:var(--surface);color:var(--text);cursor:pointer" onchange="applyMapFilter()">
+          <option value="">Todas</option>
+        </select>
+      </div>
       <span class="map-count" id="map-count"></span>
     </div>
 
@@ -286,19 +292,47 @@
     }
 
     function populateMapFilters() {
-      const sel = document.getElementById('fMapRegiao');
-      sel.innerHTML = '<option value="">Todas</option>';
-      [...new Set(allRows.map(r=>(r['Região']||'').trim()).filter(Boolean))].sort()
-        .forEach(v => { const opt=document.createElement('option'); opt.value=v; opt.textContent=v; sel.appendChild(opt); });
+      updateMapFilterOptions();
+    }
+
+    function updateMapFilterOptions() {
+      const selReg = document.getElementById('fMapRegiao');
+      const selCat = document.getElementById('fMapCat');
+      const curReg = selReg.value;
+      const curCat = selCat.value;
+
+      const baseC = curReg ? allRows.filter(r=>(r['Região']||'').trim()===curReg) : allRows;
+      const availCats = [...new Set(baseC.map(r=>(r['Categoria']||'').trim()).filter(Boolean))].sort();
+      selCat.innerHTML = '<option value="">Todas</option>';
+      availCats.forEach(v => {
+        const opt=document.createElement('option'); opt.value=v; opt.textContent=v;
+        if (v===curCat) opt.selected=true;
+        selCat.appendChild(opt);
+      });
+      if (curCat && !availCats.includes(curCat)) selCat.value='';
+
+      const baseR = curCat ? allRows.filter(r=>(r['Categoria']||'').trim()===curCat) : allRows;
+      const availRegs = [...new Set(baseR.map(r=>(r['Região']||'').trim()).filter(Boolean))].sort();
+      selReg.innerHTML = '<option value="">Todas</option>';
+      availRegs.forEach(v => {
+        const opt=document.createElement('option'); opt.value=v; opt.textContent=v;
+        if (v===curReg) opt.selected=true;
+        selReg.appendChild(opt);
+      });
+      if (curReg && !availRegs.includes(curReg)) selReg.value='';
     }
 
     function applyMapFilter() {
+      updateMapFilterOptions();
       const reg = document.getElementById('fMapRegiao')?.value || '';
-      const filtered = reg ? allRows.filter(r=>(r['Região']||'').trim()===reg) : allRows;
+      const cat = document.getElementById('fMapCat')?.value || '';
+      let filtered = allRows;
+      if (reg) filtered = filtered.filter(r=>(r['Região']||'').trim()===reg);
+      if (cat) filtered = filtered.filter(r=>(r['Categoria']||'').trim()===cat);
       currentRows = filtered;
       plotPoints(filtered);
       renderPanel(filtered);
-      if (reg) {
+      if (reg || cat) {
         const coords = filtered.map(r=>[parseFloat((r['Latitude']||'').replace(',','.')),parseFloat((r['Longitude']||'').replace(',','.'))])
           .filter(([lat,lng])=>coordValida(lat,lng));
         if (coords.length) {
