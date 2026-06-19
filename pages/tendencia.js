@@ -306,14 +306,24 @@ function render(rows) {
 
   // Renderiza tabela de calor
   const heatColors = (pct) => {
-    // branco → azul: interpolação linear
+    if (_isDark()) {
+      // surface2 (#2e2e2b = 46,46,43) → azul (55,138,221)
+      const r = Math.round(46  + pct * (55  - 46));
+      const g = Math.round(46  + pct * (138 - 46));
+      const b = Math.round(43  + pct * (221 - 43));
+      return `rgb(${r},${g},${b})`;
+    }
+    // branco → azul
     const r = Math.round(255 - pct * (255 - 55));
     const g = Math.round(255 - pct * (255 - 138));
     const b = Math.round(255 - pct * (255 - 221));
     return `rgb(${r},${g},${b})`;
   };
 
-  const heatTextColor = (pct) => (pct > 0.55 ? "#fff" : "#333");
+  const heatTextColor = (pct) => {
+    if (_isDark()) return pct > 0.55 ? "#fff" : "rgba(255,255,255,0.45)";
+    return pct > 0.55 ? "#fff" : "#333";
+  };
 
   let heatHTML = `
     <div style="overflow-x:auto">
