@@ -8,7 +8,7 @@
   background: var(--surface);
   border-radius: var(--radius);
   padding: 0.875rem 1rem;
-  border: 1px solid rgba(0, 0, 0, 0.13);
+  border: 1px solid var(--border2);
 }
 .kpi-label {
   font-size: 11px;
@@ -127,6 +127,9 @@
   background: #faeeda;
   color: #633806;
 }
+[data-theme="dark"] .tag-calc { background: rgba(55,138,221,0.18); color: #7bbff5; }
+[data-theme="dark"] .tag-native { background: rgba(99,153,34,0.18); color: #9dd44a; }
+[data-theme="dark"] .tag-extra { background: rgba(186,117,23,0.18); color: #d4941f; }
 
 /* ── Badges ──────────────────────────────────────────────── */
 .badge {
@@ -152,6 +155,10 @@
   background: #eaf3de;
   color: #27500a;
 }
+[data-theme="dark"] .b-red  { background: rgba(226,75,74,0.18);  color: #f47e7d; }
+[data-theme="dark"] .b-amb  { background: rgba(186,117,23,0.18); color: #d4941f; }
+[data-theme="dark"] .b-blue { background: rgba(55,138,221,0.18); color: #7bbff5; }
+[data-theme="dark"] .b-green{ background: rgba(99,153,34,0.18);  color: #9dd44a; }
 
 /* ── Legenda ─────────────────────────────────────────────── */
 .leg-row {

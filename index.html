@@ -44,6 +44,7 @@
           <span class="badge b-red" id="badge-ar">—</span>
         </div>
         <span class="last-update" id="last-update"></span>
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">◐</button>
         <button class="refresh-btn" onclick="refreshData()">↺ Atualizar</button>
       </div>
     </div>
@@ -201,6 +202,7 @@
   <script src="js/render.js"></script>
   <script src="js/main.js"></script>
   <script>
+    initTheme();
     function fixFiltersTop() {
       const tb = document.querySelector('.topbar');
       const fl = document.querySelector('.filters');

@@ -42,6 +42,7 @@
       </nav>
       <div class="topbar-right">
         <span class="last-update" id="last-update"></span>
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">◐</button>
         <button class="refresh-btn" onclick="refreshData()">↺ Atualizar</button>
       </div>
     </div>
@@ -348,6 +349,7 @@
     function onDataLoaded() { populateMapFilters(); render(allRows); }
     function populateFilters() {}
 
+    initTheme();
     loadData();
   </script>
 </body>

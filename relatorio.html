@@ -28,6 +28,26 @@
       --border2: rgba(0, 0, 0, 0.12);
       --radius: 8px;
     }
+    [data-theme="dark"] {
+      --text: #f0efe9;
+      --text2: #a8a89f;
+      --text3: #6e6e68;
+      --surface: #242422;
+      --surface2: #1a1a18;
+      --border: rgba(255, 255, 255, 0.07);
+      --border2: rgba(255, 255, 255, 0.12);
+    }
+    .theme-btn {
+      font-size: 13px;
+      padding: 5px 10px;
+      border-radius: 6px;
+      border: 0.5px solid var(--border2);
+      background: var(--surface);
+      color: var(--text2);
+      cursor: pointer;
+      line-height: 1;
+    }
+    .theme-btn:hover { color: var(--text); }
 
     * {
       box-sizing: border-box;
@@ -956,6 +976,7 @@
       <button class="btn-clear" onclick="clearFilters()">Limpar filtros</button>
     </div>
 
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">◐</button>
     <button class="btn-print" onclick="window.print()">⎙ Imprimir / PDF</button>
   </div>
 
@@ -973,6 +994,27 @@
 
   <!-- Scripts do dashboard -->
   <script>
+    // ── Tema ─────────────────────────────────────────────────────────────────
+    function initTheme() {
+      const saved = localStorage.getItem('theme');
+      if (saved) document.documentElement.setAttribute('data-theme', saved);
+      _updateThemeBtn();
+    }
+    function toggleTheme() {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('theme', next);
+      _updateThemeBtn();
+      if (typeof allRows !== 'undefined' && allRows.length) onDataLoaded();
+    }
+    function _updateThemeBtn() {
+      const btn = document.getElementById('themeBtn');
+      if (!btn) return;
+      btn.textContent = document.documentElement.getAttribute('data-theme') === 'dark' ? '◑' : '◐';
+      btn.title = document.documentElement.getAttribute('data-theme') === 'dark' ? 'Tema claro' : 'Tema escuro';
+    }
+    initTheme();
+
     // ── Inline de config.js e utils.js para standalone ──────────────────────
     const CSV_URL = 'https://script.google.com/macros/s/AKfycbxuYGEryQj26BBs_9ocypkJGokMaOJXk4Bq6T47rEUMi823AvKZ1SB4oztNpG7KVH6V1Q/exec?token=seconser2026dip';
     const CACHE_TTL_MS = 30 * 60 * 1000;
@@ -1612,7 +1654,7 @@
             data: faixaVals,
             backgroundColor: faixaCores,
             borderWidth: 2,
-            borderColor: '#ffffff',
+            borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#242422' : '#ffffff',
             hoverOffset: 6,
           }],
         },

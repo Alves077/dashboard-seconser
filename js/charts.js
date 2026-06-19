@@ -7,15 +7,20 @@ function destroyChart(id) {
   }
 }
 
-// Cor legível em fundo claro E escuro
-const LEGEND_COLOR = "#555550";
+function _isDark() {
+  return document.documentElement.getAttribute('data-theme') === 'dark';
+}
+function _tickColor()   { return _isDark() ? 'rgba(255,255,255,0.4)'  : '#6b6b66'; }
+function _gridColor()   { return _isDark() ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)'; }
+function _legendColor() { return _isDark() ? '#a8a89f' : '#555550'; }
+function _surfaceColor(){ return _isDark() ? '#242422' : '#ffffff'; }
 
 function legendOpts(position = "bottom") {
   return {
     display: true,
     position,
     labels: {
-      color: LEGEND_COLOR,
+      color: _legendColor(),
       font: { size: 11 },
       boxWidth: 10,
       padding: 12,
@@ -25,7 +30,7 @@ function legendOpts(position = "bottom") {
 
 function scaleX(extra = {}) {
   return {
-    ticks: { color: "#6b6b66", font: { size: 11 }, maxRotation: 0 },
+    ticks: { color: _tickColor(), font: { size: 11 }, maxRotation: 0 },
     grid: { display: false },
     border: { display: false },
     ...extra,
@@ -34,8 +39,8 @@ function scaleX(extra = {}) {
 
 function scaleY(extra = {}) {
   return {
-    ticks: { color: "#6b6b66", font: { size: 11 } },
-    grid: { color: "rgba(0,0,0,0.06)" },
+    ticks: { color: _tickColor(), font: { size: 11 } },
+    grid: { color: _gridColor() },
     border: { display: false },
     ...extra,
   };
@@ -43,7 +48,7 @@ function scaleY(extra = {}) {
 
 function scaleYH() {
   return {
-    ticks: { color: "#6b6b66", font: { size: 11 } },
+    ticks: { color: _tickColor(), font: { size: 11 } },
     grid: { display: false },
     border: { display: false },
   };
@@ -75,7 +80,7 @@ function makeDonut(
           data,
           backgroundColor: colors,
           borderWidth: 2,
-          borderColor: "#ffffff",
+          borderColor: _surfaceColor(),
           hoverOffset: 6,
         },
       ],
