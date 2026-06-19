@@ -408,6 +408,345 @@
       min-height: 48px;
     }
 
+    /* ── Tab switcher ── */
+    .tab-switcher {
+      display: flex;
+      gap: 2px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 7px;
+      padding: 3px;
+    }
+
+    .tab-btn {
+      font-size: 12px;
+      font-weight: 500;
+      padding: 5px 14px;
+      border-radius: 5px;
+      border: none;
+      background: transparent;
+      color: var(--text2);
+      cursor: pointer;
+    }
+
+    .tab-btn.tab-active {
+      background: var(--surface);
+      color: var(--text);
+      font-weight: 600;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .control-bar input[type="date"] {
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* ── Lista de Abertos ── */
+    #lista-abertos {
+      max-width: 960px;
+      margin: 32px auto;
+      padding: 0 24px 60px;
+      display: none;
+    }
+
+    .la-header {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 28px 32px 24px;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .la-group {
+      margin-bottom: 16px;
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .la-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text2);
+      background: var(--surface2);
+      padding: 9px 16px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .la-group-count {
+      font-size: 10px;
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--text3);
+    }
+
+    .la-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .la-table th {
+      text-align: center;
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text3);
+      padding: 8px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .la-table td {
+      padding: 9px 16px;
+      border-bottom: 1px solid var(--border);
+      color: var(--text2);
+      vertical-align: middle;
+      text-align: center;
+    }
+
+    /* Larguras mínimas por coluna para evitar quebra de linha */
+    .la-table th:nth-child(1), .la-table td:nth-child(1) { min-width: 70px; }
+    .la-table th:nth-child(2), .la-table td:nth-child(2) { min-width: 170px; }
+    .la-table th:nth-child(3), .la-table td:nth-child(3) { min-width: 120px; }
+    .la-table th:nth-child(4), .la-table td:nth-child(4) { min-width: 90px;  white-space: nowrap; }
+    .la-table th:nth-child(5), .la-table td:nth-child(5) { min-width: 120px; }
+    .la-table th:nth-child(6), .la-table td:nth-child(6) { min-width: 110px; }
+
+    .la-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .la-table tr:hover td {
+      background: var(--surface2);
+    }
+
+    .la-id {
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .la-badge {
+      display: inline-block;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 4px;
+      color: #fff;
+      letter-spacing: 0.03em;
+      white-space: nowrap;
+    }
+
+    .btn-clear {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--text3);
+      cursor: pointer;
+    }
+
+    .btn-clear:hover {
+      color: var(--red);
+      border-color: var(--red);
+    }
+
+    .filter-range {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-range-sep {
+      font-size: 11px;
+      color: var(--text3);
+    }
+
+    .la-empty {
+      padding: 48px;
+      text-align: center;
+      color: var(--text3);
+      font-size: 13px;
+    }
+
+    /* ── Date Picker customizado ── */
+    .datepicker {
+      position: relative;
+      display: inline-block;
+    }
+
+    .dp-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-family: inherit;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      min-width: 108px;
+      justify-content: space-between;
+    }
+
+    .dp-trigger:focus {
+      outline: 2px solid var(--blue);
+      outline-offset: 1px;
+    }
+
+    .dp-placeholder { color: var(--text3); }
+    .dp-caret { font-size: 9px; color: var(--text3); }
+
+    .dp-dropdown {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 200;
+      background: var(--surface);
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+      padding: 12px;
+      width: 232px;
+      display: none;
+    }
+
+    .dp-dropdown.dp-open { display: block; }
+
+    .dp-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .dp-nav-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--text2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    .dp-nav-btn:hover { background: var(--surface2); }
+
+    .dp-month-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .dp-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .dp-wd {
+      text-align: center;
+      font-size: 9px;
+      font-weight: 700;
+      color: var(--text3);
+      padding: 3px 0 5px;
+      text-transform: uppercase;
+    }
+
+    .dp-day {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text);
+      padding: 5px 0;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .dp-day:hover { background: var(--surface2); }
+    .dp-today { color: var(--blue); font-weight: 700; }
+    .dp-sel   { background: var(--blue) !important; color: #fff; font-weight: 700; border-radius: 4px; }
+    .dp-dis   { color: var(--text3); opacity: 0.35; cursor: not-allowed; pointer-events: none; }
+
+    .dp-footer {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+    }
+
+    .dp-footer-btn {
+      font-size: 11px;
+      font-family: inherit;
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--text2);
+      padding: 3px 6px;
+      border-radius: 4px;
+    }
+
+    .dp-footer-btn:hover { background: var(--surface2); }
+    .dp-today-btn { color: var(--blue); font-weight: 600; }
+
+    /* Rótulo clicável para modo mês */
+    .dp-label-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .dp-label-btn:hover { background: var(--surface2); }
+
+    .dp-month-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 4px;
+      padding: 4px 0;
+    }
+
+    .dp-mth {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text);
+      padding: 7px 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .dp-mth:hover { background: var(--surface2); }
+    .dp-mth.dp-sel { background: var(--blue); color: #fff; font-weight: 700; }
+    .dp-mth.dp-dis { color: var(--text3); opacity: 0.3; cursor: not-allowed; pointer-events: none; }
+
     /* ── Print ── */
     @media print {
       body {
@@ -516,6 +855,53 @@
         font-size: 11px;
         padding: 8px 12px;
       }
+
+      /* Lista de abertos no print */
+      #lista-abertos {
+        margin: 0;
+        padding: 0;
+        max-width: 100%;
+      }
+
+      .la-header {
+        padding: 16px 20px;
+      }
+
+      /* overflow:visible para break-after funcionar; sem break-inside (grupos têm 100+ linhas) */
+      .la-group {
+        overflow: visible;
+        border: 1px solid #ddd;
+        margin-bottom: 12px;
+      }
+
+      .la-table {
+        font-size: 9px;
+      }
+
+      .la-table th,
+      .la-table td {
+        padding: 5px 10px;
+      }
+
+      .la-badge {
+        font-size: 8px;
+        padding: 1px 5px;
+        white-space: nowrap;
+      }
+
+      .la-table tr:hover td {
+        background: transparent;
+      }
+
+      /* Título do grupo não pode ficar sozinho no fim da página */
+      .la-group-title {
+        break-after: avoid;
+        page-break-after: avoid;
+      }
+
+      /* Imprime apenas a aba ativa */
+      body.tab-mensal #lista-abertos { display: none !important; }
+      body.tab-abertos #relatorio    { display: none !important; }
     }
   </style>
 </head>
@@ -525,10 +911,50 @@
   <!-- Barra de controle -->
   <div class="control-bar">
     <a href="index.html" class="control-bar-brand" style="text-decoration:none;color:inherit">← DIP · Seconser</a>
-    <label>Mês de referência</label>
-    <select id="selMes">
-      <option value="">Carregando…</option>
-    </select>
+
+    <div class="tab-switcher">
+      <button class="tab-btn tab-active" id="tabBtnMensal" onclick="switchTab('mensal')">Relatório Mensal</button>
+      <button class="tab-btn" id="tabBtnAbertos" onclick="switchTab('abertos')">Serviços em Aberto</button>
+    </div>
+
+    <div id="filtersMensal" style="display:flex;align-items:center;gap:10px">
+      <label>Mês de referência</label>
+      <select id="selMes">
+        <option value="">Carregando…</option>
+      </select>
+    </div>
+
+    <div id="filtersAbertos" style="display:none;align-items:center;gap:12px">
+      <!-- Inputs hidden — armazenam valor e min/max para renderListaAbertos -->
+      <input type="date" id="filtDe"  style="display:none">
+      <input type="date" id="filtAte" style="display:none">
+
+      <div class="filter-range">
+        <label>De</label>
+        <div class="datepicker">
+          <button class="dp-trigger" onclick="openDp('de',event)">
+            <span class="dp-value dp-placeholder" id="dp-de-lbl">Selecione</span>
+            <span class="dp-caret">▾</span>
+          </button>
+          <div class="dp-dropdown" id="dp-de"></div>
+        </div>
+        <span class="filter-range-sep">→</span>
+        <label>Até</label>
+        <div class="datepicker">
+          <button class="dp-trigger" onclick="openDp('ate',event)">
+            <span class="dp-value dp-placeholder" id="dp-ate-lbl">Selecione</span>
+            <span class="dp-caret">▾</span>
+          </button>
+          <div class="dp-dropdown" id="dp-ate"></div>
+        </div>
+      </div>
+      <label>Categoria</label>
+      <select id="filtCat" onchange="renderListaAbertos()"><option value="">Todas</option></select>
+      <label>Região</label>
+      <select id="filtReg" onchange="renderListaAbertos()"><option value="">Todas</option></select>
+      <button class="btn-clear" onclick="clearFilters()">Limpar filtros</button>
+    </div>
+
     <button class="btn-print" onclick="window.print()">⎙ Imprimir / PDF</button>
   </div>
 
@@ -541,6 +967,9 @@
   <!-- Relatório -->
   <div id="relatorio"></div>
 
+  <!-- Lista de Abertos -->
+  <div id="lista-abertos"></div>
+
   <!-- Scripts do dashboard -->
   <script>
     // ── Inline de config.js e utils.js para standalone ──────────────────────
@@ -549,6 +978,8 @@
     const CACHE_KEY = 'dip_csv_v2';
     let allRows = [];
     let charts = {};
+    let activeTab = 'mensal';
+    let relatorioRendered = false;
 
     function fmt(n) {
       return Number(n).toLocaleString('pt-BR');
@@ -568,6 +999,14 @@
       const p = s.split('/');
       if (p.length === 3) return new Date(+p[2], +p[1] - 1, +p[0]);
       return new Date(s);
+    }
+    function fmtDate(s) {
+      const d = parseDate(s);
+      if (!d || isNaN(d)) return s || '—';
+      return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
+    }
+    function toInputDate(d) {
+      return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
     }
     function mesLabel(d) {
       const m = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -604,6 +1043,19 @@
         out['Situação'] = (prazo && !isNaN(prazo) && hoje > prazo) ? 'Em Atraso' : 'Em Atendimento';
       }
       return out;
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.body.className = 'tab-' + tab;
+      document.getElementById('tabBtnMensal').classList.toggle('tab-active', tab === 'mensal');
+      document.getElementById('tabBtnAbertos').classList.toggle('tab-active', tab === 'abertos');
+      document.getElementById('filtersMensal').style.display = tab === 'mensal' ? 'flex' : 'none';
+      document.getElementById('filtersAbertos').style.display = tab === 'abertos' ? 'flex' : 'none';
+      document.getElementById('relatorio').style.display = (tab === 'mensal' && relatorioRendered) ? 'block' : 'none';
+      const la = document.getElementById('lista-abertos');
+      la.style.display = tab === 'abertos' ? 'block' : 'none';
+      if (tab === 'abertos') renderListaAbertos();
     }
 
     function loadData() {
@@ -643,6 +1095,7 @@
     // ── Após carregar dados ──────────────────────────────────────────────────
     function onDataLoaded() {
       document.getElementById('loading').style.display = 'none';
+      document.body.className = 'tab-mensal';
 
       // Monta lista de meses anteriores ao atual
       const hoje = new Date();
@@ -677,6 +1130,20 @@
         sel.value = meses[0][0];
         renderRelatorio(+meses[0][0], mesesMap);
       }
+
+      // Popula selects e define min/max de datas para a aba "Serviços em Aberto"
+      const abertos = allRows.filter(r => r['Situação'] !== 'OK');
+      updateFilterOptions(); // popula cat/reg com filtros dependentes
+
+      const datasAbertos = abertos.map(r => parseDate(r['Data Saída'])).filter(d => d && !isNaN(d));
+      if (datasAbertos.length) {
+        const minD = new Date(Math.min(...datasAbertos));
+        const maxD = new Date(Math.max(...datasAbertos));
+        ['filtDe', 'filtAte'].forEach(id => {
+          document.getElementById(id).min = toInputDate(minD);
+          document.getElementById(id).max = toInputDate(maxD);
+        });
+      }
     }
 
     function renderRelatorio(mesK, mesesMap) {
@@ -684,7 +1151,8 @@
       Object.values(charts).forEach(c => c.destroy());
       charts = {};
       const rel = document.getElementById('relatorio');
-      rel.style.display = 'block';
+      relatorioRendered = true;
+      if (activeTab === 'mensal') rel.style.display = 'block';
 
       const ano = Math.floor(mesK / 100);
       const mes = mesK % 100;
@@ -986,6 +1454,151 @@
 
     } // fim renderRelatorio
 
+    // ── Filtros dependentes ───────────────────────────────────────────────────
+    function updateFilterOptions() {
+      const filtDe  = document.getElementById('filtDe').value;
+      const filtAte = document.getElementById('filtAte').value;
+      const catEl   = document.getElementById('filtCat');
+      const regEl   = document.getElementById('filtReg');
+      const curCat  = catEl.value;
+      const curReg  = regEl.value;
+
+      // Base: abertos dentro do período selecionado
+      let base = allRows.filter(r => r['Situação'] !== 'OK');
+      if (filtDe) {
+        const de = new Date(filtDe + 'T00:00:00');
+        base = base.filter(r => { const d = parseDate(r['Data Saída']); return d && d >= de; });
+      }
+      if (filtAte) {
+        const ate = new Date(filtAte + 'T23:59:59');
+        base = base.filter(r => { const d = parseDate(r['Data Saída']); return d && d <= ate; });
+      }
+
+      // Categorias disponíveis = base filtrada pela região atual
+      const baseC = curReg ? base.filter(r => (r['Região'] || '').trim() === curReg) : base;
+      const availCats = [...new Set(baseC.map(r => (r['Categoria'] || '').trim()).filter(Boolean))].sort();
+      catEl.innerHTML = '<option value="">Todas</option>';
+      availCats.forEach(c => {
+        const o = document.createElement('option'); o.value = c; o.textContent = c;
+        if (c === curCat) o.selected = true;
+        catEl.appendChild(o);
+      });
+      if (curCat && !availCats.includes(curCat)) catEl.value = '';
+
+      // Regiões disponíveis = base filtrada pela categoria atual
+      const baseR = curCat ? base.filter(r => (r['Categoria'] || '').trim() === curCat) : base;
+      const availRegs = [...new Set(baseR.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
+      regEl.innerHTML = '<option value="">Todas</option>';
+      availRegs.forEach(r => {
+        const o = document.createElement('option'); o.value = r; o.textContent = r;
+        if (r === curReg) o.selected = true;
+        regEl.appendChild(o);
+      });
+      if (curReg && !availRegs.includes(curReg)) regEl.value = '';
+    }
+
+    // ── Lista de Serviços em Aberto ───────────────────────────────────────────
+    function renderListaAbertos() {
+      updateFilterOptions();
+      const container = document.getElementById('lista-abertos');
+
+      const filtDe  = document.getElementById('filtDe').value;
+      const filtAte = document.getElementById('filtAte').value;
+      const filtCat = document.getElementById('filtCat').value;
+      const filtReg = document.getElementById('filtReg').value;
+
+      let rows = allRows.filter(r => r['Situação'] !== 'OK');
+
+      if (filtDe) {
+        const de = new Date(filtDe + 'T00:00:00');
+        rows = rows.filter(r => { const d = parseDate(r['Data Saída']); return d && d >= de; });
+      }
+      if (filtAte) {
+        const ate = new Date(filtAte + 'T23:59:59');
+        rows = rows.filter(r => { const d = parseDate(r['Data Saída']); return d && d <= ate; });
+      }
+      if (filtCat) rows = rows.filter(r => (r['Categoria'] || '').trim() === filtCat);
+      if (filtReg) rows = rows.filter(r => (r['Região'] || '').trim() === filtReg);
+
+      // Ordena do mais antigo para o mais novo
+      rows.sort((a, b) => {
+        const da = parseDate(a['Data Saída']), db = parseDate(b['Data Saída']);
+        if (!da && !db) return 0;
+        if (!da) return 1;
+        if (!db) return -1;
+        return da - db;
+      });
+
+      if (rows.length === 0) {
+        container.innerHTML = '<div class="la-empty">Nenhum serviço em aberto com os filtros selecionados.</div>';
+        return;
+      }
+
+      // Agrupa por Região (já ordenados dentro de cada grupo)
+      const groups = {};
+      const groupOrder = [];
+      rows.forEach(r => {
+        const reg = (r['Região'] || '').trim() || '(sem região)';
+        if (!groups[reg]) { groups[reg] = []; groupOrder.push(reg); }
+        groups[reg].push(r);
+      });
+
+      const dataGeracao = new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit', month: 'long', year: 'numeric'
+      });
+
+      let html = `
+        <div class="la-header">
+          <div>
+            <div class="rel-title">Serviços em Aberto</div>
+            <div class="rel-subtitle">Departamento de Iluminação Pública · Seconser Niterói</div>
+          </div>
+          <div class="rel-meta">
+            Gerado em ${dataGeracao}<br>
+            ${fmt(rows.length)} serviço(s) em aberto<br>
+            Ordenado por Data Saída · mais antigos primeiro
+          </div>
+        </div>`;
+
+      groupOrder.forEach(reg => {
+        const regRows = groups[reg];
+        html += `
+        <div class="la-group">
+          <div class="la-group-title">
+            ${reg}
+            <span class="la-group-count">${regRows.length} serviço(s)</span>
+          </div>
+          <table class="la-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Categoria</th>
+                <th>Bairro</th>
+                <th>Data Saída</th>
+                <th>Data Retorno</th>
+                <th>Situação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${regRows.map(r => {
+                const cor = r['Situação'] === 'Em Atraso' ? 'var(--red)' : 'var(--amber)';
+                return `<tr>
+                  <td class="la-id">${r['ID Colab'] || '—'}</td>
+                  <td>${r['Categoria'] || '—'}</td>
+                  <td>${r['Bairro'] || '—'}</td>
+                  <td>${fmtDate(r['Data Saída'])}</td>
+                  <td style="border-bottom:1px solid var(--text3);min-width:110px"></td>
+                  <td><span class="la-badge" style="background:${cor}">${r['Situação']}</span></td>
+                </tr>`;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>`;
+      });
+
+      container.innerHTML = html;
+    }
+
     // ── Donut de faixas ───────────────────────────────────────────────────────
     function renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas) {
       const ctx = document.getElementById('cFaixas');
@@ -1030,15 +1643,214 @@
       }
     }
 
-    // Esconde seção de observações no print se vazia
+    // ── Date Picker customizado ───────────────────────────────────────────────
+    const MESES_PT  = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
+                       'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const MESES_ABR = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    const dpState = {
+      de:  { y: new Date().getFullYear(), m: new Date().getMonth(), sel: null, mode: 'days' },
+      ate: { y: new Date().getFullYear(), m: new Date().getMonth(), sel: null, mode: 'days' },
+    };
+
+    function openDp(which, e) {
+      e.stopPropagation();
+      const panel = document.getElementById('dp-' + which);
+      const isOpen = panel.classList.contains('dp-open');
+      closeDps();
+      if (!isOpen) {
+        const s = dpState[which];
+        s.mode = 'days';
+        if (s.sel) { s.y = s.sel.getFullYear(); s.m = s.sel.getMonth(); }
+        renderDp(which);
+        panel.classList.add('dp-open');
+      }
+    }
+
+    function closeDps() {
+      document.querySelectorAll('.dp-dropdown').forEach(d => d.classList.remove('dp-open'));
+    }
+
+    function getDpBounds(which) {
+      const hid = document.getElementById(which === 'de' ? 'filtDe' : 'filtAte');
+      return {
+        min: hid.min ? new Date(hid.min + 'T00:00:00') : null,
+        max: hid.max ? new Date(hid.max + 'T00:00:00') : null,
+      };
+    }
+
+    function renderDp(which) {
+      dpState[which].mode === 'months' ? renderDpMonths(which) : renderDpDays(which);
+    }
+
+    function renderDpDays(which) {
+      const panel = document.getElementById('dp-' + which);
+      const st    = dpState[which];
+      const { min, max } = getDpBounds(which);
+      const today = new Date(); today.setHours(0,0,0,0);
+      const first = new Date(st.y, st.m, 1).getDay();
+      const days  = new Date(st.y, st.m + 1, 0).getDate();
+
+      let grid = '<div class="dp-grid">';
+      ['D','S','T','Q','Q','S','S'].forEach(w => grid += `<span class="dp-wd">${w}</span>`);
+      for (let i = 0; i < first; i++) grid += '<span></span>';
+      for (let d = 1; d <= days; d++) {
+        const dt  = new Date(st.y, st.m, d);
+        const sel = st.sel && dt.getTime() === st.sel.getTime();
+        const tod = dt.getTime() === today.getTime();
+        const dis = (min && dt < min) || (max && dt > max);
+        const cls = ['dp-day', sel ? 'dp-sel' : '', tod && !sel ? 'dp-today' : '', dis ? 'dp-dis' : ''].filter(Boolean).join(' ');
+        grid += `<span class="${cls}" onclick="pickDay('${which}','${toInputDate(dt)}',event)">${d}</span>`;
+      }
+      grid += '</div>';
+
+      panel.innerHTML = `
+        <div class="dp-nav">
+          <button class="dp-nav-btn" onclick="navDp('${which}',-1,event)">&#8249;</button>
+          <button class="dp-label-btn" onclick="toggleDpMode('${which}',event)">${MESES_PT[st.m]} ${st.y} ▾</button>
+          <button class="dp-nav-btn" onclick="navDp('${which}',1,event)">&#8250;</button>
+        </div>
+        ${grid}
+        <div class="dp-footer">
+          <button class="dp-footer-btn" onclick="clearDp('${which}',event)">Limpar data</button>
+          <button class="dp-footer-btn dp-today-btn" onclick="pickToday('${which}',event)">Hoje</button>
+        </div>`;
+    }
+
+    function renderDpMonths(which) {
+      const panel = document.getElementById('dp-' + which);
+      const st    = dpState[which];
+      const { min, max } = getDpBounds(which);
+
+      let grid = '<div class="dp-month-grid">';
+      MESES_ABR.forEach((lbl, i) => {
+        const first = new Date(st.y, i, 1);
+        const last  = new Date(st.y, i + 1, 0);
+        const dis   = (max && first > max) || (min && last < min);
+        const sel   = st.sel && st.sel.getFullYear() === st.y && st.sel.getMonth() === i;
+        const cls   = ['dp-mth', sel ? 'dp-sel' : '', dis ? 'dp-dis' : ''].filter(Boolean).join(' ');
+        grid += `<span class="${cls}" onclick="selectDpMonth('${which}',${i},event)">${lbl}</span>`;
+      });
+      grid += '</div>';
+
+      panel.innerHTML = `
+        <div class="dp-nav">
+          <button class="dp-nav-btn" onclick="navDpYear('${which}',-1,event)">&#8249;</button>
+          <span class="dp-month-label">${st.y}</span>
+          <button class="dp-nav-btn" onclick="navDpYear('${which}',1,event)">&#8250;</button>
+        </div>
+        ${grid}`;
+    }
+
+    function toggleDpMode(which, e) {
+      if (e) e.stopPropagation();
+      dpState[which].mode = dpState[which].mode === 'months' ? 'days' : 'months';
+      renderDp(which);
+    }
+
+    function selectDpMonth(which, m, e) {
+      if (e) e.stopPropagation();
+      dpState[which].m    = m;
+      dpState[which].mode = 'days';
+      renderDp(which);
+    }
+
+    function navDp(which, dir, e) {
+      if (e) e.stopPropagation();
+      const st = dpState[which];
+      st.m += dir;
+      if (st.m > 11) { st.m = 0; st.y++; }
+      if (st.m <  0) { st.m = 11; st.y--; }
+      renderDp(which);
+    }
+
+    function navDpYear(which, dir, e) {
+      if (e) e.stopPropagation();
+      dpState[which].y += dir;
+      renderDp(which);
+    }
+
+    function pickDay(which, ds, e) {
+      if (e) e.stopPropagation();
+      const [y, m, d] = ds.split('-').map(Number);
+      dpState[which].sel = new Date(y, m - 1, d);
+      document.getElementById(which === 'de' ? 'filtDe' : 'filtAte').value = ds;
+      setDpLabel(which, ds);
+      closeDps();
+      onDpChange(which, ds);
+    }
+
+    function pickToday(which, e) {
+      if (e) e.stopPropagation();
+      const t = new Date(); t.setHours(0,0,0,0);
+      const { min, max } = getDpBounds(which);
+      if ((min && t < min) || (max && t > max)) return;
+      pickDay(which, toInputDate(t));
+    }
+
+    function clearDp(which, e) {
+      if (e) e.stopPropagation();
+      dpState[which].sel = null;
+      document.getElementById(which === 'de' ? 'filtDe' : 'filtAte').value = '';
+      setDpLabel(which, '');
+      closeDps();
+      onDpChange(which, '');
+    }
+
+    function setDpLabel(which, ds) {
+      const el = document.getElementById('dp-' + which + '-lbl');
+      if (ds) {
+        el.textContent = fmtDate(ds.split('-').reverse().join('/'));
+        el.classList.remove('dp-placeholder');
+      } else {
+        el.textContent = 'Selecione';
+        el.classList.add('dp-placeholder');
+      }
+    }
+
+    function onDpChange(which, ds) {
+      const deEl  = document.getElementById('filtDe');
+      const ateEl = document.getElementById('filtAte');
+      if (which === 'de')  ateEl.min = ds || deEl.min;
+      else                 deEl.max  = ds || ateEl.max;
+      renderListaAbertos();
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.datepicker')) closeDps();
+    });
+
+    function clearFilters() {
+      const deEl  = document.getElementById('filtDe');
+      const ateEl = document.getElementById('filtAte');
+      dpState.de.sel  = null; deEl.value  = ''; setDpLabel('de', '');
+      dpState.ate.sel = null; ateEl.value = ''; setDpLabel('ate', '');
+      deEl.max  = ateEl.max;
+      ateEl.min = deEl.min;
+      document.getElementById('filtCat').value = '';
+      document.getElementById('filtReg').value = '';
+      renderListaAbertos();
+    }
+
+    // Esconde seção de observações no print se vazia;
+    // define margens por aba via @page injetado dinamicamente
     window.addEventListener('beforeprint', () => {
       const obs = document.getElementById('obsText');
       const sec = document.querySelector('.obs-section');
       if (sec) sec.classList.toggle('obs-vazia', !obs || !obs.value.trim());
+
+      let ps = document.getElementById('__printPage');
+      if (!ps) { ps = document.createElement('style'); ps.id = '__printPage'; document.head.appendChild(ps); }
+      // relatório mensal: sem margem (cabe tudo numa folha)
+      // lista de abertos: 0.8cm top/bottom, 1cm left/right — repete em cada página
+      ps.textContent = activeTab === 'abertos'
+        ? '@page { margin: 0.8cm 1cm; }'
+        : '@page { margin: 0; }';
     });
     window.addEventListener('afterprint', () => {
       const sec = document.querySelector('.obs-section');
       if (sec) sec.classList.remove('obs-vazia');
+      const ps = document.getElementById('__printPage');
+      if (ps) ps.remove();
     });
 
     // Inicia
