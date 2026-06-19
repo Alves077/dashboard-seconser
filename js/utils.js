@@ -127,6 +127,61 @@ function setHTML(id, val) {
   if (el) el.innerHTML = val;
 }
 
+// Retorna rows filtradas aos últimos N meses calendário completos (exclui mês corrente)
+function getPeriodRows(sourceRows, nMeses) {
+  if (!nMeses) return sourceRows;
+  const monthCount = {};
+  sourceRows.forEach(r => {
+    const d = parseDate(r['Data Saída']);
+    if (!d || isNaN(d)) return;
+    const k = d.getFullYear() * 100 + d.getMonth();
+    monthCount[k] = (monthCount[k] || 0) + 1;
+  });
+  const monthKeys = Object.keys(monthCount).map(Number).sort((a, b) => a - b);
+  const now = new Date();
+  const currentKey = now.getFullYear() * 100 + now.getMonth();
+  if (monthKeys[monthKeys.length - 1] === currentKey) monthKeys.pop();
+  const validKeys = new Set(monthKeys.slice(-nMeses));
+  return sourceRows.filter(r => {
+    const d = parseDate(r['Data Saída']);
+    return d && !isNaN(d) && validKeys.has(d.getFullYear() * 100 + d.getMonth());
+  });
+}
+
+// Atualiza selects de Região e Categoria de forma dependente
+// Passar null em regSelId para pular o select de região
+function updateDependentSelects(rows, regSelId, catSelId) {
+  const selR = regSelId ? document.getElementById(regSelId) : null;
+  const selC = catSelId ? document.getElementById(catSelId) : null;
+  const curReg = selR?.value || '';
+  const curCat = selC?.value || '';
+
+  if (selR) {
+    const regs = [...new Set(rows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
+    selR.innerHTML = '<option value="">Todas</option>';
+    regs.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = v;
+      if (v === curReg) o.selected = true;
+      selR.appendChild(o);
+    });
+    if (curReg && !regs.includes(curReg)) selR.value = '';
+  }
+
+  if (selC) {
+    const rowsForCat = selR?.value ? rows.filter(r => (r['Região'] || '').trim() === selR.value) : rows;
+    const cats = groupBy(rowsForCat, 'Categoria').map(([k]) => k).filter(Boolean);
+    selC.innerHTML = '<option value="">Todas</option>';
+    cats.forEach(v => {
+      const o = document.createElement('option');
+      o.value = v; o.textContent = v;
+      if (v === curCat) o.selected = true;
+      selC.appendChild(o);
+    });
+    if (curCat && !cats.includes(curCat)) selC.value = '';
+  }
+}
+
 function initTheme() {
   const saved = localStorage.getItem('theme');
   if (saved) document.documentElement.setAttribute('data-theme', saved);

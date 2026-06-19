@@ -10,56 +10,11 @@ function _homePeriodRows() {
       return d && !isNaN(d) && mesLabel(d) === mes;
     });
   }
-  const nMeses = parseInt(document.getElementById('fPeriodo')?.value || '0') || 0;
-  if (!nMeses) return allRows;
-  const monthCount = {};
-  allRows.forEach(r => {
-    const d = parseDate(r['Data Saída']);
-    if (!d || isNaN(d)) return;
-    const k = d.getFullYear() * 100 + d.getMonth();
-    monthCount[k] = (monthCount[k] || 0) + 1;
-  });
-  const monthKeys = Object.keys(monthCount).map(Number).sort((a, b) => a - b);
-  const now = new Date();
-  const currentKey = now.getFullYear() * 100 + now.getMonth();
-  if (monthKeys[monthKeys.length - 1] === currentKey) monthKeys.pop();
-  const validKeys = new Set(monthKeys.slice(-nMeses));
-  return allRows.filter(r => {
-    const d = parseDate(r['Data Saída']);
-    return d && !isNaN(d) && validKeys.has(d.getFullYear() * 100 + d.getMonth());
-  });
+  return getPeriodRows(allRows, parseInt(document.getElementById('fPeriodo')?.value || '0') || 0);
 }
 
 function _updateHomeOptions(periodRows) {
-  const selR = document.getElementById('fRegiao');
-  const selC = document.getElementById('fCat');
-  const curReg = selR?.value || '';
-  const curCat = selC?.value || '';
-
-  const regs = [...new Set(periodRows.map(r => (r['Região'] || '').trim()).filter(Boolean))].sort();
-  if (selR) {
-    selR.innerHTML = '<option value="">Todas</option>';
-    regs.forEach(v => {
-      const o = document.createElement('option');
-      o.value = v; o.textContent = v;
-      if (v === curReg) o.selected = true;
-      selR.appendChild(o);
-    });
-    if (curReg && !regs.includes(curReg)) selR.value = '';
-  }
-
-  const rowsForCat = selR?.value ? periodRows.filter(r => (r['Região'] || '').trim() === selR.value) : periodRows;
-  const cats = groupBy(rowsForCat, 'Categoria').map(([k]) => k).filter(Boolean);
-  if (selC) {
-    selC.innerHTML = '<option value="">Todas</option>';
-    cats.forEach(v => {
-      const o = document.createElement('option');
-      o.value = v; o.textContent = v;
-      if (v === curCat) o.selected = true;
-      selC.appendChild(o);
-    });
-    if (curCat && !cats.includes(curCat)) selC.value = '';
-  }
+  updateDependentSelects(periodRows, 'fRegiao', 'fCat');
 }
 
 function populateFilters() {

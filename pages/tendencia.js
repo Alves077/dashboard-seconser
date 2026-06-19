@@ -1,45 +1,16 @@
 // ─── Tendência ────────────────────────────────────────────────────────────────
 
 function _tPeriodRows() {
-  const nMeses = parseInt(document.getElementById('tFiltPeriodo')?.value || '0') || 0;
-  if (!nMeses) return allRows;
-  const mensalTrimmed = filtrarMesIncompleto(buildMensalMap(allRows));
-  const validMonths = new Set(mensalTrimmed.slice(-nMeses).map(([k]) => +k));
-  return allRows.filter(r => {
-    const d = parseDate(r['Data Saída']);
-    return d && !isNaN(d) && validMonths.has(d.getFullYear() * 100 + d.getMonth());
-  });
-}
-
-function _updateTendFilterOptions(periodRows) {
-  const selReg = document.getElementById('tFiltReg');
-  const selCat = document.getElementById('tFiltCat');
-  const curReg = selReg?.value || '';
-  const curCat = selCat?.value || '';
-
-  const regs = [...new Set(periodRows.map(r => (r['Região']||'').trim()).filter(Boolean))].sort();
-  if (selReg) {
-    selReg.innerHTML = '<option value="">Todas</option>';
-    regs.forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; if(v===curReg) o.selected=true; selReg.appendChild(o); });
-    if (curReg && !regs.includes(curReg)) selReg.value = '';
-  }
-
-  const rowsForCat = selReg?.value ? periodRows.filter(r => (r['Região']||'').trim() === selReg.value) : periodRows;
-  const cats = groupBy(rowsForCat, 'Categoria').map(([k]) => k).filter(Boolean);
-  if (selCat) {
-    selCat.innerHTML = '<option value="">Todas</option>';
-    cats.forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; if(v===curCat) o.selected=true; selCat.appendChild(o); });
-    if (curCat && !cats.includes(curCat)) selCat.value = '';
-  }
+  return getPeriodRows(allRows, parseInt(document.getElementById('tFiltPeriodo')?.value || '0') || 0);
 }
 
 function populateFilters() {
-  _updateTendFilterOptions(_tPeriodRows());
+  updateDependentSelects(_tPeriodRows(), 'tFiltReg', 'tFiltCat');
 }
 
 function applyFilters() {
   const periodRows = _tPeriodRows();
-  _updateTendFilterOptions(periodRows);
+  updateDependentSelects(periodRows, 'tFiltReg', 'tFiltCat');
   const reg = document.getElementById('tFiltReg')?.value || '';
   const cat = document.getElementById('tFiltCat')?.value || '';
   let rows = allRows;

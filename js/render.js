@@ -389,7 +389,7 @@ function render(rows) {
           display: true,
           position: "bottom",
           labels: {
-            color: "#555550",
+            color: _legendColor(),
             font: { size: 11 },
             boxWidth: 10,
             padding: 12,
@@ -420,15 +420,15 @@ function render(rows) {
       },
       scales: {
         x: {
-          ticks: { color: "#6b6b66", font: { size: 11 }, maxRotation: 0 },
+          ticks: { color: _tickColor(), font: { size: 11 }, maxRotation: 0 },
           grid: { display: false },
           border: { display: false },
           offset: true,
         },
         y: {
           beginAtZero: true,
-          ticks: { color: "#6b6b66", font: { size: 11 } },
-          grid: { color: "rgba(0,0,0,0.06)" },
+          ticks: { color: _tickColor(), font: { size: 11 } },
+          grid: { color: _gridColor() },
           border: { display: false },
         },
       },
