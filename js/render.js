@@ -79,7 +79,7 @@ function render(rows) {
   );
   setText("kMediaSub", "Mediana: " + Math.round(mediana) + " dias");
 
-  setText("badge-ok", pct(ok, total) + " no prazo");
+  setText("badge-ok", pct(ok, total) + " concluídos");
   setText("badge-at", fmt(abertos) + " em aberto");
   setText("badge-ar", fmt(ar) + " em atraso");
 
