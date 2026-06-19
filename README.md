@@ -9,7 +9,9 @@ Dashboard operacional do **Departamento de Iluminação Pública (DIP)** da Seco
 ## Páginas
 
 ### Visão Geral
-Painel principal com KPIs consolidados (total de serviços, concluídos, em aberto, em atraso, reaberturas e tempo médio) e indicadores de situação em tempo real na topbar. Distribuição por categoria, reaberturas por categoria e região, tempo de execução por faixa, serviços por região com volume/percentual/tempo médio/atraso, top 10 bairros e volume mensal de demandas com curvas de entradas e concluídos. Filtros por período, região e categoria.
+Painel principal com KPIs consolidados (total de serviços, concluídos, em aberto, em atraso, reaberturas e tempo médio) e indicadores de situação em tempo real na topbar. Distribuição por categoria, reaberturas por categoria e região, tempo de execução por faixa, serviços por região com volume/percentual/tempo médio/atraso, top 10 bairros e volume mensal de demandas com curvas de entradas e concluídos.
+
+Filtros: **Período** (todo o período / últimos 1, 3, 6, 12 meses — meses calendário completos) + **Mês** (mês específico, mutuamente exclusivo com Período) + **Região** + **Categoria**. Os filtros de Região e Categoria se atualizam de acordo com o período selecionado.
 
 Responsivo: KPIs em 2 colunas, grids em coluna única, barras horizontais adaptadas para mobile.
 
@@ -17,7 +19,7 @@ Responsivo: KPIs em 2 colunas, grids em coluna única, barras horizontais adapta
 ![Visão Geral — mobile](docs/screenshots/visao-geral-mobile.png)
 
 ### Mapa
-Visualização georreferenciada de todos os registros sobre o mapa de Niterói (OpenStreetMap via Leaflet). Filtros por situação (OK / No Prazo / Em Atraso) e por região, com zoom automático ao filtrar. Coordenadas validadas por bounding box do município — pontos fora de Niterói são descartados silenciosamente.
+Visualização georreferenciada de todos os registros sobre o mapa de Niterói (OpenStreetMap via Leaflet). Filtros dependentes por região e categoria, com zoom automático ao filtrar. Coordenadas validadas por bounding box do município — pontos fora de Niterói são descartados silenciosamente.
 
 Painel lateral com KPIs de situação atual, abertos por região, top bairros em aberto, serviços mais antigos em atraso e distribuição por categoria. Em mobile, o mapa é ocultado e apenas o painel lateral é exibido.
 
@@ -29,11 +31,15 @@ Painel lateral com KPIs de situação atual, abertos por região, top bairros em
 ### Qualidade
 Indicadores de qualidade: taxa de conclusão, reincidência, resolução rápida (≤3 dias), cauda longa (>15 dias), tempo médio e percentual em atraso agora. Atraso por região (piores primeiro), reincidência por categoria, histograma de frequência por dia de execução, distribuição de faixas por região (tabela com totais) e evolução mensal de tempo médio e cauda longa (eixos duplos).
 
+Filtros: **Período** (último mês / 3, 6, 12 meses / todo — meses calendário completos) + **Categoria** (limitada às categorias presentes no período selecionado).
+
 ![Qualidade — desktop](docs/screenshots/qualidade.png)
 ![Qualidade — mobile](docs/screenshots/qualidade-mobile.png)
 
 ### Tendência
 Análise temporal: mês de pico, último mês completo, variação mensal, média mensal, saldo acumulado e cumprimento de prazo global. Gráfico de fluxo (entradas × concluídos × saldo acumulado em eixo direito), tabela de calor de sazonalidade por categoria (top 6) e evolução mensal de percentual fora do prazo e tempo médio de execução.
+
+Filtros: **Período** (últimos 3, 6, 12 meses / todo) + **Região** + **Categoria** — todos dependentes entre si.
 
 ![Tendência — desktop](docs/screenshots/tendencia.png)
 ![Tendência — mobile](docs/screenshots/tendencia-mobile.png)
@@ -59,6 +65,7 @@ Conteúdo: contexto de saldo do mês anterior, KPIs do mês (entradas, concluíd
 | Cache L1 | CacheService do Apps Script (TTL 5 min, chunks de 90 KB) |
 | Cache L2 | localStorage no browser (TTL 30 min, chave `dip_csv_v2`) |
 | Hospedagem | GitHub Pages |
+| Tema | Dark mode via CSS custom properties + localStorage (anti-FOUC) |
 
 ---
 
@@ -120,8 +127,10 @@ dashboard-seconser/
 │   ├── tendencia.html
 │   └── tendencia.js
 ├── img/
-│   └── logo-seconser.png
+│   ├── logo-seconser.png
+│   └── favicon.png              — Brasão de Niterói (favicon de todas as páginas)
 └── docs/
+    ├── apps-script.gs           — Código do proxy Apps Script (publicar como Web App)
     └── screenshots/
         ├── visao-geral.png
         ├── visao-geral-mobile.png
