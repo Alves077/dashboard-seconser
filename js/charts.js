@@ -94,7 +94,7 @@ function makeDonut(
           display: !externalLegendId,
           position: "bottom",
           labels: {
-            color: LEGEND_COLOR,
+            color: _legendColor(),
             font: { size: 11 },
             boxWidth: 10,
             padding: 14,
