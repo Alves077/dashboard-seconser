@@ -21,6 +21,15 @@
 .kpi-ar:hover {
   box-shadow: inset 3px 0 0 var(--red), 0 6px 16px rgba(0, 0, 0, 0.12);
 }
+[data-theme="dark"] .kpi:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .kpi-at:hover {
+  box-shadow: inset 3px 0 0 var(--amber), 0 6px 20px rgba(0, 0, 0, 0.5);
+}
+[data-theme="dark"] .kpi-ar:hover {
+  box-shadow: inset 3px 0 0 var(--red), 0 6px 20px rgba(0, 0, 0, 0.5);
+}
 .kpi-label {
   font-size: 11px;
   color: var(--text2);

@@ -139,7 +139,10 @@ function toggleTheme() {
   localStorage.setItem('theme', next);
   _updateThemeBtn();
   if (typeof render === 'function' && typeof allRows !== 'undefined' && allRows.length) {
+    const lu = document.getElementById('last-update');
+    const luText = lu ? lu.textContent : null;
     render(typeof currentRows !== 'undefined' && currentRows.length ? currentRows : allRows);
+    if (lu && luText) lu.textContent = luText;
   }
 }
 
