@@ -1,38 +1,50 @@
 // ─── Qualidade ────────────────────────────────────────────────────────────────
 
+function _periodRows(sourceRows) {
+  const nMeses = parseInt(document.getElementById('qFiltPeriodo')?.value || '0') || 0;
+  if (!nMeses) return sourceRows;
+  const monthCount = {};
+  sourceRows.forEach(r => {
+    const d = parseDate(r['Data Saída']);
+    if (!d || isNaN(d)) return;
+    const k = d.getFullYear() * 100 + d.getMonth();
+    monthCount[k] = (monthCount[k] || 0) + 1;
+  });
+  const monthKeys = Object.keys(monthCount).map(Number).sort((a, b) => a - b);
+  const now = new Date();
+  const currentKey = now.getFullYear() * 100 + now.getMonth();
+  if (monthKeys[monthKeys.length - 1] === currentKey) monthKeys.pop();
+  const validKeys = new Set(monthKeys.slice(-nMeses));
+  return sourceRows.filter(r => {
+    const d = parseDate(r['Data Saída']);
+    return d && !isNaN(d) && validKeys.has(d.getFullYear() * 100 + d.getMonth());
+  });
+}
+
 function populateFilters() {
-  const selCat = document.getElementById('qFiltCat');
-  if (!selCat) return;
-  selCat.innerHTML = '<option value="">Todas</option>';
-  groupBy(allRows, 'Categoria').map(([k]) => k).filter(Boolean)
-    .forEach(v => { const o = document.createElement('option'); o.value = v; o.textContent = v; selCat.appendChild(o); });
+  _updateCatOptions(_periodRows(allRows));
+}
+
+function _updateCatOptions(rows) {
+  const sel = document.getElementById('qFiltCat');
+  if (!sel) return;
+  const current = sel.value;
+  const cats = groupBy(rows, 'Categoria').map(([k]) => k).filter(Boolean);
+  sel.innerHTML = '<option value="">Todas</option>';
+  cats.forEach(v => {
+    const o = document.createElement('option');
+    o.value = v; o.textContent = v;
+    if (v === current) o.selected = true;
+    sel.appendChild(o);
+  });
+  if (current && !cats.includes(current)) sel.value = '';
 }
 
 function applyFilters() {
-  const nMeses = parseInt(document.getElementById('qFiltPeriodo')?.value || '0') || 0;
+  const periodFiltered = _periodRows(allRows);
+  _updateCatOptions(periodFiltered);
   const cat = document.getElementById('qFiltCat')?.value || '';
-  let rows = allRows;
-  if (cat) rows = rows.filter(r => (r['Categoria'] || '').trim() === cat);
-  if (nMeses > 0) {
-    // Descobre meses calendário presentes, ordena, descarta incompleto (< 40% do anterior)
-    const monthCount = {};
-    rows.forEach(r => {
-      const d = parseDate(r['Data Saída']);
-      if (!d || isNaN(d)) return;
-      const k = d.getFullYear() * 100 + d.getMonth();
-      monthCount[k] = (monthCount[k] || 0) + 1;
-    });
-    const monthKeys = Object.keys(monthCount).map(Number).sort((a, b) => a - b);
-    // Remove o mês atual se ainda estiver em curso
-    const now = new Date();
-    const currentKey = now.getFullYear() * 100 + now.getMonth();
-    if (monthKeys[monthKeys.length - 1] === currentKey) monthKeys.pop();
-    const validKeys = new Set(monthKeys.slice(-nMeses));
-    rows = rows.filter(r => {
-      const d = parseDate(r['Data Saída']);
-      return d && !isNaN(d) && validKeys.has(d.getFullYear() * 100 + d.getMonth());
-    });
-  }
+  const rows = cat ? periodFiltered.filter(r => (r['Categoria'] || '').trim() === cat) : periodFiltered;
   render(rows);
 }
 

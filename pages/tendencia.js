@@ -1,20 +1,45 @@
 // ─── Tendência ────────────────────────────────────────────────────────────────
 
-function populateFilters() {
+function _tPeriodRows() {
+  const nMeses = parseInt(document.getElementById('tFiltPeriodo')?.value || '0') || 0;
+  if (!nMeses) return allRows;
+  const mensalTrimmed = filtrarMesIncompleto(buildMensalMap(allRows));
+  const validMonths = new Set(mensalTrimmed.slice(-nMeses).map(([k]) => +k));
+  return allRows.filter(r => {
+    const d = parseDate(r['Data Saída']);
+    return d && !isNaN(d) && validMonths.has(d.getFullYear() * 100 + d.getMonth());
+  });
+}
+
+function _updateTendFilterOptions(periodRows) {
   const selReg = document.getElementById('tFiltReg');
   const selCat = document.getElementById('tFiltCat');
-  if (!selReg || !selCat) return;
+  const curReg = selReg?.value || '';
+  const curCat = selCat?.value || '';
 
-  selReg.innerHTML = '<option value="">Todas</option>';
-  [...new Set(allRows.map(r => (r['Região']||'').trim()).filter(Boolean))].sort()
-    .forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; selReg.appendChild(o); });
+  const regs = [...new Set(periodRows.map(r => (r['Região']||'').trim()).filter(Boolean))].sort();
+  if (selReg) {
+    selReg.innerHTML = '<option value="">Todas</option>';
+    regs.forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; if(v===curReg) o.selected=true; selReg.appendChild(o); });
+    if (curReg && !regs.includes(curReg)) selReg.value = '';
+  }
 
-  selCat.innerHTML = '<option value="">Todas</option>';
-  groupBy(allRows, 'Categoria').map(([k]) => k).filter(Boolean)
-    .forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; selCat.appendChild(o); });
+  const rowsForCat = selReg?.value ? periodRows.filter(r => (r['Região']||'').trim() === selReg.value) : periodRows;
+  const cats = groupBy(rowsForCat, 'Categoria').map(([k]) => k).filter(Boolean);
+  if (selCat) {
+    selCat.innerHTML = '<option value="">Todas</option>';
+    cats.forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; if(v===curCat) o.selected=true; selCat.appendChild(o); });
+    if (curCat && !cats.includes(curCat)) selCat.value = '';
+  }
+}
+
+function populateFilters() {
+  _updateTendFilterOptions(_tPeriodRows());
 }
 
 function applyFilters() {
+  const periodRows = _tPeriodRows();
+  _updateTendFilterOptions(periodRows);
   const reg = document.getElementById('tFiltReg')?.value || '';
   const cat = document.getElementById('tFiltCat')?.value || '';
   let rows = allRows;
