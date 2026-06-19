@@ -56,17 +56,21 @@ function calcReaberturas(rows) {
   rows.forEach((r) => {
     const id = r["ID Colab"];
     const occ = parseInt(r["Ocorrências"] || 1);
-    if (!seen.has(id)) seen.set(id, occ);
+    if (!seen.has(id))
+      seen.set(id, { occ, cat: (r["Categoria"] || "").trim(), reg: (r["Região"] || "").trim() });
   });
-  let reabIds = 0,
-    reabTotal = 0;
-  seen.forEach((occ) => {
+  let reabIds = 0, reabTotal = 0;
+  const reabByCat = {}, reabEventosByCat = {}, reabByReg = {};
+  seen.forEach(({ occ, cat, reg }) => {
     if (occ > 1) {
       reabIds++;
       reabTotal += occ - 1;
+      reabByCat[cat] = (reabByCat[cat] || 0) + 1;
+      reabEventosByCat[cat] = (reabEventosByCat[cat] || 0) + (occ - 1);
+      reabByReg[reg] = (reabByReg[reg] || 0) + (occ - 1);
     }
   });
-  return { reabIds, reabTotal };
+  return { reabIds, reabTotal, reabByCat, reabEventosByCat, reabByReg };
 }
 
 function groupBy(rows, col) {

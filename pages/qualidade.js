@@ -48,7 +48,7 @@ function render(rows) {
   const at = count(rows, "Situação", "Em Atendimento");
   const ar = count(rows, "Situação", "Em Atraso");
   const abertos = at + ar;
-  const { reabIds, reabTotal } = calcReaberturas(rows);
+  const { reabIds, reabTotal, reabByCat } = calcReaberturas(rows);
 
   const okRows = rows.filter((r) => r["Situação"] === "OK");
   const diasVals = okRows
@@ -146,18 +146,6 @@ function render(rows) {
 
   // ── BLOCO 2 direita: Taxa de reabertura por categoria ────────────────────────
   // reaberturas da cat / total de serviços da cat — detecta má execução técnica
-  const seenReabIds = new Set();
-  const reabByCat = {};
-  rows.forEach((r) => {
-    const occ = parseInt(r["Ocorrências"] || 1);
-    if (occ <= 1) return;
-    const id = r["ID Colab"];
-    if (seenReabIds.has(id)) return;
-    seenReabIds.add(id);
-    const cat = (r["Categoria"] || "").trim();
-    reabByCat[cat] = (reabByCat[cat] || 0) + 1;
-  });
-
   const totalByCat = {};
   rows.forEach((r) => {
     const cat = (r["Categoria"] || "").trim();

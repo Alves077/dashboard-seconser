@@ -45,7 +45,7 @@ function render(rows) {
   const at = count(rows, "Situação", "Em Atendimento");
   const ar = count(rows, "Situação", "Em Atraso");
   const abertos = at + ar;
-  const { reabIds, reabTotal } = calcReaberturas(rows);
+  const { reabIds, reabTotal, reabEventosByCat: reabByCat, reabByReg } = calcReaberturas(rows);
 
   const okRows = rows.filter((r) => r["Situação"] === "OK");
   const diasVals = okRows
@@ -170,22 +170,6 @@ function render(rows) {
   }
 
   // ── Reaberturas ────────────────────────────────────────────────────────────
-  const reabByCat = {},
-    reabByReg = {};
-  const seenReabIds = new Set();
-  rows.forEach((r) => {
-    const occ = parseInt(r["Ocorrências"] || 1);
-    if (occ <= 1) return;
-    const id = r["ID Colab"];
-    if (seenReabIds.has(id)) return;
-    seenReabIds.add(id);
-    const eventos = occ - 1;
-    const cat = (r["Categoria"] || "").trim();
-    const reg = (r["Região"] || "").trim();
-    reabByCat[cat] = (reabByCat[cat] || 0) + eventos;
-    reabByReg[reg] = (reabByReg[reg] || 0) + eventos;
-  });
-
   const reabCatEntries = Object.entries(reabByCat)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 4);
