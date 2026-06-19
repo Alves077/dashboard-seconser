@@ -23,11 +23,10 @@ function applyFilters() {
       monthCount[k] = (monthCount[k] || 0) + 1;
     });
     const monthKeys = Object.keys(monthCount).map(Number).sort((a, b) => a - b);
-    if (monthKeys.length >= 2) {
-      const last = monthCount[monthKeys[monthKeys.length - 1]];
-      const prev = monthCount[monthKeys[monthKeys.length - 2]];
-      if (last < prev * 0.4) monthKeys.pop();
-    }
+    // Remove o mês atual se ainda estiver em curso
+    const now = new Date();
+    const currentKey = now.getFullYear() * 100 + now.getMonth();
+    if (monthKeys[monthKeys.length - 1] === currentKey) monthKeys.pop();
     const validKeys = new Set(monthKeys.slice(-nMeses));
     rows = rows.filter(r => {
       const d = parseDate(r['Data Saída']);
