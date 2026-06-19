@@ -14,13 +14,25 @@ function applyFilters() {
   let rows = allRows;
   if (cat) rows = rows.filter(r => (r['Categoria'] || '').trim() === cat);
   if (nMeses > 0) {
-    const datas = rows.map(r => parseDate(r['Data Saída'])).filter(d => d && !isNaN(d));
-    if (datas.length) {
-      const maxD = new Date(Math.max(...datas));
-      const cutoff = new Date(maxD);
-      cutoff.setMonth(cutoff.getMonth() - nMeses);
-      rows = rows.filter(r => { const d = parseDate(r['Data Saída']); return d && !isNaN(d) && d >= cutoff; });
+    // Descobre meses calendário presentes, ordena, descarta incompleto (< 40% do anterior)
+    const monthCount = {};
+    rows.forEach(r => {
+      const d = parseDate(r['Data Saída']);
+      if (!d || isNaN(d)) return;
+      const k = d.getFullYear() * 100 + d.getMonth();
+      monthCount[k] = (monthCount[k] || 0) + 1;
+    });
+    const monthKeys = Object.keys(monthCount).map(Number).sort((a, b) => a - b);
+    if (monthKeys.length >= 2) {
+      const last = monthCount[monthKeys[monthKeys.length - 1]];
+      const prev = monthCount[monthKeys[monthKeys.length - 2]];
+      if (last < prev * 0.4) monthKeys.pop();
     }
+    const validKeys = new Set(monthKeys.slice(-nMeses));
+    rows = rows.filter(r => {
+      const d = parseDate(r['Data Saída']);
+      return d && !isNaN(d) && validKeys.has(d.getFullYear() * 100 + d.getMonth());
+    });
   }
   render(rows);
 }
