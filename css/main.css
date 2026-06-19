@@ -8,6 +8,10 @@
   --sk-base: #e6e6e2;
   --sk-shine: #f2f2ee;
 }
+[data-theme="dark"] {
+  --sk-base: #2e2e2b;
+  --sk-shine: #3a3a36;
+}
 
 @keyframes sk-shimmer {
   0%   { background-position: -600px 0; }
