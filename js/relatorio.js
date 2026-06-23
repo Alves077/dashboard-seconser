@@ -167,6 +167,24 @@ function renderRelatorio(mesK, mesesMap) {
         return d && !isNaN(d) && d.getFullYear() === ano && d.getMonth() === mes;
       });
 
+  // Abertos por ano e por mês (só para modo "todos")
+  let anosBreakdown = [];
+  if (todos) {
+    const anoMap = {};
+    allRows.forEach(r => {
+      if (r['Situação'] === 'OK') return;
+      const d = parseDate(r['Data Saída']);
+      if (!d || isNaN(d)) return;
+      const ano = d.getFullYear();
+      const mk  = mesKey(d);
+      if (!anoMap[ano]) anoMap[ano] = { ano, total: 0, meses: {} };
+      anoMap[ano].total++;
+      const ml = mesLabel(d);
+      anoMap[ano].meses[mk] = { lbl: ml, n: (anoMap[ano].meses[mk]?.n || 0) + 1 };
+    });
+    anosBreakdown = Object.values(anoMap).sort((a, b) => a.ano - b.ano);
+  }
+
   let lblAnterior = null;
   let saldoAnterior = 0;
   if (!todos) {
@@ -254,7 +272,7 @@ function renderRelatorio(mesK, mesesMap) {
   rel.innerHTML = `
     <div class="rel-header">
       <div>
-        <div class="rel-title">${todos ? 'Histórico Completo' : 'Relatório Mensal · ' + lbl}</div>
+        <div class="rel-title">${todos ? 'Visão Geral · Todo o Período' : 'Relatório Mensal · ' + lbl}</div>
         <div class="rel-subtitle">Departamento de Iluminação Pública · Seconser Niterói</div>
       </div>
       <div class="rel-meta">
@@ -264,7 +282,19 @@ function renderRelatorio(mesK, mesesMap) {
       </div>
     </div>
 
-    ${lblAnterior ? `
+    ${todos && anosBreakdown.length ? `
+    <div class="context-box">
+      ${anosBreakdown.map(a => {
+        const meses = Object.entries(a.meses)
+          .sort((x, y) => +x[0] - +y[0])
+          .map(([, { lbl: ml, n }]) => `${ml}: ${fmt(n)}`)
+          .join(' · ');
+        return a.total === 0
+          ? `<strong>${a.ano}:</strong> concluído`
+          : `<strong>${a.ano}:</strong> ${fmt(a.total)} em aberto — ${meses}`;
+      }).join('<br>')}
+    </div>` : ''}
+    ${!todos && lblAnterior ? `
     <div class="context-box">
       <strong>Contexto:</strong> ao início de ${lbl}, havia <strong>${fmt(saldoAnterior)} serviços em aberto</strong>
       acumulados de meses anteriores (saldo de ${lblAnterior}).
