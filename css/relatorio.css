@@ -72,7 +72,7 @@ body {
 .control-bar {
   background: var(--surface);
   border-bottom: 1px solid var(--border2);
-  padding: 14px 32px;
+  padding: 12px 32px;
   display: flex;
   align-items: center;
   gap: 16px;
@@ -80,12 +80,29 @@ body {
   top: 0;
   z-index: 10;
 }
+.control-bar-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.control-bar-filters {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.control-bar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
 .control-bar-brand {
   font-size: 13px;
   font-weight: 700;
   color: var(--text);
   letter-spacing: 0.02em;
-  margin-right: auto;
 }
 .control-bar label {
   font-size: 12px;

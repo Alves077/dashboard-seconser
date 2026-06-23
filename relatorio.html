@@ -19,53 +19,58 @@
 
   <!-- Barra de controle -->
   <div class="control-bar">
-    <a href="index.html" class="control-bar-brand" style="text-decoration:none;color:inherit">← DIP · Seconser</a>
-
-    <div class="tab-switcher">
-      <button class="tab-btn tab-active" id="tabBtnMensal" onclick="switchTab('mensal')">Relatório Mensal</button>
-      <button class="tab-btn" id="tabBtnAbertos" onclick="switchTab('abertos')">Serviços em Aberto</button>
-    </div>
-
-    <div id="filtersMensal" style="display:flex;align-items:center;gap:10px">
-      <label>Mês de referência</label>
-      <select id="selMes">
-        <option value="">Carregando…</option>
-      </select>
-    </div>
-
-    <div id="filtersAbertos" style="display:none;align-items:center;gap:12px">
-      <!-- Inputs hidden — armazenam valor e min/max para renderListaAbertos -->
-      <input type="date" id="filtDe"  style="display:none">
-      <input type="date" id="filtAte" style="display:none">
-
-      <div class="filter-range">
-        <label>De</label>
-        <div class="datepicker">
-          <button class="dp-trigger" onclick="openDp('de',event)">
-            <span class="dp-value dp-placeholder" id="dp-de-lbl">Selecione</span>
-            <span class="dp-caret">▾</span>
-          </button>
-          <div class="dp-dropdown" id="dp-de"></div>
-        </div>
-        <span class="filter-range-sep">→</span>
-        <label>Até</label>
-        <div class="datepicker">
-          <button class="dp-trigger" onclick="openDp('ate',event)">
-            <span class="dp-value dp-placeholder" id="dp-ate-lbl">Selecione</span>
-            <span class="dp-caret">▾</span>
-          </button>
-          <div class="dp-dropdown" id="dp-ate"></div>
-        </div>
+    <div class="control-bar-left">
+      <a href="index.html" class="control-bar-brand" style="text-decoration:none;color:inherit">← DIP · Seconser</a>
+      <div class="tab-switcher">
+        <button class="tab-btn tab-active" id="tabBtnMensal" onclick="switchTab('mensal')">Relatório Mensal</button>
+        <button class="tab-btn" id="tabBtnAbertos" onclick="switchTab('abertos')">Serviços em Aberto</button>
       </div>
-      <label>Categoria</label>
-      <select id="filtCat" onchange="renderListaAbertos()"><option value="">Todas</option></select>
-      <label>Região</label>
-      <select id="filtReg" onchange="renderListaAbertos()"><option value="">Todas</option></select>
-      <button class="btn-clear" onclick="clearFilters()">Limpar filtros</button>
     </div>
 
-    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">◐</button>
-    <button class="btn-print" onclick="window.print()">⎙ Imprimir / PDF</button>
+    <div class="control-bar-filters">
+      <div id="filtersMensal" style="display:flex;align-items:center;gap:10px">
+        <label>Mês de referência</label>
+        <select id="selMes">
+          <option value="">Carregando…</option>
+        </select>
+      </div>
+
+      <div id="filtersAbertos" style="display:none;align-items:center;gap:12px">
+        <!-- Inputs hidden — armazenam valor e min/max para renderListaAbertos -->
+        <input type="date" id="filtDe"  style="display:none">
+        <input type="date" id="filtAte" style="display:none">
+
+        <div class="filter-range">
+          <label>De</label>
+          <div class="datepicker">
+            <button class="dp-trigger" onclick="openDp('de',event)">
+              <span class="dp-value dp-placeholder" id="dp-de-lbl">Selecione</span>
+              <span class="dp-caret">▾</span>
+            </button>
+            <div class="dp-dropdown" id="dp-de"></div>
+          </div>
+          <span class="filter-range-sep">→</span>
+          <label>Até</label>
+          <div class="datepicker">
+            <button class="dp-trigger" onclick="openDp('ate',event)">
+              <span class="dp-value dp-placeholder" id="dp-ate-lbl">Selecione</span>
+              <span class="dp-caret">▾</span>
+            </button>
+            <div class="dp-dropdown" id="dp-ate"></div>
+          </div>
+        </div>
+        <label>Categoria</label>
+        <select id="filtCat" onchange="renderListaAbertos()"><option value="">Todas</option></select>
+        <label>Região</label>
+        <select id="filtReg" onchange="renderListaAbertos()"><option value="">Todas</option></select>
+        <button class="btn-clear" onclick="clearFilters()">Limpar filtros</button>
+      </div>
+    </div>
+
+    <div class="control-bar-right">
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">◐</button>
+      <button class="btn-print" onclick="window.print()">⎙ Imprimir / PDF</button>
+    </div>
   </div>
 
   <!-- Loading -->
