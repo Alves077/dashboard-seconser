@@ -115,7 +115,7 @@ function onDataLoaded() {
   const meses = Object.entries(mesesMap).sort((a, b) => +b[0] - +a[0]);
 
   const sel = document.getElementById('selMes');
-  sel.innerHTML = '<option value="">Selecione o mês…</option>';
+  sel.innerHTML = '<option value="">Selecione o mês…</option><option value="todos">Histórico completo</option>';
   meses.forEach(([k, lbl]) => {
     const opt = document.createElement('option');
     opt.value = k; opt.textContent = lbl;
@@ -123,7 +123,8 @@ function onDataLoaded() {
   });
 
   sel.addEventListener('change', () => {
-    if (sel.value) renderRelatorio(+sel.value, mesesMap);
+    if (sel.value === 'todos') renderRelatorio(null, mesesMap);
+    else if (sel.value) renderRelatorio(+sel.value, mesesMap);
     else document.getElementById('relatorio').style.display = 'none';
   });
 
@@ -154,26 +155,34 @@ function renderRelatorio(mesK, mesesMap) {
   relatorioRendered = true;
   if (activeTab === 'mensal') rel.style.display = 'block';
 
-  const ano = Math.floor(mesK / 100);
-  const mes = mesK % 100;
-  const lbl = mesesMap[mesK];
+  const todos = mesK === null;
+  const lbl = todos ? 'Histórico Completo' : mesesMap[mesK];
 
-  const rowsMes = allRows.filter(r => {
-    const d = parseDate(r['Data Saída']);
-    return d && !isNaN(d) && d.getFullYear() === ano && d.getMonth() === mes;
-  });
+  const rowsMes = todos
+    ? allRows
+    : allRows.filter(r => {
+        const ano = Math.floor(mesK / 100);
+        const mes = mesK % 100;
+        const d = parseDate(r['Data Saída']);
+        return d && !isNaN(d) && d.getFullYear() === ano && d.getMonth() === mes;
+      });
 
-  const mesAnteriorK = mes === 0 ? (ano - 1) * 100 + 11 : ano * 100 + (mes - 1);
-  const lblAnterior = mesesMap[mesAnteriorK] || null;
-
-  const ultimoDiaMesAnterior = new Date(ano, mes, 0);
-  ultimoDiaMesAnterior.setHours(23, 59, 59, 999);
-  const saldoAnterior = allRows.filter(r => {
-    const saida = parseDate(r['Data Saída']);
-    if (!saida || isNaN(saida) || saida > ultimoDiaMesAnterior) return false;
-    const retorno = parseDate(r['Data Retorno']);
-    return !retorno || isNaN(retorno) || retorno > ultimoDiaMesAnterior;
-  }).length;
+  let lblAnterior = null;
+  let saldoAnterior = 0;
+  if (!todos) {
+    const ano = Math.floor(mesK / 100);
+    const mes = mesK % 100;
+    const mesAnteriorK = mes === 0 ? (ano - 1) * 100 + 11 : ano * 100 + (mes - 1);
+    lblAnterior = mesesMap[mesAnteriorK] || null;
+    const ultimoDiaMesAnterior = new Date(ano, mes, 0);
+    ultimoDiaMesAnterior.setHours(23, 59, 59, 999);
+    saldoAnterior = allRows.filter(r => {
+      const saida = parseDate(r['Data Saída']);
+      if (!saida || isNaN(saida) || saida > ultimoDiaMesAnterior) return false;
+      const retorno = parseDate(r['Data Retorno']);
+      return !retorno || isNaN(retorno) || retorno > ultimoDiaMesAnterior;
+    }).length;
+  }
 
   const total = rowsMes.length;
   const concluidos = rowsMes.filter(r => r['Situação'] === 'OK').length;
@@ -245,7 +254,7 @@ function renderRelatorio(mesK, mesesMap) {
   rel.innerHTML = `
     <div class="rel-header">
       <div>
-        <div class="rel-title">Relatório Mensal · ${lbl}</div>
+        <div class="rel-title">${todos ? 'Histórico Completo' : 'Relatório Mensal · ' + lbl}</div>
         <div class="rel-subtitle">Departamento de Iluminação Pública · Seconser Niterói</div>
       </div>
       <div class="rel-meta">
@@ -262,12 +271,12 @@ function renderRelatorio(mesK, mesesMap) {
     </div>` : ''}
 
     <div class="rel-section">
-      <div class="rel-section-title">Indicadores do mês</div>
+      <div class="rel-section-title">${todos ? 'Indicadores gerais' : 'Indicadores do mês'}</div>
       <div class="kpi-grid">
         <div class="kpi">
           <div class="kpi-label">Entradas</div>
           <div style="display:flex;align-items:center"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value">${fmt(total)}</span></div>
-          <div class="kpi-sub">serviços abertos</div>
+          <div class="kpi-sub">serviços registrados</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Concluídos</div>
