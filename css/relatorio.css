@@ -194,7 +194,58 @@ body {
   color: var(--text2);
   margin-bottom: 14px;
 }
-
+.card-note {
+  font-size: 10px;
+  color: var(--text3);
+  margin-top: 10px;
+  line-height: 1.4;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.card-head .card-title { margin-bottom: 0; }
+.card-aside { font-size: 11px; color: var(--text2); }
+.cell-delta {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text3);
+  margin-left: 4px;
+}
+.row-cauda td { color: var(--text3); font-style: italic; }
+.faixa-bar {
+  display: flex;
+  height: 34px;
+  border-radius: 5px;
+  overflow: hidden;
+  background: var(--surface2);
+}
+.faixa-seg {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.01em;
+  min-width: 2px;
+}
+.faixa-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  justify-content: center;
+  margin-top: 14px;
+}
+.faixa-item { display: flex; align-items: center; gap: 7px; font-size: 11px; }
+.faixa-dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.faixa-lbl { color: var(--text2); }
+.faixa-n { color: var(--text3); }
+.faixa-pc { font-weight: 600; color: var(--text); }
+.faixa-empty { font-size: 11px; color: var(--text3); }
 .kpi-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -227,6 +278,15 @@ body {
   color: var(--text2);
   margin-top: 5px;
 }
+.kpi-delta {
+  font-size: 10px;
+  font-weight: 600;
+  margin-top: 3px;
+  letter-spacing: -0.01em;
+}
+.kpi-delta-bad { color: var(--red); }
+.kpi-delta-good { color: var(--green); }
+.kpi-delta-flat { color: var(--text3); font-weight: 500; }
 .kpi-accent {
   display: inline-block;
   width: 3px;
@@ -247,6 +307,50 @@ body {
   color: var(--text2);
 }
 .context-box strong { color: var(--text); }
+
+.bal {
+  display: flex;
+  align-items: stretch;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.bal-cell { flex: 1; padding: 14px 16px; }
+.bal-cell.bal-end { background: var(--surface2); }
+.bal-op {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text3);
+  background: var(--surface2);
+}
+.bal-k {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text3);
+}
+.bal-v {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-top: 7px;
+  color: var(--text);
+}
+.bal-n { font-size: 11px; color: var(--text2); margin-top: 5px; }
+.bal-note { font-size: 11px; color: var(--text2); margin-top: 8px; line-height: 1.5; }
+.bal-note strong { color: var(--text); }
+
+@media screen and (max-width: 900px) {
+  .bal { flex-wrap: wrap; }
+  .bal-cell { flex: 1 1 40%; }
+}
 
 .g2 {
   display: grid;
@@ -322,6 +426,15 @@ body {
   font-weight: 500;
 }
 .reg-table tr:last-child td { border-bottom: none; }
+
+.reg-table-center th,
+.reg-table-center td {
+  text-align: center;
+}
+.reg-table-center th:first-child,
+.reg-table-center td:first-child {
+  text-align: center;
+}
 
 .obs-section { margin-bottom: 20px; }
 .obs-label {
@@ -653,6 +766,7 @@ body {
   .kpi-label { font-size: 8px; }
   .kpi-value { font-size: 18px; }
   .kpi-sub { font-size: 9px; }
+  .kpi-delta { font-size: 8px; margin-top: 2px; }
   .reg-table { font-size: 9px; width: 100%; }
   .reg-table th { padding: 3px 2px; white-space: nowrap; }
   .reg-table td { padding: 4px 2px; white-space: nowrap; }
@@ -660,7 +774,21 @@ body {
   .card { border: 1px solid #ddd; break-inside: avoid; }
   .kpi { border: 1px solid #ddd; }
   .g2 { break-inside: auto; }
-  .rel-section { break-inside: avoid; }
+  .bal { border: 1px solid #ddd; break-inside: avoid; flex-wrap: nowrap; }
+  .bal-cell { padding: 8px 10px; }
+  .bal-op { width: 18px; font-size: 14px; }
+  .bal-v { font-size: 16px; }
+  .bal-k { font-size: 8px; }
+  .bal-n { font-size: 9px; }
+  .bal-note { font-size: 9px; }
+  .card-note { font-size: 8px; margin-top: 6px; }
+  .card-aside { font-size: 9px; }
+  .cell-delta { font-size: 8px; }
+    .faixa-bar { height: 26px; break-inside: avoid; }
+  .faixa-seg { font-size: 9px; }
+  .faixa-legend { gap: 5px 20px; margin-top: 10px; }
+  .faixa-item { font-size: 9px; }
+      .rel-section { break-inside: avoid; }
   .obs-section { break-before: auto; }
   .obs-vazia { display: none !important; }
   .rel-header { padding: 16px 20px; }

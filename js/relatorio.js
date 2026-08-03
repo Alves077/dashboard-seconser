@@ -9,6 +9,57 @@ function fmtDate(s) {
   if (!d || isNaN(d)) return s || '—';
   return ('0' + d.getDate()).slice(-2) + '/' + ('0' + (d.getMonth() + 1)).slice(-2) + '/' + d.getFullYear();
 }
+// Linha de variação para os KPIs. inverso = true quando subir é ruim.
+function deltaKpi(atual, anterior, lblAnt, unidade, inverso) {
+  if (anterior === null || anterior === undefined) return '';
+  const dif = atual - anterior;
+  if (Math.abs(dif) < 0.05) return `<div class="kpi-delta kpi-delta-flat">estável vs ${lblAnt}</div>`;
+  const ruim = inverso ? dif > 0 : dif < 0;
+  return `<div class="kpi-delta ${ruim ? 'kpi-delta-bad' : 'kpi-delta-good'}">vs ${fmtDec(anterior)}${unidade} em ${lblAnt}</div>`;
+}
+
+// Agrega por coluna devolvendo volume, pendencias e qualidade de execucao
+function agrupar(rows, col) {
+  const m = {};
+  rows.forEach(r => {
+    const k = (r[col] || '').trim();
+    if (!k) return;
+    if (!m[k]) m[k] = { total: 0, atraso: 0, abertos: 0, somaDias: 0, nDias: 0, fora: 0 };
+    const o = m[k];
+    o.total++;
+    if (r['Situação'] === 'OK') {
+      const v = parseFloat((r['Dias Execução'] || '').toString().replace(',', '.'));
+      if (!isNaN(v) && v >= 0) { o.somaDias += v; o.nDias++; if (v > 5) o.fora++; }
+    } else {
+      o.abertos++;
+      if (r['Situação'] === 'Em Atraso') o.atraso++;
+    }
+  });
+  return Object.entries(m).map(([k, o]) => ({
+    k, ...o,
+    media: o.nDias ? o.somaDias / o.nDias : null,
+    pctFora: o.nDias ? (o.fora / o.nDias) * 100 : null
+  }));
+}
+
+// Celulas padronizadas das tabelas
+function celMedia(v) {
+  if (v === null) return '<td style="color:var(--text3)">—</td>';
+  const cor = v > 15 ? 'var(--red)' : v > 5 ? 'var(--amber)' : 'var(--text)';
+  return `<td style="color:${cor};font-weight:${v > 15 ? '600' : '400'}">${fmtDec(v)}d</td>`;
+}
+function celPct(v) {
+  if (v === null) return '<td style="color:var(--text3)">—</td>';
+  const cor = v >= 70 ? 'var(--red)' : v >= 40 ? 'var(--amber)' : 'var(--text)';
+  return `<td style="color:${cor};font-weight:${v >= 70 ? '600' : '400'}">${fmtDec(v)}%</td>`;
+}
+function celAtraso(n) {
+  return `<td style="color:${n > 0 ? 'var(--red)' : 'var(--text3)'}">${n > 0 ? fmt(n) : '—'}</td>`;
+}
+
+function celAberto(o) {
+  return o.abertos ? `<td>${fmt(o.abertos)}</td>` : '<td style="color:var(--text3)">—</td>';
+}
 function toInputDate(d) {
   return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
 }
@@ -167,30 +218,87 @@ function renderRelatorio(mesK, mesesMap) {
         return d && !isNaN(d) && d.getFullYear() === ano && d.getMonth() === mes;
       });
 
-  // Abertos por ano e por mês (só para modo "todos")
-  let anosBreakdown = [];
+  // ── Cálculos exclusivos do modo "Todo o Período" ──────────────────────────
+  let faixasIdade = [], serieMensal = [], ultimos3 = [], maisAntigos = [];
   if (todos) {
-    const anoMap = {};
-    allRows.forEach(r => {
-      if (r['Situação'] === 'OK') return;
+    const hoje = new Date();
+    hoje.setHours(23, 59, 59, 999);
+
+    // Fila em aberto por tempo de espera
+    const abertosRows = allRows.filter(r => r['Situação'] !== 'OK');
+    const buckets = [
+      { lbl: 'Até 5 dias', nota: 'dentro do prazo', max: 5,    cor: '#639922', n: 0 },
+      { lbl: '6 a 15 dias',  nota: '',              max: 15,   cor: '#C9A227', n: 0 },
+      { lbl: '16 a 30 dias', nota: '',              max: 30,   cor: '#BA7517', n: 0 },
+      { lbl: '31 a 90 dias', nota: '',              max: 90,   cor: '#E24B4A', n: 0 },
+      { lbl: 'Mais de 90 dias', nota: '',           max: 1e9,  cor: '#8C1D1B', n: 0 },
+    ];
+    let acima150 = 0;
+    abertosRows.forEach(r => {
       const d = parseDate(r['Data Saída']);
       if (!d || isNaN(d)) return;
-      const ano = d.getFullYear();
-      const mk  = mesKey(d);
-      if (!anoMap[ano]) anoMap[ano] = { ano, total: 0, meses: {} };
-      anoMap[ano].total++;
-      const ml = mesLabel(d);
-      anoMap[ano].meses[mk] = { lbl: ml, n: (anoMap[ano].meses[mk]?.n || 0) + 1 };
+      const dias = Math.floor((hoje - d) / 86400000);
+      if (dias > 150) acima150++;
+      (buckets.find(b => dias <= b.max) || buckets[buckets.length - 1]).n++;
     });
-    anosBreakdown = Object.values(anoMap).sort((a, b) => a.ano - b.ano);
+    faixasIdade = { buckets, total: abertosRows.length, acima150 };
+
+    // Série mensal: média de execução e % fora do prazo por mês de registro
+    const mm = {};
+    allRows.forEach(r => {
+      const d = parseDate(r['Data Saída']);
+      if (!d || isNaN(d)) return;
+      const k = mesKey(d);
+      if (!mm[k]) mm[k] = { k, lbl: mesLabel(d), reg: 0, exec: 0, abertos: 0, soma: 0, n: 0, fora: 0 };
+      const o = mm[k];
+      o.reg++;
+      if (r['Situação'] === 'OK') {
+        o.exec++;
+        const v = parseFloat((r['Dias Execução'] || '').toString().replace(',', '.'));
+        if (!isNaN(v) && v >= 0) { o.soma += v; o.n++; if (v > 5) o.fora++; }
+      } else o.abertos++;
+    });
+    serieMensal = Object.values(mm).sort((a, b) => a.k - b.k).map(o => ({
+      ...o,
+      media: o.n ? o.soma / o.n : null,
+      pctFora: o.n ? (o.fora / o.n) * 100 : null,
+    }));
+
+    // Últimos 3 meses + saldo de fila de cada um
+    ultimos3 = serieMensal.slice(-3).map(m => {
+      const ano = Math.floor(m.k / 100), mes = m.k % 100;
+      const ini = new Date(ano, mes, 1);
+      const fim = new Date(ano, mes + 1, 0); fim.setHours(23, 59, 59, 999);
+      let execNoMes = 0, filaFimMes = 0;
+      allRows.forEach(r => {
+        const ret = parseDate(r['Data Retorno']);
+        if (ret && !isNaN(ret) && ret >= ini && ret <= fim) execNoMes++;
+        const saida = parseDate(r['Data Saída']);
+        if (saida && !isNaN(saida) && saida <= fim && (!ret || isNaN(ret) || ret > fim)) filaFimMes++;
+      });
+      return { ...m, saldo: m.reg - execNoMes, filaFim: filaFimMes };
+    });
+
+    // Serviços mais antigos ainda em aberto
+    maisAntigos = abertosRows
+      .map(r => {
+        const d = parseDate(r['Data Saída']);
+        return (!d || isNaN(d)) ? null : { r, d, dias: Math.floor((hoje - d) / 86400000) };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.dias - a.dias)
+      .slice(0, 8);
   }
 
   let lblAnterior = null;
+  let mesAnteriorK = null;
   let saldoAnterior = 0;
+  let executadosNoMes = 0;   // concluídos DENTRO do mês, de qualquer data de registro
+  let execDoMes = 0;         // destes, os que também foram registrados no mês
   if (!todos) {
     const ano = Math.floor(mesK / 100);
     const mes = mesK % 100;
-    const mesAnteriorK = mes === 0 ? (ano - 1) * 100 + 11 : ano * 100 + (mes - 1);
+    mesAnteriorK = mes === 0 ? (ano - 1) * 100 + 11 : ano * 100 + (mes - 1);
     lblAnterior = mesesMap[mesAnteriorK] || null;
     const ultimoDiaMesAnterior = new Date(ano, mes, 0);
     ultimoDiaMesAnterior.setHours(23, 59, 59, 999);
@@ -200,11 +308,23 @@ function renderRelatorio(mesK, mesesMap) {
       const retorno = parseDate(r['Data Retorno']);
       return !retorno || isNaN(retorno) || retorno > ultimoDiaMesAnterior;
     }).length;
+
+    const primeiroDia = new Date(ano, mes, 1);
+    const ultimoDia = new Date(ano, mes + 1, 0);
+    ultimoDia.setHours(23, 59, 59, 999);
+    allRows.forEach(r => {
+      const ret = parseDate(r['Data Retorno']);
+      if (!ret || isNaN(ret) || ret < primeiroDia || ret > ultimoDia) return;
+      executadosNoMes++;
+      const saida = parseDate(r['Data Saída']);
+      if (saida && !isNaN(saida) && saida >= primeiroDia && saida <= ultimoDia) execDoMes++;
+    });
   }
 
   const total = rowsMes.length;
   const concluidos = rowsMes.filter(r => r['Situação'] === 'OK').length;
   const abertos = rowsMes.filter(r => r['Situação'] !== 'OK').length;
+  const filaFim = saldoAnterior + total - executadosNoMes;
 
   const okRows = rowsMes.filter(r => r['Situação'] === 'OK');
   const diasVals = okRows.map(r =>
@@ -214,6 +334,25 @@ function renderRelatorio(mesK, mesesMap) {
   const noPrazo = diasVals.filter(v => v <= 5).length;
   const media = diasVals.length ? diasVals.reduce((a, b) => a + b, 0) / diasVals.length : 0;
 
+  // Comparativo com o mês anterior (mesma lógica de rowsMes + media/noPrazo)
+  let mediaAnt = null, noPrazoPctAnt = null;
+  if (!todos && lblAnterior) {
+    const anoA = Math.floor(mesAnteriorK / 100);
+    const mesA = mesAnteriorK % 100;
+    const diasAnt = allRows
+      .filter(r => {
+        if (r['Situação'] !== 'OK') return false;
+        const d = parseDate(r['Data Saída']);
+        return d && !isNaN(d) && d.getFullYear() === anoA && d.getMonth() === mesA;
+      })
+      .map(r => parseFloat((r['Dias Execução'] || '').toString().replace(',', '.')))
+      .filter(v => !isNaN(v) && v >= 0);
+    if (diasAnt.length) {
+      mediaAnt = diasAnt.reduce((a, b) => a + b, 0) / diasAnt.length;
+      noPrazoPctAnt = (diasAnt.filter(v => v <= 5).length / diasAnt.length) * 100;
+    }
+  }
+  
   const seen = new Map();
   rowsMes.forEach(r => {
     const id = r['ID Colab'];
@@ -223,35 +362,26 @@ function renderRelatorio(mesK, mesesMap) {
   let reabIds = 0, reabTotal = 0;
   seen.forEach(occ => { if (occ > 1) { reabIds++; reabTotal += occ - 1; } });
 
-  const catMap = {}, catOkMap = {}, catArMap = {};
-  rowsMes.forEach(r => {
-    const c = (r['Categoria'] || '').trim();
-    if (!c) return;
-    catMap[c] = (catMap[c] || 0) + 1;
-    if (r['Situação'] === 'OK') catOkMap[c] = (catOkMap[c] || 0) + 1;
-    if (r['Situação'] === 'Em Atraso') catArMap[c] = (catArMap[c] || 0) + 1;
-  });
-  const cats = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+  // Categorias: mostra as 8 maiores e agrupa a cauda para não estourar a altura
+  const catsAll = agrupar(rowsMes, 'Categoria').sort((a, b) => b.total - a.total || a.k.localeCompare(b.k));
+  const cats = todos ? catsAll.slice(0, 8) : catsAll;
+  const catsCauda = todos ? catsAll.slice(8) : [];
+  const cauda = catsCauda.length ? {
+    n: catsCauda.length,
+    total: catsCauda.reduce((s, c) => s + c.total, 0),
+    atraso: catsCauda.reduce((s, c) => s + c.atraso, 0),
+  } : null;
+  const regs = agrupar(rowsMes, 'Região').sort((a, b) => b.total - a.total);
 
-  const regMap = {}, regOkMap = {}, regArMap = {};
-  rowsMes.forEach(r => {
-    const reg = (r['Região'] || '').trim();
-    if (!reg) return;
-    regMap[reg] = (regMap[reg] || 0) + 1;
-    if (r['Situação'] === 'OK') regOkMap[reg] = (regOkMap[reg] || 0) + 1;
-    if (r['Situação'] === 'Em Atraso') regArMap[reg] = (regArMap[reg] || 0) + 1;
-  });
-  const regs = Object.entries(regMap).sort((a, b) => b[1] - a[1]);
-
-  const bairroMap = {}, bairroOkMap = {}, bairroArMap = {};
-  rowsMes.forEach(r => {
-    const b = (r['Bairro'] || '').trim();
-    if (!b) return;
-    bairroMap[b] = (bairroMap[b] || 0) + 1;
-    if (r['Situação'] === 'OK') bairroOkMap[b] = (bairroOkMap[b] || 0) + 1;
-    if (r['Situação'] === 'Em Atraso') bairroArMap[b] = (bairroArMap[b] || 0) + 1;
-  });
-  const bairros = Object.entries(bairroMap).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  // Bairros em dois recortes: volume de pedidos e backlog (proporção parada, não a contagem bruta —
+  // senão bairros de alto volume aparecem no topo só por terem mais gente esperando em números absolutos)
+  const MIN_BACKLOG = todos ? 50 : 15;
+  const bairrosAll = agrupar(rowsMes, 'Bairro');
+  const bairrosVol = [...bairrosAll].sort((a, b) => b.total - a.total).slice(0, 8);
+  const bairrosBacklog = bairrosAll
+    .filter(b => b.total >= MIN_BACKLOG)
+    .sort((a, b) => (b.abertos / b.total) - (a.abertos / a.total))
+    .slice(0, 8);
 
   const faixaKeyMap = {
     '1. Até 3 dias': 'Até 3 dias', '2. 4 a 7 dias': '4 a 7 dias',
@@ -277,27 +407,21 @@ function renderRelatorio(mesK, mesesMap) {
       </div>
       <div class="rel-meta">
         Gerado em ${dataGeracao}<br>
-        ${fmt(total)} serviços no período<br>
+        ${fmt(total)} serviços ${todos ? 'no período' : 'registrados no mês'}<br>
         Dados: Google Sheets via Apps Script
       </div>
     </div>
 
-    ${todos && anosBreakdown.length ? `
+    ${todos && serieMensal.length ? `
     <div class="context-box">
-      ${anosBreakdown.map(a => {
-        const meses = Object.entries(a.meses)
-          .sort((x, y) => +x[0] - +y[0])
-          .map(([, { lbl: ml, n }]) => `${ml}: ${fmt(n)}`)
-          .join(' · ');
-        return a.total === 0
-          ? `<strong>${a.ano}:</strong> concluído`
-          : `<strong>${a.ano}:</strong> ${fmt(a.total)} em aberto — ${meses}`;
-      }).join('<br>')}
-    </div>` : ''}
-    ${!todos && lblAnterior ? `
-    <div class="context-box">
-      <strong>Contexto:</strong> ao início de ${lbl}, havia <strong>${fmt(saldoAnterior)} serviços em aberto</strong>
-      acumulados de meses anteriores (saldo de ${lblAnterior}).
+      Indicadores acumulados de <strong>${fmt(serieMensal.length)} meses</strong>.
+      ${(() => {
+        const agora = new Date();
+        const kAtual = agora.getFullYear() * 100 + agora.getMonth();
+        const f = [...serieMensal].reverse().find(m => m.k < kAtual && m.media !== null);
+        return f ? `No último mês fechado (<strong>${f.lbl}</strong>): tempo médio
+          <strong>${fmtDec(f.media)}d</strong> e <strong>${fmtDec(f.pctFora)}%</strong> fora do prazo.` : '';
+      })()}
     </div>` : ''}
 
     <div class="rel-section">
@@ -311,20 +435,22 @@ function renderRelatorio(mesK, mesesMap) {
         <div class="kpi">
           <div class="kpi-label">Concluídos</div>
           <div style="display:flex;align-items:center"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value">${fmt(concluidos)}</span></div>
-          <div class="kpi-sub">${pct(concluidos, total)} do total</div>
+          <div class="kpi-sub">${pct(concluidos, total)} ${todos ? 'do total' : '· até hoje'}</div>
         </div>
         <div class="kpi">
           <div class="kpi-label">No Prazo</div>
           <div style="display:flex;align-items:center"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value">${pct(noPrazo, concluidos || 1)}</span></div>
           <div class="kpi-sub">${fmt(noPrazo)} de ${fmt(concluidos)}</div>
+          ${deltaKpi(concluidos ? (noPrazo / concluidos) * 100 : 0, noPrazoPctAnt, lblAnterior, '%', false)}
         </div>
         <div class="kpi">
           <div class="kpi-label">Tempo Médio</div>
           <div style="display:flex;align-items:center"><span class="kpi-accent" style="background:var(--gray)"></span><span class="kpi-value">${fmtDec(media)}<span style="font-size:14px;font-weight:400;color:var(--text2)"> d</span></span></div>
           <div class="kpi-sub">dos concluídos</div>
+          ${deltaKpi(media, mediaAnt, lblAnterior, 'd', true)}
         </div>
         <div class="kpi">
-          <div class="kpi-label">Em Aberto</div>
+          <div class="kpi-label">Abertos</div>
           <div style="display:flex;align-items:center"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value">${fmt(abertos)}</span></div>
           <div class="kpi-sub">${pct(abertos, total)} do total</div>
         </div>
@@ -335,6 +461,97 @@ function renderRelatorio(mesK, mesesMap) {
         </div>
       </div>
     </div>
+    ${todos && faixasIdade.total ? `
+    <div class="rel-section">
+      <div class="rel-section-title">Composição da fila em aberto</div>
+      <div class="card">
+        <div class="card-head">
+          <div class="card-title">${fmt(faixasIdade.total)} serviços pendentes, por tempo de espera</div>
+          <div class="card-aside">${fmt(faixasIdade.total - faixasIdade.buckets[0].n)} de ${fmt(faixasIdade.total)}
+            (${pct(faixasIdade.total - faixasIdade.buckets[0].n, faixasIdade.total)}) já passaram do prazo</div>
+        </div>
+        <div class="faixa-bar">
+          ${faixasIdade.buckets.filter(b => b.n).map(b => {
+            const p = (b.n / faixasIdade.total) * 100;
+            return `<span class="faixa-seg" style="width:${p}%;background:${b.cor}"
+              title="${b.lbl}: ${fmt(b.n)}">${p >= 7 ? fmtDec(p) + '%' : ''}</span>`;
+          }).join('')}
+        </div>
+        <div class="faixa-legend">
+          ${faixasIdade.buckets.map((b, i) => `
+          <span class="faixa-item">
+            <span class="faixa-dot" style="background:${b.cor}"></span>
+            <span class="faixa-lbl">${b.lbl}</span>
+            <span class="faixa-pc">${fmt(b.n)}</span>
+            ${b.nota ? `<span class="faixa-n">· ${b.nota}</span>` : ''}
+            ${i === 4 && faixasIdade.acima150 ? `<span class="faixa-n">· ${fmt(faixasIdade.acima150)} acima de 150 dias</span>` : ''}
+          </span>`).join('')}
+        </div>
+      </div>
+    </div>` : ''}
+
+    ${todos && ultimos3.length ? `
+    <div class="rel-section">
+      <div class="rel-section-title">Últimos meses</div>
+      <div class="card">
+        <table class="reg-table">
+          <thead><tr><th>Mês</th><th>Registrados</th><th>Executados</th><th>Abertos</th><th>Tempo Médio</th><th>Fora do Prazo</th><th>Fila no Fim</th></tr></thead>
+          <tbody>${ultimos3.map(m => `
+            <tr>
+              <td>${m.lbl}</td>
+              <td>${fmt(m.reg)}</td><td>${fmt(m.exec)}</td><td>${fmt(m.abertos)}</td>
+              ${celMedia(m.media)}${celPct(m.pctFora)}
+              <td style="color:${m.saldo > 0 ? 'var(--red)' : 'var(--green)'};font-weight:600">${fmt(m.filaFim)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div class="card-note">
+          Fila no fim do mês conta todos os serviços pendentes naquela data, de qualquer mês de registro; ao lado, a variação no período.
+        </div>
+      </div>
+    </div>` : ''}
+
+    ${!todos ? `
+    <div class="rel-section">
+      <div class="rel-section-title">Movimento da fila</div>
+      <div class="bal">
+        <div class="bal-cell">
+          <div class="bal-k">Fila em 01/${lbl.split('/')[0]}</div>
+          <div class="bal-v">${fmt(saldoAnterior)}</div>
+          <div class="bal-n">pendentes de meses anteriores</div>
+        </div>
+        <div class="bal-op">+</div>
+        <div class="bal-cell">
+          <div class="bal-k">Registrados em ${lbl.split('/')[0]}</div>
+          <div class="bal-v" style="color:var(--blue)">${fmt(total)}</div>
+          <div class="bal-n">novos serviços no mês</div>
+        </div>
+        <div class="bal-op">−</div>
+        <div class="bal-cell">
+          <div class="bal-k">Executados em ${lbl.split('/')[0]}</div>
+          <div class="bal-v" style="color:var(--green)">${fmt(executadosNoMes)}</div>
+          <div class="bal-n">concluídos no mês</div>
+        </div>
+        <div class="bal-op">=</div>
+        <div class="bal-cell bal-end">
+          <div class="bal-k">Fila em ${new Date(Math.floor(mesK/100), mesK%100+1, 0).getDate()}/${lbl.split('/')[0]}</div>
+          <div class="bal-v" style="color:${filaFim > saldoAnterior ? 'var(--red)' : 'var(--green)'}">${fmt(filaFim)}</div>
+          <div class="bal-n">pendentes ao fim do mês</div>
+        </div>
+      </div>
+      <div class="bal-note">
+        Dos ${fmt(executadosNoMes)} executados, ${fmt(execDoMes)} foram registrados em ${lbl}
+        e ${fmt(executadosNoMes - execDoMes)} em meses anteriores.
+      </div>
+    </div>` : ''}
+
+    <div class="rel-section">
+      <div class="card">
+        <div class="card-title">Distribuição por faixa · só concluídos</div>
+        <div class="faixa-bar" id="cFaixasBar"></div>
+        <div class="faixa-legend" id="cFaixasLegend"></div>
+      </div>
+    </div>
 
     <div class="rel-section">
       <div class="rel-section-title">Distribuição</div>
@@ -342,25 +559,27 @@ function renderRelatorio(mesK, mesesMap) {
         <div class="card">
           <div class="card-title">Por categoria</div>
           <table class="reg-table">
-            <thead><tr><th>Categoria</th><th>Total</th><th>%</th><th>Concluídos</th><th>Em Atraso</th></tr></thead>
-            <tbody>${cats.map(([cat, n]) => `
+            <thead><tr><th>Categoria</th><th>Total</th><th>%</th><th>Abertos</th><th>Tempo Médio</th></tr></thead>
+            <tbody>${cats.map(c => `
               <tr>
-                <td>${cat}</td><td>${fmt(n)}</td><td>${pct(n, total)}</td>
-                <td style="color:var(--green)">${fmt(catOkMap[cat] || 0)}</td>
-                <td style="color:${(catArMap[cat] || 0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(catArMap[cat] || 0) > 0 ? fmt(catArMap[cat]) : '—'}</td>
+                <td>${c.k}</td><td>${fmt(c.total)}</td><td>${pct(c.total, total)}</td>
+                ${celAberto(c)}${celMedia(c.media)}
               </tr>`).join('')}
+              ${cauda ? `<tr class="row-cauda">
+                <td>Demais (${cauda.n} categorias)</td><td>${fmt(cauda.total)}</td><td>${pct(cauda.total, total)}</td>
+                ${celAtraso(cauda.atraso)}<td style="color:var(--text3)">—</td>
+              </tr>` : ''}
             </tbody>
           </table>
         </div>
         <div class="card">
-          <div class="card-title">Top bairros</div>
+          <div class="card-title">Por região</div>
           <table class="reg-table">
-            <thead><tr><th>Bairro</th><th>Total</th><th>%</th><th>Concluídos</th><th>Em Atraso</th></tr></thead>
-            <tbody>${bairros.map(([b, n]) => `
+            <thead><tr><th>Região</th><th>Total</th><th>%</th><th>Abertos</th><th>Tempo Médio</th><th>Fora do Prazo</th></tr></thead>
+            <tbody>${regs.map(r => `
               <tr>
-                <td>${b}</td><td>${fmt(n)}</td><td>${pct(n, total)}</td>
-                <td style="color:var(--green)">${fmt(bairroOkMap[b] || 0)}</td>
-                <td style="color:${(bairroArMap[b] || 0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(bairroArMap[b] || 0) > 0 ? fmt(bairroArMap[b]) : '—'}</td>
+                <td>${r.k}</td><td>${fmt(r.total)}</td><td>${pct(r.total, total)}</td>
+                ${celAberto(r)}${celMedia(r.media)}${celPct(r.pctFora)}
               </tr>`).join('')}
             </tbody>
           </table>
@@ -369,28 +588,69 @@ function renderRelatorio(mesK, mesesMap) {
     </div>
 
     <div class="rel-section">
-      <div class="rel-section-title">Detalhamento</div>
+      <div class="rel-section-title">Bairros</div>
       <div class="g2">
         <div class="card">
-          <div class="card-title">Distribuição por faixa · só concluídos</div>
-          <div style="position:relative;height:180px;margin-bottom:12px"><canvas id="cFaixas"></canvas></div>
-          <div id="cFaixasLegend" style="display:flex;flex-direction:column;gap:8px"></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Por região</div>
+          <div class="card-title">Maior volume de pedidos</div>
           <table class="reg-table">
-            <thead><tr><th>Região</th><th>Total</th><th>%</th><th>Concluídos</th><th>Em Atraso</th></tr></thead>
-            <tbody>${regs.map(([reg, n]) => `
+            <thead><tr><th>Bairro</th><th>Total</th><th>Abertos</th><th>Tempo Médio</th><th>Fora do Prazo</th></tr></thead>
+            <tbody>${bairrosVol.map(b => `
               <tr>
-                <td>${reg}</td><td>${fmt(n)}</td><td>${pct(n, total)}</td>
-                <td style="color:var(--green)">${fmt(regOkMap[reg] || 0)}</td>
-                <td style="color:${(regArMap[reg] || 0) > 0 ? 'var(--red)' : 'var(--text3)'}">${(regArMap[reg] || 0) > 0 ? fmt(regArMap[reg]) : '—'}</td>
+                <td>${b.k}</td><td>${fmt(b.total)}</td>${celAberto(b)}
+                ${celMedia(b.media)}${celPct(b.pctFora)}
               </tr>`).join('')}
             </tbody>
           </table>
+          <div class="card-note">Tempo médio considera apenas os serviços já concluídos.</div>
+        </div>
+        <div class="card">
+          <div class="card-title">Maior backlog</div>
+          ${bairrosBacklog.length ? `
+          <table class="reg-table">
+            <thead><tr><th>Bairro</th><th>Total</th><th>Abertos</th><th>Tempo Médio</th><th>Fora do Prazo</th></tr></thead>
+            <tbody>${bairrosBacklog.map(b => `
+              <tr>
+                <td>${b.k}</td><td>${fmt(b.total)}</td>${celAberto(b)}
+                ${celMedia(b.media)}${celPct(b.pctFora)}
+              </tr>`).join('')}
+            </tbody>
+          </table>
+          <div class="card-note">Bairros com ${MIN_BACKLOG} ou mais serviços no período, ordenados pela proporção ainda pendente. Tempo médio considera apenas os já concluídos — bairros com muito pendente podem ter tempo real maior do que o exibido.</div>` : `
+          <div class="card-note">Nenhum bairro atingiu ${MIN_BACKLOG} serviços no período.</div>`}
         </div>
       </div>
     </div>
+
+    ${todos && serieMensal.length > 1 ? `
+    <div class="rel-section">
+      <div class="rel-section-title">Evolução mensal</div>
+      <div class="card">
+        <div class="card-title">Tempo médio de execução e percentual fora do prazo</div>
+        <div style="position:relative;height:230px"><canvas id="cEvolucao"></canvas></div>
+        <div class="card-note">Serviços agrupados pelo mês de registro. Prazo de atendimento: 5 dias corridos.</div>
+      </div>
+    </div>` : ''}
+
+    ${todos && maisAntigos.length ? `
+    <div class="rel-section">
+      <div class="rel-section-title">Serviços mais antigos ainda em aberto</div>
+      <div class="card">
+        <table class="reg-table reg-table-center">
+          <thead><tr><th>Serviço</th><th>Categoria</th><th>Bairro</th><th>Região</th><th>Registrado em</th><th>Dias em Aberto</th></tr></thead>
+          <tbody>${maisAntigos.map(o => `
+            <tr>
+              <td>${o.r['ID Colab'] || '—'}</td>
+              <td>${(o.r['Categoria'] || '—').trim()}</td>
+              <td>${(o.r['Bairro'] || '—').trim()}</td>
+              <td>${(o.r['Região'] || '—').trim()}</td>
+              <td>${fmtDate(o.r['Data Saída'])}</td>
+              <td style="color:var(--red);font-weight:600">${fmt(o.dias)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div class="card-note">Dias em aberto contados até a data de geração do relatório.</div>
+      </div>
+    </div>` : ''}
 
     <div class="rel-section obs-section">
       <div class="rel-section-title">Observações</div>
@@ -405,7 +665,8 @@ function renderRelatorio(mesK, mesesMap) {
     </div>
   `;
 
-  renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas);
+  renderBarraFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas);
+  if (todos && serieMensal.length > 1) renderEvolucao(serieMensal);
 }
 
 // ── Filtros dependentes (aba Abertos) ────────────────────────────────────────
@@ -530,47 +791,109 @@ function renderListaAbertos() {
   container.innerHTML = html;
 }
 
-// ── Donut de faixas ───────────────────────────────────────────────────────────
-function renderDonutFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas) {
-  const ctx = document.getElementById('cFaixas');
+// ── Evolução mensal (2 eixos, legível em P&B) ────────────────────────────────
+function renderEvolucao(serie) {
+  const ctx = document.getElementById('cEvolucao');
   if (!ctx) return;
-  charts['cFaixas'] = new Chart(ctx, {
-    type: 'doughnut',
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  const eixo = dark ? 'rgba(255,255,255,0.45)' : 'rgba(0,0,0,0.45)';
+  const grade = dark ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)';
+  const linha = dark ? '#E8E6E1' : '#2B2F33';
+
+  charts['cEvolucao'] = new Chart(ctx, {
+    type: 'line',
     data: {
-      labels: faixaOrdem,
-      datasets: [{
-        data: faixaVals,
-        backgroundColor: faixaCores,
-        borderWidth: 2,
-        borderColor: document.documentElement.getAttribute('data-theme') === 'dark' ? '#242422' : '#ffffff',
-        hoverOffset: 6,
-      }],
+      labels: serie.map(m => m.lbl),
+      datasets: [
+        {
+          label: 'Tempo médio (dias)',
+          data: serie.map(m => m.media),
+          yAxisID: 'y',
+          borderColor: linha,
+          backgroundColor: linha,
+          borderWidth: 2.4,
+          pointStyle: 'circle',
+          pointRadius: 3,
+          tension: 0.25,
+        },
+        {
+          label: 'Fora do prazo (%)',
+          data: serie.map(m => m.pctFora),
+          yAxisID: 'y1',
+          borderColor: '#8A8F95',
+          backgroundColor: '#fff',
+          borderWidth: 1.8,
+          borderDash: [5, 3],
+          pointStyle: 'rect',
+          pointRadius: 3.5,
+          pointBorderWidth: 1.6,
+          tension: 0.25,
+        },
+      ],
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '65%',
+      interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { display: false },
+        legend: {
+          position: 'top',
+          align: 'center',
+          labels: { usePointStyle: true, pointStyleWidth: 14, boxWidth: 14, boxHeight: 7, padding: 16, font: { size: 11 }, color: eixo },
+        },
         tooltip: {
           callbacks: {
-            label: (ctx) => ` ${ctx.label}: ${fmt(ctx.parsed)} (${pct(ctx.parsed, totalFaixas)})`,
+            label: (c) => c.datasetIndex === 0
+              ? ` Tempo médio: ${fmtDec(c.parsed.y)}d`
+              : ` Fora do prazo: ${fmtDec(c.parsed.y)}%`,
           },
+        },
+      },
+      scales: {
+        x: { ticks: { color: eixo, font: { size: 10 } }, grid: { display: false } },
+        y: {
+          position: 'left', beginAtZero: true,
+          ticks: { color: eixo, font: { size: 10 }, callback: (v) => v + 'd' },
+          grid: { color: grade },
+        },
+        y1: {
+          position: 'right', beginAtZero: true, max: 100,
+          ticks: { color: eixo, font: { size: 10 }, callback: (v) => v + '%' },
+          grid: { display: false },
         },
       },
     },
   });
+}
 
+// ── Barra de faixas de execução ──────────────────────────────────────────────
+function renderBarraFaixas(faixaOrdem, faixaVals, faixaCores, totalFaixas) {
+  const bar = document.getElementById('cFaixasBar');
   const leg = document.getElementById('cFaixasLegend');
-  if (leg) {
-    leg.innerHTML = faixaOrdem.map((lbl, i) => `
-    <div style="display:flex;align-items:center;gap:6px">
-      <span style="width:9px;height:9px;border-radius:2px;background:${faixaCores[i]};flex-shrink:0"></span>
-      <span style="flex:1;font-size:11px;color:var(--text2)">${lbl}</span>
-      <span style="font-size:11px;color:var(--text3);margin-right:4px">${fmt(faixaVals[i])}</span>
-      <span style="font-size:12px;font-weight:600;color:var(--text);width:36px;text-align:right">${pct(faixaVals[i], totalFaixas)}</span>
-    </div>`).join('');
+  if (!bar || !leg) return;
+
+  if (!totalFaixas) {
+    bar.innerHTML = '';
+    leg.innerHTML = '<span class="faixa-empty">Sem serviços concluídos no período.</span>';
+    return;
   }
+
+  // Segmentos: só entram faixas com valor; rótulo interno some se a fatia for estreita
+  bar.innerHTML = faixaOrdem.map((lbl, i) => {
+    const v = faixaVals[i];
+    if (!v) return '';
+    const p = (v / totalFaixas) * 100;
+    return `<span class="faixa-seg" style="width:${p}%;background:${faixaCores[i]}"
+      title="${lbl}: ${fmt(v)} (${pct(v, totalFaixas)})">${p >= 7 ? pct(v, totalFaixas) : ''}</span>`;
+  }).join('');
+
+  leg.innerHTML = faixaOrdem.map((lbl, i) => `
+    <span class="faixa-item">
+      <span class="faixa-dot" style="background:${faixaCores[i]}"></span>
+      <span class="faixa-lbl">${lbl}</span>
+      <span class="faixa-n">${fmt(faixaVals[i])}</span>
+      <span class="faixa-pc">${pct(faixaVals[i], totalFaixas)}</span>
+    </span>`).join('');
 }
 
 // ── Date Picker customizado ───────────────────────────────────────────────────
@@ -760,7 +1083,10 @@ window.addEventListener('beforeprint', () => {
   if (sec) sec.classList.toggle('obs-vazia', !obs || !obs.value.trim());
   let ps = document.getElementById('__printPage');
   if (!ps) { ps = document.createElement('style'); ps.id = '__printPage'; document.head.appendChild(ps); }
-  ps.textContent = activeTab === 'abertos' ? '@page { margin: 0.8cm 1cm; }' : '@page { margin: 0; }';
+  ps.textContent = activeTab === 'abertos' ? '@page { margin: 0.8cm 1cm; }' : '@page { margin: 1cm 1cm 1.2cm; }';
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    Object.values(charts).forEach(c => c && c.resize());
+  }));
 });
 window.addEventListener('afterprint', () => {
   const sec = document.querySelector('.obs-section');
