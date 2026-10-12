@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="view-transition" content="same-origin">
+  <title>DIP · Seconser Niterói — Dashboard</title>
+  <link rel="icon" type="image/png" href="img/favicon.png">
+  <script>try{var _t=localStorage.getItem('theme');if(_t)document.documentElement.setAttribute('data-theme',_t)}catch(e){}</script>
+  <link rel="stylesheet" href="css/main.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+</head>
+
+<body>
+
+  <div id="loading" style="display:none">
+    <div class="spinner"></div>
+    <p>Carregando dados da planilha…</p>
+    <p id="error-msg"></p>
+  </div>
+
+  <div id="app" class="sk-loading">
+
+    <div class="topbar">
+      <div class="topbar-brand">
+        <img src="img/logo-seconser.png" alt="Seconser Niterói" class="topbar-logo">
+        <div>
+          <div class="topbar-title">DIP · Seconser Niterói</div>
+          <div class="topbar-sub" id="sub-periodo">carregando…</div>
+        </div>
+      </div>
+      <nav class="topbar-nav">
+        <a class="nav-link nav-active" href="index.html">Visão Geral</a>
+        <a class="nav-link nav-mapa" href="pages/mapa.html">Mapa</a>
+        <a class="nav-link" href="pages/qualidade.html">Qualidade</a>
+        <a class="nav-link" href="pages/tendencia.html">Tendência</a>
+        <a class="nav-link nav-rel" href="relatorio.html">Relatório</a>
+      </nav>
+      <div class="topbar-right">
+        <div class="topbar-badges">
+          <span class="badge b-green" id="badge-ok">—</span>
+          <span class="badge b-amb" id="badge-at">—</span>
+          <span class="badge b-red" id="badge-ar">—</span>
+        </div>
+        <span class="last-update" id="last-update"></span>
+        <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">◐</button>
+        <button class="refresh-btn" onclick="refreshData()" aria-label="Atualizar dados">↺ Atualizar</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="fg">
+        <label for="fPeriodo">Período</label>
+        <select id="fPeriodo">
+          <option value="0">Todo o período</option>
+          <option value="1">Último mês</option>
+          <option value="3">Últimos 3 meses</option>
+          <option value="6">Últimos 6 meses</option>
+          <option value="12">Últimos 12 meses</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label for="fMes">Mês</label>
+        <select id="fMes">
+          <option value="">Todos</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label for="fRegiao">Região</label>
+        <select id="fRegiao">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label for="fCat">Categoria</label>
+        <select id="fCat">
+          <option value="">Todas</option>
+        </select>
+      </div>
+      <span class="filter-note">dados ao vivo · Google Sheets</span>
+    </div>
+
+    <div class="page">
+
+      <!-- KPIs -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">Total de Serviços</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--blue)"></span><span class="kpi-value" id="kTotal">—</span></div>
+          <div class="kpi-sub">registros na planilha</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Concluídos</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--green)"></span><span class="kpi-value" id="kOk">—</span></div>
+          <div class="kpi-sub" id="kOkPct">—</div>
+        </div>
+        <div class="kpi kpi-at">
+          <div class="kpi-label">Em Aberto</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--amber)"></span><span class="kpi-value" id="kAt">—</span></div>
+          <div class="kpi-sub" id="kAtPct">—</div>
+        </div>
+        <div class="kpi kpi-ar">
+          <div class="kpi-label">Em Atraso</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--red)"></span><span class="kpi-value" id="kAr">—</span></div>
+          <div class="kpi-sub" id="kArPct">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Reaberturas</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--purple)"></span><span class="kpi-value" id="kReab">—</span></div>
+          <div class="kpi-sub" id="kReabPct">—</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Tempo Médio</div>
+          <div class="kpi-row"><span class="kpi-accent" style="background:var(--gray)"></span><span class="kpi-value" id="kMedia">—</span></div>
+          <div class="kpi-sub" id="kMediaSub">—</div>
+        </div>
+      </div>
+
+      <!-- Linha 1: categorias full width -->
+      <div class="card">
+        <div class="ct">Categorias</div>
+        <div class="cat-top">
+          <span id="catTop">—</span>
+          <span id="catTopVal">—</span>
+        </div>
+        <div id="catBars"></div>
+      </div>
+
+      <!-- Linha 2: reaberturas + faixas -->
+      <div class="g2">
+        <div class="card">
+          <div class="ct">Reaberturas</div>
+          <div class="reab-kpi">
+            <div>
+              <div style="display:flex;align-items:baseline;gap:10px">
+                <span class="reab-kpi-n" id="rTotal">—</span>
+                <span style="font-size:13px;color:var(--text2)">serviços reabertos</span>
+              </div>
+              <div class="reab-kpi-meta">
+                <span id="rEventos">—</span>
+                <span class="reab-sep">·</span>
+                <span id="rPct">—</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-sub-title first">Por categoria</div>
+          <div id="reabList"></div>
+          <div class="card-sub-title">Por região</div>
+          <div id="reabRegBars"></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Tempo de execução · concluídos</div>
+          <div class="card-sub-title first">Distribuição por faixa</div>
+          <div class="donut-mobile-stack" style="display:grid;grid-template-columns:2fr 1fr;gap:24px;align-items:center;margin-bottom:4px">
+            <div style="position:relative;height:200px">
+              <canvas id="cFaixas" role="img" aria-label="Faixas de execução"></canvas>
+            </div>
+            <div id="cFaixasLegend" style="display:flex;flex-direction:column;gap:10px;align-self:center"></div>
+          </div>
+          <div class="card-sub-title">Tempo médio por categoria <span style="font-size:10px;font-weight:400;text-transform:none;letter-spacing:0;color:var(--text3)">· mín. 10 registros</span></div>
+          <div id="cTempoHTML"></div>
+        </div>
+      </div>
+
+      <!-- Linha 3: regiões + bairros -->
+      <div class="g2">
+        <div class="card card-vcenter">
+          <div class="ct">Serviços por região</div>
+          <div class="card-vcenter-body" style="justify-content:flex-start">
+            <div class="reg-header">
+              <span style="width:110px;flex-shrink:0"></span>
+              <div style="flex:1"></div>
+              <span style="width:40px;text-align:right">Vol.</span>
+              <span style="width:36px;text-align:right">%</span>
+              <span style="width:34px;text-align:right">Méd.</span>
+              <span style="width:30px;text-align:right">Atr.</span>
+              <span style="width:30px;text-align:right">At.</span>
+            </div>
+            <div id="regList"></div>
+          </div>
+        </div>
+
+        <div class="card card-vcenter">
+          <div class="ct">Top 10 bairros</div>
+          <div class="card-vcenter-body">
+            <div id="bairroList"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Volume mensal -->
+      <div class="card">
+        <div class="ct" style="justify-content:space-between">
+          <span>Volume mensal de demandas</span>
+          <span class="ct-note" id="pico-label"></span>
+        </div>
+        <div style="position:relative;height:300px">
+          <canvas id="cMensal" role="img" aria-label="Volume mensal de demandas"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/charts.js"></script>
+  <script src="js/filters.js"></script>
+  <script src="js/render.js"></script>
+  <script src="js/main.js"></script>
+  <script>initTheme();</script>
+</body>
+
+</html>

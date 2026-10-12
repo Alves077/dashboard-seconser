@@ -1,0 +1,188 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/inter';
+
+/* Modo escuro pelo atributo (escolhido pelo usuário ou pelo sistema — ver index.html), não pela media query */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/* ── Tokens (DESIGN.md) ──────────────────────────────────────────────────────
+   Valores por tema em variáveis; o Tailwind só aponta para elas (@theme inline),
+   então `bg-card`, `text-ink` etc. trocam sozinhos no modo escuro. */
+:root {
+  color-scheme: light;
+  --c-page: #f6f9fc;
+  --c-card: #ffffff;
+  --c-line: #e3e8ee;
+  --c-line-input: #a8c3de;
+  --c-ink: #0d253d;
+  --c-ink-2: #273951;
+  --c-ink-3: #64748d; /* só sobre card branco (4.75:1); no fundo da página usar ink-2 */
+  --c-acao: #533afd;
+  --c-acao-press: #2e2b8c;
+  --c-acao-suave: #eeedff;
+  --c-sobre-acao: #ffffff;
+  --c-ok: #0ca30c;
+  --c-ok-texto: #006300;
+  --c-andamento: #fab219;
+  --c-andamento-texto: #8a5a00;
+  --c-atraso: #d03b3b;
+  --c-atraso-texto: #b42323;
+  --c-risco: #ec835a;
+  --c-risco-texto: #a4461f;
+  --c-s1: #2a78d6;
+  --c-s2: #eb6834;
+  --c-s3: #1baf7a;
+  --c-s4: #eda100;
+  --c-s5: #e87ba4;
+  --c-s6: #008300;
+  --c-s7: #4a3aa7;
+  --c-s8: #e34948;
+  --sombra-1: rgba(0, 55, 112, 0.08) 0 1px 3px;
+  --sombra-2: rgba(0, 55, 112, 0.08) 0 8px 24px, rgba(0, 55, 112, 0.04) 0 2px 6px;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+  --c-page: #0a1324;
+  --c-card: #111b2e;
+  --c-line: #22314d;
+  --c-line-input: #3a4d6f;
+  --c-ink: #e6edf6;
+  --c-ink-2: #a3b1c6;
+  --c-ink-3: #7d8ba1;
+  --c-acao: #8d87ff;
+  --c-acao-press: #b3afff;
+  --c-acao-suave: #23224d;
+  --c-sobre-acao: #0a1324;
+  --c-ok-texto: #4ccb4c;
+  --c-andamento-texto: #fab219;
+  --c-atraso-texto: #ff7b7b;
+  --c-risco-texto: #f2a07f;
+  --c-s1: #3987e5;
+  --c-s2: #d95926;
+  --c-s3: #199e70;
+  --c-s4: #c98500;
+  --c-s5: #d55181;
+  --c-s6: #008300;
+  --c-s7: #9085e9;
+  --c-s8: #e66767;
+  --sombra-1: rgba(0, 0, 0, 0.3) 0 1px 3px;
+  --sombra-2: rgba(0, 0, 0, 0.45) 0 8px 24px, rgba(0, 0, 0, 0.3) 0 2px 6px;
+}
+
+@theme inline {
+  --font-sans: 'Inter Variable', Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --color-page: var(--c-page);
+  --color-card: var(--c-card);
+  --color-line: var(--c-line);
+  --color-line-input: var(--c-line-input);
+  --color-ink: var(--c-ink);
+  --color-ink-2: var(--c-ink-2);
+  --color-ink-3: var(--c-ink-3);
+  --color-acao: var(--c-acao);
+  --color-acao-press: var(--c-acao-press);
+  --color-acao-suave: var(--c-acao-suave);
+  --color-sobre-acao: var(--c-sobre-acao);
+  --color-ok: var(--c-ok);
+  --color-ok-texto: var(--c-ok-texto);
+  --color-andamento: var(--c-andamento);
+  --color-andamento-texto: var(--c-andamento-texto);
+  --color-atraso: var(--c-atraso);
+  --color-atraso-texto: var(--c-atraso-texto);
+  --color-risco: var(--c-risco);
+  --color-risco-texto: var(--c-risco-texto);
+  --color-s1: var(--c-s1);
+  --color-s2: var(--c-s2);
+  --color-s3: var(--c-s3);
+  --color-s4: var(--c-s4);
+  --color-s5: var(--c-s5);
+  --color-s6: var(--c-s6);
+  --color-s7: var(--c-s7);
+  --color-s8: var(--c-s8);
+
+  --shadow-1: var(--sombra-1);
+  --shadow-2: var(--sombra-2);
+
+  --ease-saida: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-movimento: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-gaveta: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ── Base ─────────────────────────────────────────────────────────────────── */
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-page text-ink font-sans antialiased;
+    font-size: 14px;
+    line-height: 1.45;
+    min-height: 100dvh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* toque sem atraso de 300 ms (mobile-native) */
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label,
+  summary {
+    touch-action: manipulation;
+  }
+  /* iOS dá zoom em campo com fonte < 16px */
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--c-acao);
+    outline-offset: 2px;
+  }
+  /* texto de botão não é selecionado num toque longo */
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+}
+
+@utility numeros {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Pressionar: confirma o toque (DESIGN.md §9) */
+@utility pressionavel {
+  transition: transform 140ms var(--ease-saida);
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
+/* Movimento reduzido: menos e mais suave, não zero (emil-design-eng). Tira deslocamento/escala;
+   fades e trocas de cor continuam. Componentes usam `motion-reduce:` para o resto. */
+@media (prefers-reduced-motion: reduce) {
+  .pressionavel:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* Mapas (Leaflet): fundo do tema enquanto os blocos carregam; no escuro, escurece só os blocos
+   do OpenStreetMap (pinos e controles continuam com as cores certas) */
+.mapa-tema {
+  background: var(--c-page);
+  font-family: inherit;
+}
+[data-theme='dark'] .mapa-tema .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85);
+}
+
+@media print {
+  :root {
+    color-scheme: light;
+  }
+  body {
+    background: #fff;
+  }
+}

@@ -11,3 +11,21 @@ desktop.ini
 
 # Dev docs internos
 SESSION_CHECKPOINT.md
+
+# Build / dependências (v2: Vite + React)
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Variáveis de ambiente (as chaves públicas vão no código; nada de segredo aqui, mas .env nunca sobe)
+.env
+.env.*
+!.env.example
+
+# Dados: nenhum retrato do banco entra no repositório público
+*.csv
+dados-locais/
