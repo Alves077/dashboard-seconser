@@ -4,7 +4,7 @@ import { Drawer } from '@base-ui/react/drawer'
 import { clsx } from 'clsx'
 import { ImageOff, Lightbulb, Lock, MapPin, X } from 'lucide-react'
 import { lazy, Suspense, useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { EstadoVazio, Esqueleto } from '@/componentes/estados/Estados'
 import { useInterface } from '@/componentes/layout/interface'
 import { Botao } from '@/componentes/ui/Botao'
@@ -171,6 +171,8 @@ function ParteRestrita({ servico }: { servico: Servico }) {
 function Conteudo({ servico }: { servico: Servico }) {
   const hoje = useHoje()
   const destino = useDestino()
+  // já no Mapa, o próprio mapa voa até o pino: o link "Ver no mapa" seria redundante
+  const naPaginaMapa = useLocation().pathname === '/mapa'
   const atual = ultimaSaida(servico.saidas)
   const sit = situacao(atual, hoje)
 
@@ -213,7 +215,7 @@ function Conteudo({ servico }: { servico: Servico }) {
             </Suspense>
           </div>
         )}
-        {servico.lat !== null && (
+        {servico.lat !== null && !naPaginaMapa && (
           <Link
             to={destino('/mapa', { servico: servico.chave })}
             className="mt-2 inline-flex h-9 items-center gap-1.5 text-[13px] font-medium text-acao hover:underline"

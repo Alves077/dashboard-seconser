@@ -1,8 +1,9 @@
 // Mapa pequeno com o pino do serviço (Ficha). Carregado sob demanda: o Leaflet só baixa
 // quando uma ficha com coordenada é aberta.
 import 'leaflet/dist/leaflet.css'
-import { CircleMarker, MapContainer, TileLayer } from 'react-leaflet'
+import { CircleMarker, MapContainer } from 'react-leaflet'
 import type { Situacao } from '@/dados/tipos'
+import { FundoMapa } from './FundoMapa'
 
 const VAR_COR: Record<Situacao, string> = { ok: '--c-ok', andamento: '--c-andamento', atraso: '--c-atraso' }
 
@@ -20,11 +21,7 @@ export default function MiniMapa({ lat, lng, situacao }: { lat: number; lng: num
       attributionControl
       className="mapa-tema h-48 w-full rounded-lg"
     >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        maxZoom={19}
-      />
+      <FundoMapa />
       {/* halo branco + ponto na cor da situação (a situação também está escrita na ficha) */}
       <CircleMarker center={[lat, lng]} radius={11} pathOptions={{ color: '#fff', weight: 3, fillColor: cor(situacao), fillOpacity: 1 }} />
     </MapContainer>

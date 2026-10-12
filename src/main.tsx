@@ -8,6 +8,7 @@ import { ProvedorInterface } from '@/componentes/layout/interface'
 import { Moldura } from '@/componentes/layout/Moldura'
 import { ProvedorSessao } from '@/dados/sessao'
 import { EmConstrucao } from '@/paginas/EmConstrucao'
+import { Mapa } from '@/paginas/Mapa'
 import { Panorama } from '@/paginas/Panorama'
 
 // Rotas com "#" (…/dashboard-seconser/#/mapa): o GitHub Pages não sabe responder rotas de
@@ -17,7 +18,7 @@ const rotas = createHashRouter([
     element: <Moldura />,
     children: [
       { path: '/', element: <Panorama /> },
-      { path: '/mapa', element: <EmConstrucao /> },
+      { path: '/mapa', element: <Mapa /> },
       { path: '/prazo', element: <EmConstrucao /> },
       { path: '/evolucao', element: <EmConstrucao /> },
       { path: '/relatorios', element: <EmConstrucao /> },

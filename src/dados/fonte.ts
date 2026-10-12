@@ -34,9 +34,25 @@ async function lerCsv(nome: string): Promise<{ linhas: Record<string, string>[];
     )
   }
   const texto = await r.text()
-  const { data } = Papa.parse<Record<string, string>>(texto, { header: true, skipEmptyLines: true })
   const lm = r.headers.get('Last-Modified')
-  return { linhas: data, modificado: lm ? new Date(lm) : null }
+  // arquivo grande vai para o worker (não trava a tela); os pequenos, direto
+  const linhas = texto.length > 200_000 ? await lerEmSegundoPlano(texto) : Papa.parse<Record<string, string>>(texto, { header: true, skipEmptyLines: true }).data
+  return { linhas, modificado: lm ? new Date(lm) : null }
+}
+
+function lerEmSegundoPlano(texto: string): Promise<Record<string, string>[]> {
+  return new Promise((resolver, rejeitar) => {
+    const w = new Worker(new URL('./leitorCsv.worker.ts', import.meta.url), { type: 'module' })
+    w.onmessage = (e: MessageEvent<Record<string, string>[]>) => {
+      resolver(e.data)
+      w.terminate()
+    }
+    w.onerror = (e) => {
+      rejeitar(new Error(`Falha ao ler o CSV: ${e.message}`))
+      w.terminate()
+    }
+    w.postMessage(texto)
+  })
 }
 
 function fonteCsv(): Fonte {

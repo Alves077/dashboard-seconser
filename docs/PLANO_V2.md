@@ -166,3 +166,50 @@ depois).
 "no prazo"/"tempo médio" só existem para o executado) — volta como controle próprio no Mapa e nos Relatórios.
 "Quem pediu" foi direto para a barra. Ao mudar período/"contar por", a tela rola até "No período" se estiver
 fora de vista. Colunas de quebras alinhadas no fim; "Esperando há mais tempo" com divisórias.
+
+## 10. Fase 3 — Mapa (12/10/2026)
+
+- **Um pino por serviço** (situação da saída mais recente), desenhado em canvas direto no Leaflet (até ~17 mil
+  sem travar). Cor = situação; aro laranja = risco elétrico em aberto; dica ao passar o mouse; tocar abre a Ficha.
+- **"Mostrar"** (controle da página, `?mostrar=`): Abertos (padrão, fila de hoje) · Em atraso · Executados no
+  período (pela data de execução) · Todos do período. É onde a situação voltou depois de sair dos filtros globais.
+- Filtros globais (região, bairro, categoria, origem) reenquadram o mapa; período só conta nos modos de período.
+- **Painel clicável:** No mapa (total + situação + sem coordenada), Esperando há mais tempo (abre Ficha e voa até
+  o pino, descontando a Ficha aberta), Regiões (cor de identidade), Bairros, Categorias. Tocar filtra; tocar de
+  novo tira.
+- Controles: Ver todos (reenquadra), **Perto de mim** (geolocalização, uso na rua), zoom com as cores do tema;
+  legenda com contagem. Mapa visível no celular (58dvh, painel embaixo). Caixa de Niterói do site antigo
+  descarta coordenada errada. Na página do Mapa a Ficha não mostra "Ver no mapa" e a barra não mostra a
+  contagem de saídas.
+- Frase do Panorama: "dos 275 já executados, 106 (38,7%) ficaram no prazo".
+- Observação: com o servidor do usuário já aberto, a entrada de um componente novo do Base UI fez o Vite
+  reorganizar as dependências e misturar duas cópias do React ("Invalid hook call") — recarregar a página resolve.
+
+**Ajustes do Mapa (12/10/2026, revisão do usuário):** sem subtítulo; "Perto de mim" removido; "Ver todos" com
+texto também no celular; "Mostrar" em grade 2×2 no celular. **Pinos empilhados:** serviços na MESMA coordenada
+(Leste: 114 serviços em 59 lugares; cidade: 223 em 84 pontos) viram um pino com o número (cor = pior situação,
+aro de risco), dica "Toque para escolher" e lista no popup (cada linha abre a Ficha). Enquadramento mais perto
+(zoom fracionado 0,25, margem 16 px, até zoom 17). Computador: mapa e painel até o fim da janela, medido
+(`useAlturaAteOFim`), sem rolagem sobrando. Grades com `grid-cols-1` (o conteúdo empurrava a coluna para fora da
+tela no celular — também no Panorama). CSV local lido num Web Worker (`src/dados/leitorCsv.worker.ts`); a demora
+no desenvolvimento é processar 5,5 MB de CSV + o servidor de dev, não o download (90 ms).
+**"Ver no mapa" (12/10/2026):** o deslocamento do pino descontava a Ficha inteira (256 px), mas numa tela larga
+ela cobre só ~95 px do mapa (o resto cobre o painel) → pino ia parar longe do centro. Agora desconta só o pedaço
+coberto de fato (medido) e, ao chegar de outra página, abre direto no pino (sem voo longo desde o centro de
+Niterói); voo só ao escolher outro serviço já no Mapa. ResizeObserver chama `invalidateSize` quando o espaço do
+mapa muda. Conferido em 1440×900: pino a 1 px do centro da parte visível. `window.__mapa` exposto só em dev.
+
+**Fundo do mapa (12/10/2026):** padrão = OpenStreetMap "suave" (o mesmo mapa com cores apagadas, `saturate(0.4)` — cinza total igualava mar e terra; filtro CSS
+`.fundo-suave` em `estilos.css`; invertido no tema escuro) — os pinos de situação ficam com a cor só para eles e
+todos os nomes de rua/bairro continuam. Botão "Mapa detalhado" (canto superior direito, lembrado no
+`localStorage` `mapa-detalhado`) volta o OSM colorido. Componente único `src/mapa/FundoMapa.tsx` (Mapa e
+MiniMapa da Ficha). CARTO Positron/Dark Matter foi testado e **descartado**: todo tile vem com marca d'água
+"API KEY REQUIRED" (exige conta paga). Créditos: "Leaflet | © OpenStreetMap" (prefixo Leaflet mantido de
+propósito: mostra a biblioteca). Também: o 1º enquadramento agora é sem animação de verdade (`animate: false`).
+
+**Mapa no celular (12/10/2026):** sem "Mapa detalhado" (abaixo de 640 px de largura; o fundo é sempre o
+suave). Enquadramento automático: Niterói inteira só cabe numa tela estreita em zoom fracionado (~11,25), que
+estica as imagens (nomes borrados) e embola os pinos → zoom inteiro que cabe o miolo (sem os 5% mais afastados
+de cada lado), centrado onde há mais pinos à vista (grade 11×11 de centros). 375 px: zoom 12, 878 de 941 pinos
+à vista. "Ver todos" continua mostrando tudo. Computador: igual a antes (12,5; todos à vista). O botão do
+fundo detalhado virou chave liga/desliga (`role="switch"`).

@@ -68,7 +68,7 @@ function Resumo({ d, porRetorno, periodo }: { d: Dados; porRetorno: boolean; per
           {quando}, foram executados <B>{numero(atual.saidas)}</B>
           {atual.pctNoPrazo !== null && (
             <>
-              , <B>{decimal(atual.pctNoPrazo)}%</B> dentro do prazo
+              ; desses, <B>{numero(atual.noPrazo)}</B> ({decimal(atual.pctNoPrazo)}%) dentro do prazo
             </>
           )}
           .
@@ -78,7 +78,7 @@ function Resumo({ d, porRetorno, periodo }: { d: Dados; porRetorno: boolean; per
           {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua
           {atual.pctNoPrazo !== null && (
             <>
-              ; dos já executados, <B>{decimal(atual.pctNoPrazo)}%</B> ficaram no prazo
+              ; dos <B>{numero(atual.executadas)}</B> já executados, <B>{numero(atual.noPrazo)}</B> ({decimal(atual.pctNoPrazo)}%) ficaram no prazo
             </>
           )}
           .
@@ -199,7 +199,7 @@ export function Panorama() {
             <Movimento m={d.movimento} primeiraSaida={d.primeiraSaida} hoje={hoje} />
             {/* duas colunas independentes (sem buraco entre cards de alturas diferentes):
                 à esquerda ONDE (regiões, bairros), à direita O QUÊ e QUEM (categorias, origem) */}
-            <div className="grid gap-4 lg:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div className="flex flex-col gap-4">
                 <Regioes linhas={d.regioes} />
                 {/* o último card de cada coluna estica: as duas colunas terminam na mesma linha */}

@@ -2,6 +2,7 @@ import { Drawer } from '@base-ui/react/drawer'
 import { Popover } from '@base-ui/react/popover'
 import { CalendarRange, ChevronDown, SlidersHorizontal, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useLocation } from 'react-router'
 import { ListaEscolha, type OpcaoLista } from '@/componentes/ui/ListaEscolha'
 import { Selecao } from '@/componentes/ui/Selecao'
 import { corRegiao } from '@/lib/cores'
@@ -144,11 +145,13 @@ function FiltrosAtivos() {
 }
 
 function ContagemResultado() {
+  // no Mapa a unidade é serviço (pinos), não saída: a contagem fica no painel do mapa
+  const naPaginaMapa = useLocation().pathname === '/mapa'
   const { data: base } = useBase()
   const { filtros } = useFiltros()
   const hoje = useHoje()
   const n = useMemo(() => (base ? aplicarFiltros(base.saidas, filtros, hoje).saidas.length : null), [base, filtros, hoje])
-  if (n === null) return null
+  if (n === null || naPaginaMapa) return null
   return (
     <span className="numeros text-xs text-ink-2" aria-live="polite">
       {numero(n)} {n === 1 ? 'saída' : 'saídas'}

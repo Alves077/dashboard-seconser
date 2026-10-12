@@ -256,14 +256,160 @@ html[data-transicao='volta']::view-transition-new(root) {
   }
 }
 
-/* Mapas (Leaflet): fundo do tema enquanto os blocos carregam; no escuro, escurece só os blocos
-   do OpenStreetMap (pinos e controles continuam com as cores certas) */
+/* Mapas (Leaflet): fundo do tema enquanto os blocos carregam. O OpenStreetMap "suave" é o mesmo
+   mapa com as cores bem apagadas: as estradas amarelas/laranja e os ícones somem da disputa com os
+   pinos, mas a água continua azul e o verde, verde (cinza total igualava mar e terra); no escuro, invertido */
 .mapa-tema {
   background: var(--c-page);
   font-family: inherit;
 }
-[data-theme='dark'] .mapa-tema .leaflet-tile-pane {
+.mapa-tema .fundo-suave {
+  filter: saturate(0.4) brightness(1.04) contrast(0.9);
+}
+[data-theme='dark'] .mapa-tema .fundo-osm {
   filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.85);
+}
+[data-theme='dark'] .mapa-tema .fundo-suave {
+  filter: invert(1) hue-rotate(180deg) saturate(0.4) brightness(0.9) contrast(0.85);
+}
+/* controles e dica do Leaflet com as cores do tema */
+.mapa-tema .leaflet-bar {
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  box-shadow: var(--sombra-1);
+  overflow: hidden;
+}
+.mapa-tema .leaflet-bar a {
+  width: 36px;
+  height: 36px;
+  line-height: 34px;
+  background: var(--c-card);
+  color: var(--c-ink);
+  border-bottom-color: var(--c-line);
+}
+.mapa-tema .leaflet-bar a:hover {
+  background: var(--c-page);
+}
+.mapa-tema .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--c-card) 80%, transparent);
+  color: var(--c-ink-3);
+}
+.mapa-tema .leaflet-control-attribution a {
+  color: var(--c-ink-2);
+}
+.dica-mapa {
+  font: 12px/1.4 'Inter Variable', Inter, system-ui, sans-serif;
+  color: var(--c-ink);
+  background: var(--c-card);
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+  box-shadow: var(--sombra-2);
+  padding: 6px 8px;
+}
+.leaflet-tooltip-top.dica-mapa::before {
+  border-top-color: var(--c-card);
+}
+.dica-mapa-acao {
+  color: var(--c-acao);
+  font-weight: 500;
+}
+/* vários serviços na mesma coordenada: pino com o número */
+.pino-grupo {
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  border: 2px solid var(--c-card);
+  box-shadow: var(--sombra-1);
+  font: 600 11px/1 'Inter Variable', Inter, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.pino-grupo.sit-atraso {
+  background: var(--c-atraso);
+  color: #fff;
+}
+.pino-grupo.sit-andamento {
+  background: var(--c-andamento);
+  color: #0d253d; /* texto escuro: o amarelo não dá contraste com branco */
+}
+.pino-grupo.sit-ok {
+  background: var(--c-ok);
+  color: #fff;
+}
+.pino-grupo.com-risco {
+  box-shadow: 0 0 0 2.5px var(--c-risco), var(--sombra-1);
+}
+/* popup com a lista do ponto */
+.popup-mapa .leaflet-popup-content-wrapper {
+  background: var(--c-card);
+  color: var(--c-ink);
+  border: 1px solid var(--c-line);
+  border-radius: 12px;
+  box-shadow: var(--sombra-2);
+}
+.popup-mapa .leaflet-popup-tip {
+  background: var(--c-card);
+}
+.popup-mapa .leaflet-popup-content {
+  margin: 8px;
+}
+.popup-mapa a.leaflet-popup-close-button {
+  color: var(--c-ink-3);
+}
+.lista-ponto {
+  display: flex;
+  flex-direction: column;
+  max-height: 260px;
+  overflow-y: auto;
+  font-family: 'Inter Variable', Inter, system-ui, sans-serif;
+}
+.lista-ponto-titulo {
+  margin: 0 24px 4px 4px !important;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--c-ink-2);
+}
+.lista-ponto-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 8px;
+  min-height: 44px;
+  padding: 6px 8px 6px 10px;
+  border-radius: 8px;
+  text-align: left;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+}
+.lista-ponto-item:hover,
+.lista-ponto-item:focus-visible {
+  background: var(--c-acao-suave);
+}
+.lista-ponto-item.sit-atraso {
+  border-left-color: var(--c-atraso);
+}
+.lista-ponto-item.sit-andamento {
+  border-left-color: var(--c-andamento);
+}
+.lista-ponto-item.sit-ok {
+  border-left-color: var(--c-ok);
+}
+.lista-ponto-id {
+  grid-row: span 2;
+  align-self: center;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.lista-ponto-cat {
+  font-size: 12px;
+  color: var(--c-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lista-ponto-dias {
+  font-size: 11px;
+  color: var(--c-ink-3);
 }
 
 @media print {

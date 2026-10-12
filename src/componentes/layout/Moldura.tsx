@@ -1,4 +1,5 @@
-import { Outlet } from 'react-router'
+import { clsx } from 'clsx'
+import { Outlet, useLocation } from 'react-router'
 import { Toaster } from 'sonner'
 import { PaletaBusca } from '@/busca/PaletaBusca'
 import { Ficha } from '@/ficha/Ficha'
@@ -10,6 +11,7 @@ import { NavInferior } from './NavInferior'
 
 export function Moldura() {
   const { tema } = useTema()
+  const { pathname } = useLocation()
   return (
     <>
       <a
@@ -21,7 +23,13 @@ export function Moldura() {
       <BarraSuperior />
       <BarraFiltros />
       {/* espaço embaixo para a navegação do celular */}
-      <main id="conteudo" className="mx-auto max-w-[1280px] px-4 pt-5 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:px-6 lg:pb-12">
+      <main
+        id="conteudo"
+        className={clsx(
+          'mx-auto max-w-[1280px] px-4 pt-5 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:px-6',
+          pathname === '/mapa' ? 'lg:pb-0' : 'lg:pb-12',
+        )}
+      >
         <Outlet />
       </main>
       <NavInferior />
