@@ -1,9 +1,8 @@
 // Estados que ocupam o MESMO lugar do conteúdo (mesma moldura e altura), para nada pular
 // nem desalinhar a grade (DESIGN.md §7).
 import { clsx } from 'clsx'
-import { CloudOff, History, SearchX } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
-import { DIAS_PARA_DESATUALIZADO } from '@/config'
+import { CloudOff, SearchX } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { Botao } from '@/componentes/ui/Botao'
 
 /** Bloco que pulsa no formato do conteúdo final. Com movimento reduzido, fica parado. */
@@ -105,28 +104,5 @@ export function EstadoErro({
         )
       }
     />
-  )
-}
-
-/** Faixa discreta quando a última carga tem mais de 2 dias — informa, sem alarme */
-export function AvisoDesatualizado({ atualizadoEm }: { atualizadoEm: Date | null }) {
-  const [agora] = useState(() => Date.now())
-  if (!atualizadoEm) return null
-  const dias = (agora - atualizadoEm.getTime()) / 86_400_000
-  if (dias < DIAS_PARA_DESATUALIZADO) return null
-  const quando = atualizadoEm.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-  return (
-    <div className="border-b border-line bg-card/60 print:hidden">
-      <p className="mx-auto flex max-w-[1280px] items-center gap-2 px-4 py-2 text-xs text-ink-2 sm:px-6">
-        <History aria-hidden className="size-3.5 shrink-0" />
-        Dados de {quando} — há {Math.floor(dias)} dias sem atualização.
-      </p>
-    </div>
   )
 }

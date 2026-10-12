@@ -127,3 +127,42 @@ em desenvolvimento usa o CSV local; em produção, só depois da autorização.
 - Conferido no navegador (retrato de 09/10): 17.303 saídas, 1.080 na fila, Ficha e filtros funcionando, celular ok.
 - Anotado para a fase 2: atalhos de período em grade no celular; 5º KPI sozinho na linha do celular; selects
   estreitos cortando o texto; "Ver no mapa" cai em página em construção até a fase 3.
+
+## 9. Fase 2 — Panorama (12/10/2026)
+
+- Dois blocos com nome na tela: **Agora** (fila de hoje; respeita lugar/categoria/origem, não o período — o
+  próprio card diz isso) e **No período** (período + "contar por" + situação).
+- Agora: total da fila, em atraso, risco elétrico (botão que filtra a categoria), "há quanto tempo esperam"
+  (barra única em 5 faixas, escala ordinal de uma cor validada nos dois temas) e "esperando há mais tempo"
+  (5, expande para 15; abre a Ficha).
+- No período: 4 indicadores (saídas · no prazo · tempo médio · **reaberturas** de volta), cada um com comparação
+  ao período anterior (mês inteiro → "vs. ago/26") e mini-linha de 13 meses (mês corrente tracejado).
+- **Movimento da fila** (do relatório antigo, agora para qualquer período): fila no início + saíram − executadas
+  = fila no fim; diz quantas executadas tinham saído antes. Conferido: 726 + 1.191 − 631 = 1.286 (set/26).
+- Regiões (tabela), O que mais se pede (categoria revisada), Bairros (alterna fila agora / no período; até 30),
+  **Quem pede** (origem — novo). Toda linha vira filtro (toca de novo para tirar).
+- Frase-resumo no topo ("Hoje há 1.080 serviços na fila… Em setembro saíram 1.191…").
+- Filtros: **origem** virou filtro global; opções com contagem ("Norte · 238") e zero desabilitado; barra do
+  computador numa linha só (69 px): período · região · bairro · categoria · "Mais filtros" (quem pediu + situação).
+  Atalhos de período em 2 colunas no celular.
+- Observação de dado: mesmo revisada, "Lâmpada apagada" é ~88% das saídas — o ganho da revisão está na cauda
+  (risco elétrico, braço, implantação), que antes ficava escondida em "Iluminação pública irregular".
+
+**Ajustes da revisão do usuário (12/10/2026):** faixa "dados desatualizados" removida (virou selo âmbar no
+cabeçalho, visível também no celular); frase-resumo na largura toda; troca de filtro com crossfade de 160 ms
+(View Transitions; cabeçalho, filtros e navegação ficam parados; sem animação com movimento reduzido); risco
+elétrico com estado ativo claro ("Mostrando só risco elétrico · ver todas"); período enxuto (6 atalhos + grade de
+meses com contagem dos outros filtros + intervalo personalizado recolhido + "contar pela data de"); listas de
+região/bairro/categoria/origem próprias (Base UI Select: altura máxima, contagem em cinza, zero desabilitado,
+bairros agrupados por região, escolher bairro acerta a região); no celular continuam os seletores do sistema.
+Regiões com o mesmo destaque das listas e linha inteira clicável; cor de identidade fixa por região
+(`lib/cores.ts`, paleta validada) em regiões, bairros e listas; categoria dominante (> 2× a segunda) separada
+com fatia própria e as demais em escala própria; barra de risco na cor de risco; Movimento da fila como extrato
+no celular e com ícones de significado. Build de produção ok (chunk principal ~300 kB gzip — dividir por rota
+depois).
+
+**12/10/2026 (fim da fase 2):** período padrão = **Últimos 30 dias** (não vai para a URL; "Todo o período" vira
+`?periodo=tudo`). **Situação saiu dos filtros globais** (no Panorama só confundia: o "Agora" já é a fila e
+"no prazo"/"tempo médio" só existem para o executado) — volta como controle próprio no Mapa e nos Relatórios.
+"Quem pediu" foi direto para a barra. Ao mudar período/"contar por", a tela rola até "No período" se estiver
+fora de vista. Colunas de quebras alinhadas no fim; "Esperando há mais tempo" com divisórias.

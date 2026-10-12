@@ -15,7 +15,6 @@ import {
   type ChaveMes,
   type Dia,
 } from '@/lib/datas'
-import { situacao } from '@/dados/regras'
 import type { Saida, Situacao } from '@/dados/tipos'
 
 export type Atalho =
@@ -51,7 +50,7 @@ export type Periodo =
 /** Contar o período pela data de saída (foi para a rua) ou de retorno (foi executado) */
 export type ContarPor = 'saida' | 'retorno'
 
-/** Atalho de situação (aplicado à saída) */
+/** Recorte por situação — NÃO é filtro global (no Panorama só confundia); Mapa e Relatórios usam localmente */
 export type FiltroSituacao = 'todas' | 'abertos' | 'atraso' | 'ok'
 
 export interface Filtros {
@@ -60,16 +59,22 @@ export interface Filtros {
   regiao: string | null
   bairro: string | null
   categoria: string | null
-  situacao: FiltroSituacao
+  /** quem pediu: Cidadão, Regional, Vereador… */
+  origem: string | null
 }
 
+/** Padrão ao abrir: últimos 30 dias (Panorama = "como estamos agora"; decisão de 12/10/2026) */
+export const PERIODO_PADRAO: Periodo = { tipo: 'atalho', atalho: '30d' }
+
+export const ehPeriodoPadrao = (p: Periodo) => p.tipo === 'atalho' && p.atalho === '30d'
+
 export const FILTROS_PADRAO: Filtros = {
-  periodo: { tipo: 'atalho', atalho: 'tudo' },
+  periodo: PERIODO_PADRAO,
   contarPor: 'saida',
   regiao: null,
   bairro: null,
   categoria: null,
-  situacao: 'todas',
+  origem: null,
 }
 
 // ── URL ────────────────────────────────────────────────────────────────────
@@ -87,21 +92,20 @@ export function lerFiltros(p: URLSearchParams): Filtros {
     periodo = { tipo: 'intervalo', de: Math.min(de, ate), ate: Math.max(de, ate) }
   else if (pp && ATALHOS_VALIDOS.has(pp as Atalho)) periodo = { tipo: 'atalho', atalho: pp as Atalho }
 
-  const sit = p.get('situacao')
   return {
     periodo,
     contarPor: p.get('por') === 'retorno' ? 'retorno' : 'saida',
     regiao: p.get('regiao') || null,
     bairro: p.get('bairro') || null,
     categoria: p.get('categoria') || null,
-    situacao: sit === 'abertos' || sit === 'atraso' || sit === 'ok' ? sit : 'todas',
+    origem: p.get('origem') || null,
   }
 }
 
 /** Escreve os filtros na URL, mantendo outros parâmetros (ex.: ?servico= da Ficha) */
 export function escreverFiltros(f: Filtros, base: URLSearchParams): URLSearchParams {
   const p = new URLSearchParams(base)
-  for (const k of ['periodo', 'mes', 'de', 'ate', 'por', 'regiao', 'bairro', 'categoria', 'situacao']) p.delete(k)
+  for (const k of ['periodo', 'mes', 'de', 'ate', 'por', 'regiao', 'bairro', 'categoria', 'origem', 'situacao']) p.delete(k)
   const per = f.periodo
   if (per.tipo === 'mes') {
     const { ano, mes0 } = partes(diaDaChave(per.mes))
@@ -111,12 +115,12 @@ export function escreverFiltros(f: Filtros, base: URLSearchParams): URLSearchPar
     p.set('periodo', 'intervalo')
     p.set('de', isoDe(per.de))
     p.set('ate', isoDe(per.ate))
-  } else if (per.atalho !== 'tudo') p.set('periodo', per.atalho)
+  } else if (!ehPeriodoPadrao(per)) p.set('periodo', per.atalho) // o padrão não vai para a URL
   if (f.contarPor === 'retorno') p.set('por', 'retorno')
   if (f.regiao) p.set('regiao', f.regiao)
   if (f.bairro) p.set('bairro', f.bairro)
   if (f.categoria) p.set('categoria', f.categoria)
-  if (f.situacao !== 'todas') p.set('situacao', f.situacao)
+  if (f.origem) p.set('origem', f.origem)
   return p
 }
 
@@ -194,15 +198,16 @@ export function intervaloAnterior(i: Intervalo): Intervalo | null {
 
 // ── Aplicar ────────────────────────────────────────────────────────────────
 
-/** Só os filtros de lugar/categoria (sem período e sem situação) — base para listas e opções */
+/** Filtros do serviço (lugar, categoria, origem) — sem período e sem situação */
 export function filtrarLugar(saidas: Saida[], f: Filtros): Saida[] {
-  if (!f.regiao && !f.bairro && !f.categoria) return saidas
+  if (!f.regiao && !f.bairro && !f.categoria && !f.origem) return saidas
   return saidas.filter((s) => {
     const sv = s.servico
     return (
       (!f.regiao || sv.regiao === f.regiao) &&
       (!f.bairro || sv.bairro === f.bairro) &&
-      (!f.categoria || sv.categoria === f.categoria)
+      (!f.categoria || sv.categoria === f.categoria) &&
+      (!f.origem || sv.origem === f.origem)
     )
   })
 }
@@ -222,20 +227,51 @@ export function bateSituacao(sit: Situacao, f: FiltroSituacao): boolean {
 /** Aplica todos os filtros às saídas */
 export function aplicarFiltros(saidas: Saida[], f: Filtros, hoje: Dia): { saidas: Saida[]; intervalo: Intervalo } {
   const intervalo = intervaloDo(f.periodo, hoje)
-  const r = filtrarLugar(saidas, f).filter(
-    (s) => noIntervalo(s, intervalo, f.contarPor) && bateSituacao(situacao(s, hoje), f.situacao),
-  )
+  const r = filtrarLugar(saidas, f).filter((s) => noIntervalo(s, intervalo, f.contarPor))
   return { saidas: r, intervalo }
 }
 
 /** Quantos filtros estão diferentes do padrão (contador do botão "Filtros" no celular) */
 export function contarAtivos(f: Filtros): number {
   return (
-    (f.periodo.tipo !== 'atalho' || f.periodo.atalho !== 'tudo' ? 1 : 0) +
+    (ehPeriodoPadrao(f.periodo) ? 0 : 1) +
     (f.contarPor !== 'saida' ? 1 : 0) +
     (f.regiao ? 1 : 0) +
     (f.bairro ? 1 : 0) +
     (f.categoria ? 1 : 0) +
-    (f.situacao !== 'todas' ? 1 : 0)
+    (f.origem ? 1 : 0)
   )
+}
+
+/** Dimensões do serviço que viram filtro (e opção de lista com contagem) */
+export type Dimensao = 'regiao' | 'bairro' | 'categoria' | 'origem'
+
+const valorDe: Record<Dimensao, (s: Saida) => string | null> = {
+  regiao: (s) => s.servico.regiao,
+  bairro: (s) => s.servico.bairro,
+  categoria: (s) => s.servico.categoria,
+  origem: (s) => s.servico.origem,
+}
+
+/**
+ * Quantas saídas cada opção teria com os OUTROS filtros aplicados (o da própria dimensão
+ * fica de fora — senão só a opção escolhida teria contagem). Alimenta "Fonseca (128)" e
+ * deixa desabilitadas as opções com zero, sem sumir da lista.
+ */
+export function contarOpcoes(saidas: Saida[], f: Filtros, hoje: Dia): Record<Dimensao, Map<string, number>> {
+  const intervalo = intervaloDo(f.periodo, hoje)
+  const base = saidas.filter((s) => noIntervalo(s, intervalo, f.contarPor))
+  const r = {} as Record<Dimensao, Map<string, number>>
+  for (const d of Object.keys(valorDe) as Dimensao[]) {
+    const sem = { ...f, [d]: null }
+    // bairro depende da região escolhida; região não depende do bairro
+    if (d === 'regiao') sem.bairro = null
+    const m = new Map<string, number>()
+    for (const s of filtrarLugar(base, sem)) {
+      const v = valorDe[d](s)
+      if (v) m.set(v, (m.get(v) ?? 0) + 1)
+    }
+    r[d] = m
+  }
+  return r
 }

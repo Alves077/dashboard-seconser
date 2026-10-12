@@ -36,6 +36,12 @@
   --c-s6: #008300;
   --c-s7: #4a3aa7;
   --c-s8: #e34948;
+  /* escala ordinal (tempo de espera): uma cor, claro → escuro; validada no método dataviz */
+  --c-o1: #86b6ef;
+  --c-o2: #5598e7;
+  --c-o3: #2a78d6;
+  --c-o4: #1c5cab;
+  --c-o5: #104281;
   --sombra-1: rgba(0, 55, 112, 0.08) 0 1px 3px;
   --sombra-2: rgba(0, 55, 112, 0.08) 0 8px 24px, rgba(0, 55, 112, 0.04) 0 2px 6px;
 }
@@ -65,6 +71,12 @@
   --c-s6: #008300;
   --c-s7: #9085e9;
   --c-s8: #e66767;
+  /* no escuro a escala inverte: mais espera = mais claro (mais destaque sobre o fundo) */
+  --c-o1: #184f95;
+  --c-o2: #256abf;
+  --c-o3: #3987e5;
+  --c-o4: #6da7ec;
+  --c-o5: #9ec5f4;
   --sombra-1: rgba(0, 0, 0, 0.3) 0 1px 3px;
   --sombra-2: rgba(0, 0, 0, 0.45) 0 8px 24px, rgba(0, 0, 0, 0.3) 0 2px 6px;
 }
@@ -99,6 +111,11 @@
   --color-s6: var(--c-s6);
   --color-s7: var(--c-s7);
   --color-s8: var(--c-s8);
+  --color-o1: var(--c-o1);
+  --color-o2: var(--c-o2);
+  --color-o3: var(--c-o3);
+  --color-o4: var(--c-o4);
+  --color-o5: var(--c-o5);
 
   --shadow-1: var(--sombra-1);
   --shadow-2: var(--sombra-2);
@@ -157,6 +174,77 @@
   transition: transform 140ms var(--ease-saida);
   &:active:not(:disabled) {
     transform: scale(0.97);
+  }
+}
+
+/* Troca de filtro: crossfade curto da página (View Transitions). Barra superior e de filtros ficam
+   fora (não piscam: são o que o usuário está tocando). Com movimento reduzido, troca direta. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 160ms;
+  animation-timing-function: var(--ease-saida);
+}
+.fixo-na-troca {
+  view-transition-name: fixo-na-troca;
+}
+.barra-na-troca {
+  view-transition-name: barra-na-troca;
+}
+.nav-na-troca {
+  view-transition-name: nav-na-troca;
+}
+::view-transition-old(nav-na-troca),
+::view-transition-new(nav-na-troca),
+::view-transition-old(fixo-na-troca),
+::view-transition-new(fixo-na-troca),
+::view-transition-old(barra-na-troca),
+::view-transition-new(barra-na-troca) {
+  animation: none;
+}
+/* Entrar em foco (ex.: só risco elétrico) desliza da direita; voltar desliza para a direita.
+   Deslocamento curto: é navegação, não espetáculo. */
+html[data-transicao='entra']::view-transition-old(root) {
+  animation: 160ms var(--ease-saida) both sai-para-esquerda;
+}
+html[data-transicao='entra']::view-transition-new(root) {
+  animation: 220ms var(--ease-saida) both entra-da-direita;
+}
+html[data-transicao='volta']::view-transition-old(root) {
+  animation: 160ms var(--ease-saida) both sai-para-direita;
+}
+html[data-transicao='volta']::view-transition-new(root) {
+  animation: 220ms var(--ease-saida) both entra-da-esquerda;
+}
+@keyframes sai-para-esquerda {
+  to {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+@keyframes entra-da-direita {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+@keyframes sai-para-direita {
+  to {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+}
+@keyframes entra-da-esquerda {
+  from {
+    opacity: 0;
+    transform: translateX(-24px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root),
+  html[data-transicao]::view-transition-old(root),
+  html[data-transicao]::view-transition-new(root) {
+    animation: none;
   }
 }
 

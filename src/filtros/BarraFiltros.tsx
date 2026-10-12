@@ -1,92 +1,88 @@
 import { Drawer } from '@base-ui/react/drawer'
 import { Popover } from '@base-ui/react/popover'
-import { Toggle } from '@base-ui/react/toggle'
-import { ToggleGroup } from '@base-ui/react/toggle-group'
 import { CalendarRange, ChevronDown, SlidersHorizontal, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { ListaEscolha, type OpcaoLista } from '@/componentes/ui/ListaEscolha'
 import { Selecao } from '@/componentes/ui/Selecao'
+import { corRegiao } from '@/lib/cores'
 import { useBase } from '@/dados/consultas'
 import { compararTexto, numero } from '@/lib/formato'
 import { useHoje } from '@/lib/ganchos'
-import { aplicarFiltros, contarAtivos, type FiltroSituacao } from './filtros'
+import { aplicarFiltros, contarAtivos, contarOpcoes, type Dimensao } from './filtros'
 import { PainelPeriodo } from './PainelPeriodo'
 import { useFiltros } from './useFiltros'
 import { useResumoPeriodo } from './useResumoPeriodo'
 
-const SITUACOES: { v: FiltroSituacao; texto: string }[] = [
-  { v: 'todas', texto: 'Todas' },
-  { v: 'abertos', texto: 'Abertos' },
-  { v: 'atraso', texto: 'Em atraso' },
-  { v: 'ok', texto: 'Concluídos' },
-]
-
+/** Opções com contagem (com os OUTROS filtros aplicados); zero fica visível, mas desabilitado */
 function useOpcoes() {
   const { data: base } = useBase()
   const { filtros } = useFiltros()
+  const hoje = useHoje()
   return useMemo(() => {
-    if (!base) return { regioes: [], bairros: [], categorias: [] }
+    const vazio: Record<'regioes' | 'bairros' | 'categorias' | 'origens', OpcaoLista[]> = {
+      regioes: [],
+      bairros: [],
+      categorias: [],
+      origens: [],
+    }
+    if (!base) return vazio
+    const n = contarOpcoes(base.saidas, filtros, hoje)
+    const opcao = (valor: string, d: Dimensao, atual: string | null, extra?: Partial<OpcaoLista>): OpcaoLista => {
+      const c = n[d].get(valor) ?? 0
+      return { valor, texto: valor, contagem: c, desabilitada: c === 0 && valor !== atual, ...extra }
+    }
     const regioes = [...new Set(base.bairros.map((b) => b.regiao))].sort(compararTexto)
-    const bairros = base.bairros
-      .filter((b) => !filtros.regiao || b.regiao === filtros.regiao)
-      .map((b) => ({ valor: b.nome, texto: b.nome }))
-    const categorias = base.categorias.map((c) => ({ valor: c.nome, texto: c.nome }))
-    return { regioes: regioes.map((r) => ({ valor: r, texto: r })), bairros, categorias }
-  }, [base, filtros.regiao])
+    const origens = [...new Set(base.servicos.map((s) => s.origem))].sort(
+      (a, b) => (n.origem.get(b) ?? 0) - (n.origem.get(a) ?? 0) || compararTexto(a, b),
+    )
+    return {
+      regioes: regioes.map((r) => opcao(r, 'regiao', filtros.regiao, { ponto: corRegiao(r) })),
+      // sem região escolhida, bairros agrupados por região (52 nomes ficam fáceis de achar)
+      bairros: base.bairros
+        .filter((b) => !filtros.regiao || b.regiao === filtros.regiao)
+        .sort((a, b) => compararTexto(a.regiao, b.regiao) || compararTexto(a.nome, b.nome))
+        .map((b) => opcao(b.nome, 'bairro', filtros.bairro, { grupo: filtros.regiao ? undefined : b.regiao })),
+      categorias: base.categorias.map((c) => opcao(c.nome, 'categoria', filtros.categoria)),
+      origens: origens.map((o) => opcao(o, 'origem', filtros.origem)),
+    }
+  }, [base, filtros, hoje])
 }
 
-function SeletorSituacao() {
-  const { filtros, mudar } = useFiltros()
-  return (
-    <ToggleGroup
-      aria-label="Situação"
-      value={[filtros.situacao]}
-      onValueChange={(v) => mudar({ situacao: (v[0] as FiltroSituacao) ?? 'todas' })}
-      className="flex h-11 items-center rounded-full border border-line bg-page p-1"
-    >
-      {SITUACOES.map((s) => (
-        <Toggle
-          key={s.v}
-          value={s.v}
-          className="pressionavel h-full rounded-full px-3 text-[13px] whitespace-nowrap text-ink-2 hover:text-ink data-pressed:bg-card data-pressed:font-medium data-pressed:text-ink data-pressed:shadow-1"
-        >
-          {s.texto}
-        </Toggle>
-      ))}
-    </ToggleGroup>
-  )
-}
+/** <select> do sistema (gaveta do celular): sem contagem no texto, zero desabilitado */
+const paraNativo = (ops: OpcaoLista[]) => ops.map((o) => ({ valor: o.valor, texto: o.texto, disabled: o.desabilitada }))
 
 function CamposLugar({ empilhado = false }: { empilhado?: boolean }) {
   const { filtros, mudar } = useFiltros()
   const { regioes, bairros, categorias } = useOpcoes()
-  const classe = empilhado ? '' : 'w-44'
+  const { data: base } = useBase()
+  // escolher um bairro já acerta a região dele
+  const escolherBairro = (b: string | null) =>
+    b ? mudar({ regiao: base?.bairros.find((x) => x.nome === b)?.regiao ?? filtros.regiao, bairro: b }) : mudar({ bairro: null })
+  const vazioBairro = filtros.regiao ? `Todos de ${filtros.regiao}` : 'Todos os bairros'
+  if (empilhado)
+    return (
+      <>
+        <Selecao rotulo="Região" vazio="Todas as regiões" opcoes={paraNativo(regioes)} value={filtros.regiao ?? ''} onChange={(e) => mudar({ regiao: e.target.value || null })} />
+        <Selecao rotulo="Bairro" vazio={vazioBairro} opcoes={paraNativo(bairros)} value={filtros.bairro ?? ''} onChange={(e) => escolherBairro(e.target.value || null)} />
+        <Selecao rotulo="Categoria" vazio="Todas as categorias" opcoes={paraNativo(categorias)} value={filtros.categoria ?? ''} onChange={(e) => mudar({ categoria: e.target.value || null })} />
+      </>
+    )
   return (
     <>
-      <Selecao
-        rotulo="Região"
-        vazio="Todas as regiões"
-        opcoes={regioes}
-        value={filtros.regiao ?? ''}
-        onChange={(e) => mudar({ regiao: e.target.value || null })}
-        className={classe}
-      />
-      <Selecao
-        rotulo="Bairro"
-        vazio={filtros.regiao ? `Todos de ${filtros.regiao}` : 'Todos os bairros'}
-        opcoes={bairros}
-        value={filtros.bairro ?? ''}
-        onChange={(e) => mudar({ bairro: e.target.value || null })}
-        className={classe}
-      />
-      <Selecao
-        rotulo="Categoria"
-        vazio="Todas as categorias"
-        opcoes={categorias}
-        value={filtros.categoria ?? ''}
-        onChange={(e) => mudar({ categoria: e.target.value || null })}
-        className={empilhado ? '' : 'w-56'}
-      />
+      <ListaEscolha rotulo="Região" vazio="Todas as regiões" opcoes={regioes} valor={filtros.regiao} aoMudar={(v) => mudar({ regiao: v })} className="w-48" />
+      <ListaEscolha rotulo="Bairro" vazio={vazioBairro} opcoes={bairros} valor={filtros.bairro} aoMudar={escolherBairro} className="w-52" />
+      <ListaEscolha rotulo="Categoria" vazio="Todas as categorias" opcoes={categorias} valor={filtros.categoria} aoMudar={(v) => mudar({ categoria: v })} className="w-60" />
     </>
+  )
+}
+
+function CampoOrigem({ nativo = false }: { nativo?: boolean }) {
+  const { filtros, mudar } = useFiltros()
+  const { origens } = useOpcoes()
+  if (nativo)
+    return <Selecao rotulo="Quem pediu" vazio="Todas as origens" opcoes={paraNativo(origens)} value={filtros.origem ?? ''} onChange={(e) => mudar({ origem: e.target.value || null })} />
+  return (
+    <ListaEscolha rotulo="Quem pediu" vazio="Todas as origens" opcoes={origens} valor={filtros.origem} aoMudar={(v) => mudar({ origem: v })} className="w-48" />
   )
 }
 
@@ -95,14 +91,14 @@ function BotaoPeriodo() {
   const [aberto, setAberto] = useState(false)
   return (
     <Popover.Root open={aberto} onOpenChange={setAberto}>
-      <div className="flex flex-col gap-1">
-        <span className="text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">Período</span>
-        <Popover.Trigger className="pressionavel flex h-11 max-w-72 items-center gap-2 rounded-md border border-line-input bg-card pr-3 pl-3 text-left text-ink hover:border-acao/50">
-          <CalendarRange aria-hidden className="size-4 shrink-0 text-ink-3" />
-          <span className="truncate">{resumo}</span>
-          <ChevronDown aria-hidden className="ml-auto size-4 shrink-0 text-ink-3" />
-        </Popover.Trigger>
-      </div>
+      <Popover.Trigger
+        aria-label={`Período: ${resumo}`}
+        className="pressionavel flex h-11 max-w-72 min-w-44 items-center gap-2 rounded-md border border-line-input bg-card pr-3 pl-3 text-left text-ink hover:border-acao/50"
+      >
+        <CalendarRange aria-hidden className="size-4 shrink-0 text-ink-3" />
+        <span className="truncate">{resumo}</span>
+        <ChevronDown aria-hidden className="ml-auto size-4 shrink-0 text-ink-3" />
+      </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner sideOffset={8} align="start" className="z-40">
           <Popover.Popup className="w-[min(560px,calc(100vw-2rem))] origin-(--transform-origin) rounded-xl border border-line bg-card p-4 shadow-2 transition-[opacity,scale] duration-200 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
@@ -122,6 +118,7 @@ function FiltrosAtivos() {
   if (filtros.regiao) chips.push({ texto: `Região: ${filtros.regiao}`, tirar: () => mudar({ regiao: null }) })
   if (filtros.bairro) chips.push({ texto: `Bairro: ${filtros.bairro}`, tirar: () => mudar({ bairro: null }) })
   if (filtros.categoria) chips.push({ texto: filtros.categoria, tirar: () => mudar({ categoria: null }) })
+  if (filtros.origem) chips.push({ texto: `Quem pediu: ${filtros.origem}`, tirar: () => mudar({ origem: null }) })
   if (!chips.length) return null
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -197,10 +194,7 @@ function GavetaFiltros() {
               </section>
               <section className="flex flex-col gap-3 border-t border-line pt-4">
                 <CamposLugar empilhado />
-                <div className="flex flex-col gap-1">
-                  <span className="text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">Situação</span>
-                  <SeletorSituacao />
-                </div>
+                <CampoOrigem nativo />
               </section>
               <Drawer.Close className="pressionavel sticky bottom-2 h-12 rounded-full bg-acao text-sm font-medium text-sobre-acao shadow-2">
                 Ver resultado
@@ -215,22 +209,19 @@ function GavetaFiltros() {
 
 export function BarraFiltros() {
   return (
-    <div className="sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] z-20 border-b border-line bg-page/90 backdrop-blur-md print:hidden">
+    <div className="barra-na-troca sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] z-20 border-b border-line bg-page/90 backdrop-blur-md print:hidden">
       <div className="mx-auto max-w-[1280px] px-4 py-3 sm:px-6">
         {/* celular */}
         <div className="md:hidden">
           <GavetaFiltros />
         </div>
         {/* tablet e computador */}
-        <div className="hidden flex-col gap-3 md:flex">
-          <div className="flex flex-wrap items-end gap-3">
+        <div className="hidden flex-col gap-2 md:flex">
+          <div className="flex flex-wrap items-center gap-2">
             <BotaoPeriodo />
             <CamposLugar />
-            <div className="flex flex-col gap-1">
-              <span className="text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">Situação</span>
-              <SeletorSituacao />
-            </div>
-            <div className="ml-auto pb-3">
+            <CampoOrigem />
+            <div className="ml-auto pl-2">
               <ContagemResultado />
             </div>
           </div>

@@ -1,6 +1,9 @@
 import { Menu } from '@base-ui/react/menu'
+import { Popover } from '@base-ui/react/popover'
 import { clsx } from 'clsx'
-import { LogIn, Moon, RefreshCw, Search, Sun, UserRound } from 'lucide-react'
+import { Database, History, LogIn, Moon, RefreshCw, Search, Sun, UserRound } from 'lucide-react'
+import { useState } from 'react'
+import { DIAS_PARA_DESATUALIZADO } from '@/config'
 import { NavLink } from 'react-router'
 import { Botao } from '@/componentes/ui/Botao'
 import { useBase, useDetalhes, useRecarregar } from '@/dados/consultas'
@@ -9,19 +12,75 @@ import { useDestino, useTema } from '@/lib/ganchos'
 import { useInterface } from './interface'
 import { PAGINAS } from './paginas'
 
-function DataDosDados() {
+/**
+ * Status dos dados num botão só (data · fonte · atualizar), para o cabeçalho ter espaço para crescer.
+ * Fechado: a data, ou o selo âmbar "há N dias" quando a última carga passou de 2 dias.
+ */
+function StatusDados() {
   const { data, isFetching } = useBase()
-  if (!data?.atualizadoEm) return null
-  const quando = data.atualizadoEm.toLocaleString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
+  const { modo } = useSessao()
+  const recarregar = useRecarregar()
+  const [agora] = useState(() => Date.now())
+  const em = data?.atualizadoEm ?? null
+  const dias = em ? Math.floor((agora - em.getTime()) / 86_400_000) : null
+  const velho = dias !== null && dias >= DIAS_PARA_DESATUALIZADO
+  const curto = em?.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+  const longo = em?.toLocaleString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+
   return (
-    <span className="hidden text-xs text-ink-2 xl:inline" title="Fim da última atualização dos dados">
-      {isFetching ? 'Atualizando…' : `Dados de ${quando}`}
-    </span>
+    <Popover.Root>
+      <Popover.Trigger
+        aria-label={em ? `Dados de ${curto}${velho ? `, há ${dias} dias` : ''}. Ver detalhes e atualizar` : 'Status dos dados'}
+        className={clsx(
+          'pressionavel inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap',
+          velho ? 'bg-andamento/15 text-andamento-texto hover:bg-andamento/25' : 'text-ink-2 hover:bg-ink/5 hover:text-ink',
+        )}
+      >
+        {isFetching ? (
+          <RefreshCw aria-hidden className="size-3.5 animate-spin motion-reduce:animate-none" />
+        ) : velho ? (
+          <History aria-hidden className="size-3.5" />
+        ) : (
+          <Database aria-hidden className="size-3.5" />
+        )}
+        {isFetching ? (
+          <span className="hidden sm:inline">Atualizando…</span>
+        ) : velho ? (
+          <span>
+            <span className="hidden xl:inline">Dados de {curto} · </span>há {dias} dias
+          </span>
+        ) : (
+          em && <span className="hidden xl:inline">Dados de {curto}</span>
+        )}
+        {modo === 'local' && <span aria-hidden className="size-1.5 rounded-full bg-andamento" title="Dados locais" />}
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Positioner sideOffset={8} align="end" className="z-50">
+          <Popover.Popup className="w-72 origin-(--transform-origin) rounded-xl border border-line bg-card p-4 shadow-2 transition-[opacity,scale] duration-150 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
+            <Popover.Title className="text-[13px] font-medium text-ink">Dados do painel</Popover.Title>
+            <dl className="mt-3 flex flex-col gap-2.5 text-[13px]">
+              <div>
+                <dt className="text-xs text-ink-3">Última atualização</dt>
+                <dd className={clsx('text-ink', velho && 'text-andamento-texto')}>
+                  {longo ?? '—'}
+                  {dias !== null && <span className="text-ink-3"> · {dias === 0 ? 'hoje' : `há ${dias} ${dias === 1 ? 'dia' : 'dias'}`}</span>}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs text-ink-3">Fonte</dt>
+                <dd className="text-ink">
+                  {modo === 'local' ? 'Retrato local do banco (desenvolvimento) — parte restrita liberada' : 'Banco da DIP, sincronizado uma vez por dia'}
+                </dd>
+              </div>
+            </dl>
+            <Botao variante="secundario" tamanho="compacto" onClick={recarregar} disabled={isFetching} className="mt-4 w-full">
+              <RefreshCw aria-hidden className={clsx('size-4', isFetching && 'animate-spin motion-reduce:animate-none')} />
+              {isFetching ? 'Atualizando…' : 'Buscar dados de novo'}
+            </Botao>
+          </Popover.Popup>
+        </Popover.Positioner>
+      </Popover.Portal>
+    </Popover.Root>
   )
 }
 
@@ -30,16 +89,8 @@ function Conta() {
   const { acesso } = useDetalhes()
   const { setLoginAberto } = useInterface()
 
-  if (modo === 'local') {
-    return (
-      <span
-        className="hidden rounded-full bg-andamento/15 px-2.5 py-1 text-[11px] font-medium text-andamento-texto sm:inline"
-        title="Desenvolvimento: dados do retrato local, parte restrita liberada"
-      >
-        Dados locais
-      </span>
-    )
-  }
+  // dados locais: sem login (o status dos dados já mostra a fonte)
+  if (modo === 'local') return null
   if (!usuario) {
     return (
       <Botao variante="fantasma" tamanho="compacto" onClick={() => setLoginAberto(true)}>
@@ -80,13 +131,11 @@ function Conta() {
 
 export function BarraSuperior() {
   const { tema, alternar } = useTema()
-  const recarregar = useRecarregar()
-  const { isFetching } = useBase()
   const { setBuscaAberta } = useInterface()
   const destino = useDestino()
 
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-card/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md print:hidden">
+    <header className="fixo-na-troca sticky top-0 z-30 border-b border-line bg-card/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md print:hidden">
       <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-4 sm:px-6">
         <NavLink to={destino('/')} className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label="Início — Panorama">
           <img src={`${import.meta.env.BASE_URL}img/logo-seconser.png`} alt="" className="h-8 w-auto" />
@@ -128,17 +177,7 @@ export function BarraSuperior() {
             <span className="hidden sm:inline">Buscar</span>
             <kbd className="ml-3 hidden rounded border border-line px-1.5 font-sans text-[11px] text-ink-3 md:inline">/</kbd>
           </button>
-          <DataDosDados />
-          <Botao
-            variante="icone"
-            tamanho="compacto"
-            onClick={recarregar}
-            aria-label="Atualizar dados"
-            title="Atualizar dados"
-            disabled={isFetching}
-          >
-            <RefreshCw aria-hidden className={clsx('size-4', isFetching && 'animate-spin motion-reduce:animate-none')} />
-          </Botao>
+          <StatusDados />
           <Botao
             variante="icone"
             tamanho="compacto"

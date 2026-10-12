@@ -1,197 +1,218 @@
-// PROVISÓRIO (fase 1, base): prova a cadeia dados → filtros → estados → ficha de ponta a ponta.
-// A página completa (fluxo da fila, regiões, categorias, bairros) é a fase 2 do docs/PLANO_V2.md.
-import { clsx } from 'clsx'
-import { ChevronRight } from 'lucide-react'
-import { useMemo } from 'react'
-import { EstadoErro, EstadoVazio, Esqueleto } from '@/componentes/estados/Estados'
-import { Card, CabecalhoCard } from '@/componentes/ui/Card'
-import { SeloRisco, SeloSituacao } from '@/componentes/ui/SeloSituacao'
-import { filaAtual, indicadoresPeriodo, variacao } from '@/calculos/indicadores'
+// Panorama — "Como estamos agora?". Dois blocos com nome: AGORA (fila de hoje, não depende do
+// período) e NO PERÍODO (o que saiu/voltou no período escolhido). Toda quebra é clicável e vira filtro.
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { EstadoErro, Esqueleto } from '@/componentes/estados/Estados'
+import { Card } from '@/componentes/ui/Card'
+import { calcularPanorama, type Panorama as Dados } from '@/calculos/panorama'
 import { useBase } from '@/dados/consultas'
-import { CATEGORIA_RISCO, situacao } from '@/dados/regras'
-import { aplicarFiltros, filtrarLugar, intervaloAnterior, noIntervalo } from '@/filtros/filtros'
-import { useResumoPeriodo } from '@/filtros/useResumoPeriodo'
+import type { Intervalo, Periodo } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
-import { formatarDia } from '@/lib/datas'
-import { decimal, dias, numero, pct } from '@/lib/formato'
-import { useFicha, useHoje } from '@/lib/ganchos'
+import { chaveMes, fimDoMes, inicioDoMes, rotuloMes } from '@/lib/datas'
+import { decimal, numero } from '@/lib/formato'
+import { useHoje } from '@/lib/ganchos'
+import { Agora } from './panorama/Agora'
+import { Indicadores } from './panorama/Indicadores'
+import { Movimento } from './panorama/Movimento'
+import { Bairros, Categorias, Origens, Regioes } from './panorama/Quebras'
 
-function Kpi({
-  rotulo,
-  valor,
-  sufixo,
-  nota,
-  delta,
-  deltaBom,
-  tom,
-}: {
-  rotulo: string
-  valor: string
-  sufixo?: string
-  nota?: string
-  delta?: number | null
-  /** subir é bom (no prazo) ou ruim (tempo médio)? */
-  deltaBom?: 'subir' | 'descer'
-  tom?: 'atraso'
-}) {
-  const bom = delta == null || deltaBom === undefined ? null : deltaBom === 'subir' ? delta >= 0 : delta <= 0
+/** "ago/26" quando o período anterior é um mês inteiro; senão "período anterior" */
+function rotuloComparacao(a: Intervalo | null): string | null {
+  if (!a || a.de === null || a.ate === null) return null
+  const mesInteiro = a.de === inicioDoMes(a.de) && a.ate === fimDoMes(a.de)
+  return mesInteiro ? rotuloMes(chaveMes(a.de)) : 'período anterior'
+}
+
+/** "Nos últimos 30 dias", "Em setembro de 2026", "Neste ano"… (português natural, não "Em últimos 30 dias") */
+function fraseQuando(p: Periodo, i: Intervalo, primeiraSaida: number | null): string {
+  if (p.tipo === 'mes') return `Em ${i.rotulo}`
+  if (p.tipo === 'intervalo') return `De ${i.rotulo}`
+  switch (p.atalho) {
+    case 'tudo':
+      return `Desde ${primeiraSaida !== null ? rotuloMes(chaveMes(primeiraSaida)) : 'o início'}`
+    case '7d':
+    case '30d':
+    case '90d':
+      return `Nos últimos ${parseInt(p.atalho)} dias`
+    case '3m':
+    case '6m':
+    case '12m':
+      return `Nos últimos ${parseInt(p.atalho)} meses fechados`
+    case 'este-mes':
+      return 'Neste mês'
+    case 'este-ano':
+      return 'Neste ano'
+    case 'mes-anterior':
+      return `Em ${i.rotulo}`
+  }
+}
+
+const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
+
+/** Uma frase que diz o essencial antes dos números (para quem só vai ler o topo) */
+function Resumo({ d, porRetorno, periodo }: { d: Dados; porRetorno: boolean; periodo: Periodo }) {
+  const { agora, atual, intervalo, primeiraSaida } = d
+  const quando = fraseQuando(periodo, intervalo, primeiraSaida)
   return (
-    <Card className={clsx('px-5 py-4', tom === 'atraso' && 'border-l-[3px] border-l-atraso')}>
-      <p className="text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">{rotulo}</p>
-      <p className="numeros mt-1.5 text-[32px] leading-none font-light tracking-[-0.64px] text-ink">
-        {valor}
-        {sufixo && <span className="ml-1 text-base font-normal tracking-normal text-ink-2">{sufixo}</span>}
-      </p>
-      <p className="mt-2 flex flex-wrap items-center gap-x-2 text-xs text-ink-2">
-        {delta != null && (
-          <span className={clsx('numeros font-medium', bom ? 'text-ok-texto' : 'text-atraso-texto')}>
-            {delta >= 0 ? '▲' : '▼'} {decimal(Math.abs(delta))}%
-          </span>
-        )}
-        {nota}
-      </p>
-    </Card>
+    <p className="text-[15px] leading-relaxed text-ink-2">
+      Hoje há <B>{numero(agora.total)} {agora.total === 1 ? 'serviço' : 'serviços'} na fila</B>
+      {agora.total > 0 && (
+        <>
+          , {numero(agora.atraso)} em atraso{agora.risco > 0 && <> e {numero(agora.risco)} com risco elétrico</>}
+        </>
+      )}
+      .{' '}
+      {atual.saidas === 0 ? (
+        <>{quando}, nada com esses filtros.</>
+      ) : porRetorno ? (
+        <>
+          {quando}, foram executados <B>{numero(atual.saidas)}</B>
+          {atual.pctNoPrazo !== null && (
+            <>
+              , <B>{decimal(atual.pctNoPrazo)}%</B> dentro do prazo
+            </>
+          )}
+          .
+        </>
+      ) : (
+        <>
+          {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua
+          {atual.pctNoPrazo !== null && (
+            <>
+              ; dos já executados, <B>{decimal(atual.pctNoPrazo)}%</B> ficaram no prazo
+            </>
+          )}
+          .
+        </>
+      )}
+    </p>
   )
 }
 
-function KpisCarregando() {
+function Carregando() {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-5" aria-busy="true">
-      {Array.from({ length: 5 }, (_, i) => (
-        <Card key={i} className="px-5 py-4">
-          <Esqueleto className="h-3 w-24" />
-          <Esqueleto className="mt-3 h-8 w-20" />
-          <Esqueleto className="mt-3 h-3 w-28" />
-        </Card>
-      ))}
+    <div aria-busy="true" className="flex flex-col gap-6">
+      <Esqueleto className="h-5 w-2/3" />
+      <Card className="p-5">
+        <div className="grid gap-8 md:grid-cols-[240px_1fr]">
+          <div>
+            <Esqueleto className="h-11 w-32" />
+            <Esqueleto className="mt-3 h-3 w-40" />
+            <Esqueleto className="mt-5 h-3 w-36" />
+            <Esqueleto className="mt-3 h-3 w-40" />
+          </div>
+          <div>
+            <Esqueleto className="h-3 w-40" />
+            <Esqueleto className="mt-4 h-4 w-full" />
+            <div className="mt-4 grid grid-cols-5 gap-4">
+              {Array.from({ length: 5 }, (_, i) => (
+                <Esqueleto key={i} className="h-8" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </Card>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Card key={i} className="px-5 py-4">
+            <Esqueleto className="h-3 w-24" />
+            <Esqueleto className="mt-3 h-8 w-20" />
+            <Esqueleto className="mt-3 h-3 w-full" />
+            <Esqueleto className="mt-4 h-7 w-full" />
+          </Card>
+        ))}
+      </div>
+      <Card className="p-5">
+        <Esqueleto className="h-4 w-40" />
+        <div className="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+          {Array.from({ length: 4 }, (_, i) => (
+            <Esqueleto key={i} className="h-20" />
+          ))}
+        </div>
+      </Card>
     </div>
   )
 }
 
 export function Panorama() {
   const { data: base, isLoading, error, refetch } = useBase()
-  const { filtros, limpar } = useFiltros()
-  const { abrir } = useFicha()
+  const { filtros } = useFiltros()
   const hoje = useHoje()
-  const resumo = useResumoPeriodo()
 
-  const dados = useMemo(() => {
-    if (!base) return null
-    const { saidas, intervalo } = aplicarFiltros(base.saidas, filtros, hoje)
-    const ant = intervaloAnterior(intervalo)
-    const lugar = filtrarLugar(base.saidas, filtros)
-    const anteriores = ant ? lugar.filter((s) => noIntervalo(s, ant, filtros.contarPor)) : null
-    const servicosLugar = [...new Set(lugar.map((s) => s.servico))]
-    return {
-      atual: indicadoresPeriodo(saidas),
-      anterior: anteriores ? indicadoresPeriodo(anteriores) : null,
-      fila: filaAtual(servicosLugar, hoje),
-      intervalo,
+  const d = useMemo(() => (base ? calcularPanorama(base, filtros, hoje) : null), [base, filtros, hoje])
+  const regiaoDe = useMemo(() => {
+    const m = new Map(base?.bairros.map((b) => [b.nome, b.regiao]))
+    return (bairro: string) => m.get(bairro) ?? ''
+  }, [base])
+
+  // Período e "contar por" só mudam o bloco "No período": ao trocá-los, a tela vai até lá
+  // (senão parece que o filtro não fez nada — o "Agora", no topo, não muda). Só rola se o bloco
+  // estiver fora de vista; com movimento reduzido, salta sem animar.
+  const secaoPeriodo = useRef<HTMLElement>(null)
+  const chavePeriodo = JSON.stringify([filtros.periodo, filtros.contarPor])
+  const chaveAnterior = useRef(chavePeriodo)
+  useEffect(() => {
+    if (chaveAnterior.current === chavePeriodo) return
+    chaveAnterior.current = chavePeriodo
+    const el = secaoPeriodo.current
+    if (!el) return
+    const topo = el.getBoundingClientRect().top
+    if (topo > window.innerHeight * 0.45 || topo < 0) {
+      const reduzir = matchMedia('(prefers-reduced-motion: reduce)').matches
+      el.scrollIntoView({ behavior: reduzir ? 'auto' : 'smooth', block: 'start' })
     }
-  }, [base, filtros, hoje])
+  }, [chavePeriodo])
+
+  const porRetorno = filtros.contarPor === 'retorno'
+  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.origem].filter(Boolean).join(' · ')
 
   return (
     <>
-      <div className="mb-5">
-        <h1 className="text-2xl font-normal tracking-[-0.4px] text-ink">Panorama</h1>
-        <p className="mt-1 text-ink-2">
-          Como estamos agora · <span className="text-ink">{resumo}</span>
-          {dados?.intervalo.parcial && dados.intervalo.de !== null && (
-            <span className="ml-2 rounded-full bg-ink/5 px-2 py-0.5 text-xs text-ink-2">parcial</span>
-          )}
-        </p>
-      </div>
+      <header className="mb-6">
+        <div className="flex flex-wrap items-baseline gap-x-3">
+          <h1 className="text-2xl font-normal tracking-[-0.4px] text-ink">Panorama</h1>
+          {escopo && <span className="text-sm text-ink-2">{escopo}</span>}
+        </div>
+        <div className="mt-2">{d ? <Resumo d={d} porRetorno={porRetorno} periodo={filtros.periodo} /> : !error && <Esqueleto className="h-5 w-2/3" />}</div>
+      </header>
 
       {error ? (
         <Card>
-          <EstadoErro erro={error} aoTentar={() => refetch()} altura="min-h-64" />
+          <EstadoErro erro={error} aoTentar={() => refetch()} altura="min-h-72" />
         </Card>
-      ) : isLoading || !dados ? (
-        <KpisCarregando />
+      ) : isLoading || !d ? (
+        <Carregando />
       ) : (
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
-          <Kpi rotulo="Fila em aberto" valor={numero(dados.fila.abertos)} nota="serviços aguardando agora" />
-          <Kpi
-            rotulo="Em atraso"
-            valor={numero(dados.fila.atraso)}
-            nota={`${pct(dados.fila.atraso, dados.fila.abertos)} da fila · ${numero(dados.fila.risco)} com risco elétrico`}
-            tom="atraso"
-          />
-          <Kpi
-            rotulo={filtros.contarPor === 'retorno' ? 'Execuções' : 'Saídas para a rua'}
-            valor={numero(dados.atual.saidas)}
-            delta={variacao(dados.atual.saidas, dados.anterior?.saidas ?? null)}
-            nota={dados.anterior ? 'vs. período anterior' : 'no período'}
-          />
-          <Kpi
-            rotulo="No prazo (5 dias)"
-            valor={dados.atual.pctNoPrazo === null ? '—' : decimal(dados.atual.pctNoPrazo)}
-            sufixo={dados.atual.pctNoPrazo === null ? undefined : '%'}
-            delta={variacao(dados.atual.pctNoPrazo, dados.anterior?.pctNoPrazo ?? null)}
-            deltaBom="subir"
-            nota={`${numero(dados.atual.noPrazo)} de ${numero(dados.atual.concluidas)} executados`}
-          />
-          <Kpi
-            rotulo="Tempo médio"
-            valor={decimal(dados.atual.tempoMedio)}
-            sufixo="dias"
-            delta={variacao(dados.atual.tempoMedio, dados.anterior?.tempoMedio ?? null)}
-            deltaBom="descer"
-            nota={dados.atual.tempoMediano === null ? undefined : `mediana ${decimal(dados.atual.tempoMediano)} dias`}
-          />
+        <div className="flex flex-col gap-8">
+          <Agora agora={d.agora} hoje={hoje} />
+
+          <section ref={secaoPeriodo} aria-labelledby="titulo-periodo" className="flex scroll-mt-36 flex-col gap-4">
+            <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+              <h2 id="titulo-periodo" className="text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">
+                No período · {d.intervalo.rotulo}
+              </h2>
+              <span className="text-xs text-ink-3">
+                por data de {porRetorno ? 'retorno (execução)' : 'saída para a rua'}
+                {d.intervalo.parcial && d.intervalo.de !== null && ' · em curso, números ainda mudam'}
+              </span>
+            </div>
+            <Indicadores p={d} comparacao={rotuloComparacao(d.anterior)} porRetorno={porRetorno} />
+            <Movimento m={d.movimento} primeiraSaida={d.primeiraSaida} hoje={hoje} />
+            {/* duas colunas independentes (sem buraco entre cards de alturas diferentes):
+                à esquerda ONDE (regiões, bairros), à direita O QUÊ e QUEM (categorias, origem) */}
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="flex flex-col gap-4">
+                <Regioes linhas={d.regioes} />
+                {/* o último card de cada coluna estica: as duas colunas terminam na mesma linha */}
+                <Bairros linhas={d.bairros} regiaoDe={regiaoDe} className="lg:flex-1" />
+              </div>
+              <div className="flex flex-col gap-4">
+                <Categorias linhas={d.categorias} total={d.atual.saidas} />
+                <Origens linhas={d.origens} total={d.atual.saidas} className="lg:flex-1" />
+              </div>
+            </div>
+          </section>
         </div>
       )}
-
-      <Card className="mt-6" aria-labelledby="mais-antigos">
-        <CabecalhoCard
-          id="mais-antigos"
-          titulo="Esperando há mais tempo"
-          subtitulo="Serviços da fila atual, do mais antigo para o mais novo. Toque para ver a ficha."
-        />
-        <div className="mt-3 pb-2">
-          {error ? null : isLoading || !dados ? (
-            <ul aria-busy="true">
-              {Array.from({ length: 6 }, (_, i) => (
-                <li key={i} className="flex items-center gap-4 border-t border-line px-5 py-3">
-                  <Esqueleto className="h-4 w-14" />
-                  <Esqueleto className="h-4 flex-1" />
-                  <Esqueleto className="h-5 w-24 rounded-full" />
-                </li>
-              ))}
-            </ul>
-          ) : dados.fila.maisAntigos.length === 0 ? (
-            <EstadoVazio
-              titulo="Nenhum serviço em aberto aqui"
-              texto="Com esses filtros de região, bairro e categoria, a fila está zerada."
-              aoLimpar={limpar}
-              altura="min-h-48"
-            />
-          ) : (
-            <ul>
-              {dados.fila.maisAntigos.slice(0, 8).map(({ servico, saida, dias: d }) => (
-                <li key={servico.chave}>
-                  <button
-                    type="button"
-                    onClick={() => abrir(servico.chave)}
-                    className="group flex min-h-14 w-full items-center gap-4 border-t border-line px-5 py-3 text-left hover:bg-ink/[0.03]"
-                  >
-                    <span className="numeros w-16 shrink-0 text-[13px] font-medium text-ink">{servico.idColab}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] text-ink">{servico.categoria}</span>
-                      <span className="block truncate text-xs text-ink-3">
-                        {servico.bairro} · {servico.regiao} · saiu em {formatarDia(saida.dataSaida)}
-                      </span>
-                    </span>
-                    {servico.categoria === CATEGORIA_RISCO && <SeloRisco className="max-sm:hidden" />}
-                    <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} />
-                    <ChevronRight aria-hidden className="size-4 shrink-0 text-ink-3 transition-transform duration-150 group-hover:translate-x-0.5" />
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-      </Card>
     </>
   )
 }

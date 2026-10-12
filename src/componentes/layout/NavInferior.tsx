@@ -9,7 +9,7 @@ export function NavInferior() {
   return (
     <nav
       aria-label="Páginas"
-      className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-md lg:hidden print:hidden"
+      className="nav-na-troca fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-md lg:hidden print:hidden"
     >
       <ul className="mx-auto grid max-w-lg grid-cols-5">
         {PAGINAS.map(({ caminho, nome, icone: Icone }) => (

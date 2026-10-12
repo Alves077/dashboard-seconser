@@ -9,17 +9,24 @@ export function useFiltros() {
 
   const mudar = useCallback(
     (parcial: Partial<Filtros>) => {
-      setParams((atual) => {
-        const f = { ...lerFiltros(atual), ...parcial }
-        // bairro só faz sentido dentro da região escolhida
-        if (parcial.regiao !== undefined && parcial.bairro === undefined) f.bairro = null
-        return escreverFiltros(f, atual)
-      })
+      setParams(
+        (atual) => {
+          const f = { ...lerFiltros(atual), ...parcial }
+          // bairro só faz sentido dentro da região escolhida
+          if (parcial.regiao !== undefined && parcial.bairro === undefined) f.bairro = null
+          return escreverFiltros(f, atual)
+        },
+        // troca suave (crossfade curto) em vez de os números pularem; ver estilos.css
+        { viewTransition: true },
+      )
     },
     [setParams],
   )
 
-  const limpar = useCallback(() => setParams((atual) => escreverFiltros(FILTROS_PADRAO, atual)), [setParams])
+  const limpar = useCallback(
+    () => setParams((atual) => escreverFiltros(FILTROS_PADRAO, atual), { viewTransition: true }),
+    [setParams],
+  )
 
   return { filtros, mudar, limpar }
 }

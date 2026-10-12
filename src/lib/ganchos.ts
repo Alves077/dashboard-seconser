@@ -89,3 +89,15 @@ export function useDestino() {
     [search],
   )
 }
+
+/**
+ * Marca a direção da próxima troca de filtro (estilos.css: data-transicao). "entra" = foco num
+ * recorte (desliza da direita); "volta" = de volta à visão geral. Some sozinha depois da troca.
+ */
+export function direcaoDaTroca(direcao: 'entra' | 'volta') {
+  const raiz = document.documentElement
+  raiz.dataset.transicao = direcao
+  window.setTimeout(() => {
+    if (raiz.dataset.transicao === direcao) delete raiz.dataset.transicao
+  }, 500)
+}

@@ -1,8 +1,6 @@
 import { Outlet } from 'react-router'
 import { Toaster } from 'sonner'
-import { AvisoDesatualizado } from '@/componentes/estados/Estados'
 import { PaletaBusca } from '@/busca/PaletaBusca'
-import { useBase } from '@/dados/consultas'
 import { Ficha } from '@/ficha/Ficha'
 import { BarraFiltros } from '@/filtros/BarraFiltros'
 import { useTema } from '@/lib/ganchos'
@@ -11,7 +9,6 @@ import { DialogoEntrar } from './DialogoEntrar'
 import { NavInferior } from './NavInferior'
 
 export function Moldura() {
-  const { data } = useBase()
   const { tema } = useTema()
   return (
     <>
@@ -22,7 +19,6 @@ export function Moldura() {
         Pular para o conteúdo
       </a>
       <BarraSuperior />
-      <AvisoDesatualizado atualizadoEm={data?.atualizadoEm ?? null} />
       <BarraFiltros />
       {/* espaço embaixo para a navegação do celular */}
       <main id="conteudo" className="mx-auto max-w-[1280px] px-4 pt-5 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:px-6 lg:pb-12">
