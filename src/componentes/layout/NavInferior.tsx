@@ -1,18 +1,19 @@
 import { clsx } from 'clsx'
 import { NavLink } from 'react-router'
 import { useDestino } from '@/lib/ganchos'
-import { PAGINAS } from './paginas'
+import { usePaginas } from './usePaginas'
 
 // Celular/tablet: navegação embaixo, ao alcance do polegar (uso na rua, com uma mão).
 export function NavInferior() {
   const destino = useDestino()
+  const paginas = usePaginas()
   return (
     <nav
       aria-label="Páginas"
       className="nav-na-troca fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-md lg:hidden print:hidden"
     >
-      <ul className="mx-auto grid max-w-lg grid-cols-5">
-        {PAGINAS.map(({ caminho, nome, icone: Icone }) => (
+      <ul className={clsx('mx-auto grid max-w-lg', paginas.length === 5 ? 'grid-cols-5' : 'grid-cols-4')}>
+        {paginas.map(({ caminho, nome, icone: Icone }) => (
           <li key={caminho}>
             <NavLink
               to={destino(caminho)}

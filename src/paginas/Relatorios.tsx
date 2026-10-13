@@ -7,13 +7,14 @@ import { ToggleGroup } from '@base-ui/react/toggle-group'
 import { ClipboardList, FileText, ListTodo, LogIn, Printer } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { EstadoErro, Esqueleto } from '@/componentes/estados/Estados'
+import { EstadoErro, EstadoRestrito, Esqueleto } from '@/componentes/estados/Estados'
 import { useInterface } from '@/componentes/layout/interface'
 import { Botao } from '@/componentes/ui/Botao'
 import { Card } from '@/componentes/ui/Card'
 import { Selecao } from '@/componentes/ui/Selecao'
 import { listaCampo, mesesDoRelatorio, relatorioAbertos, relatorioMensal } from '@/calculos/relatorios'
 import { useBase, useDetalhes } from '@/dados/consultas'
+import { useSessao } from '@/dados/sessao'
 import { useFiltros } from '@/filtros/useFiltros'
 import { formatarDia, rotuloMesLongo, type ChaveMes } from '@/lib/datas'
 import { numero } from '@/lib/formato'
@@ -54,7 +55,50 @@ function useObservacao(chave: string) {
   return [valor, mudar] as const
 }
 
+/**
+ * Relatórios são ferramenta da equipe da DIP (reunião e rua): só com acesso à parte restrita.
+ * O menu já esconde a página (usePaginas); quem chega pelo link vê esta tela com o botão de entrar,
+ * e depois de entrar a página aparece sozinha (o acesso muda e o componente redesenha).
+ */
 export function Relatorios() {
+  const { modo, usuario } = useSessao()
+  const { acesso } = useDetalhes()
+  const { setLoginAberto } = useInterface()
+  if (acesso === true) return <PaginaRelatorios />
+  return (
+    <>
+      <h1 className="mb-5 text-2xl font-normal tracking-[-0.4px] text-ink">Relatórios</h1>
+      <Card>
+        {acesso === undefined ? (
+          <div aria-busy="true" className="flex min-h-72 flex-col items-center justify-center gap-3">
+            <Esqueleto className="size-10 rounded-full" />
+            <Esqueleto className="h-4 w-56" />
+          </div>
+        ) : (
+          <EstadoRestrito
+            titulo="Relatórios são para a equipe da DIP"
+            texto={
+              usuario
+                ? 'Sua conta não tem acesso a esta parte. Fale com o administrador.'
+                : 'Entre com a sua conta para imprimir o relatório mensal, os serviços em aberto e a lista de campo.'
+            }
+            acao={
+              !usuario &&
+              modo === 'supabase' && (
+                <Botao variante="primario" tamanho="compacto" onClick={() => setLoginAberto(true)}>
+                  <LogIn aria-hidden className="size-4" /> Entrar
+                </Botao>
+              )
+            }
+            altura="min-h-72"
+          />
+        )}
+      </Card>
+    </>
+  )
+}
+
+function PaginaRelatorios() {
   useImpressaoClara()
   const [params, setParams] = useSearchParams()
   const aba: Aba = (['mensal', 'abertos', 'campo'] as const).find((a) => a === params.get('relatorio')) ?? 'mensal'
@@ -68,8 +112,8 @@ export function Relatorios() {
     })
 
   const { data: base, isLoading, error, refetch } = useBase()
+  // a página só abre com acesso (ver Relatorios acima): os detalhes (endereço) estão sempre disponíveis
   const { data: detalhes, acesso } = useDetalhes()
-  const { setLoginAberto } = useInterface()
   const { filtros } = useFiltros()
   const hoje = useHoje()
 
@@ -153,16 +197,6 @@ export function Relatorios() {
           </ToggleGroup>
         )}
 
-        {/* lista de campo e abertos ficam muito melhores com o endereço (dado restrito) */}
-        {aba !== 'mensal' && acesso === false && (
-          <p className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg bg-acao-suave px-3 py-2 text-[12.5px] text-ink-2">
-            O endereço de cada serviço só aparece para quem tem acesso.
-            <button type="button" onClick={() => setLoginAberto(true)} className="inline-flex items-center gap-1 font-medium text-acao hover:underline">
-              <LogIn aria-hidden className="size-3.5" />
-              Entrar
-            </button>
-          </p>
-        )}
       </header>
 
       {error ? (

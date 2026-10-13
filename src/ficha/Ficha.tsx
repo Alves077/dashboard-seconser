@@ -2,7 +2,7 @@
 // Computador: painel à direita. Celular: folha de baixo (arrastar para fechar).
 import { Drawer } from '@base-ui/react/drawer'
 import { clsx } from 'clsx'
-import { ImageOff, Lightbulb, Lock, MapPin, X } from 'lucide-react'
+import { FileText, ImageOff, Images, Lightbulb, Lock, MapPin, X } from 'lucide-react'
 import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { EstadoVazio, Esqueleto } from '@/componentes/estados/Estados'
@@ -115,6 +115,13 @@ function Fotos({ chave }: { chave: string }) {
   )
 }
 
+// O que fica escondido sem acesso (a largura da linha apagada imita o tamanho do conteúdo)
+const ITENS_RESTRITOS = [
+  { icone: FileText, nome: 'Descrição', largura: 'flex-1' },
+  { icone: MapPin, nome: 'Endereço', largura: 'w-1/2' },
+  { icone: Images, nome: 'Fotos', largura: 'w-1/3' },
+]
+
 /** Descrição, endereço e fotos — só para quem tem acesso */
 function ParteRestrita({ servico }: { servico: Servico }) {
   const { modo, usuario } = useSessao()
@@ -132,18 +139,30 @@ function ParteRestrita({ servico }: { servico: Servico }) {
   if (!acesso)
     return (
       <Bloco titulo="Descrição, endereço e fotos">
-        <div className="flex items-start gap-3 rounded-lg bg-page p-3">
-          <Lock aria-hidden className="mt-0.5 size-4 shrink-0 text-ink-3" />
-          <div className="text-[13px] text-ink-2">
+        <div className="rounded-xl border border-line bg-page p-4">
+          <span className="inline-flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-xs font-medium text-ink-2">
+            <Lock aria-hidden className="size-3.5" /> Restrito
+          </span>
+          {/* O que existe aqui, sem mostrar o conteúdo: linhas apagadas no lugar do texto */}
+          <ul aria-hidden className="mt-3 flex flex-col gap-2.5 select-none">
+            {ITENS_RESTRITOS.map(({ icone: Icone, nome, largura }) => (
+              <li key={nome} className="flex items-center gap-3">
+                <Icone className="size-4 shrink-0 text-ink-3" />
+                <span className="w-[72px] shrink-0 text-[13px] text-ink-3">{nome}</span>
+                <span className={clsx('h-2.5 rounded-full bg-ink/10', largura)} />
+              </li>
+            ))}
+          </ul>
+          <p className="mt-4 text-[13px] text-ink-2">
             {usuario
               ? 'Sua conta não tem acesso à parte restrita. Fale com o administrador.'
               : 'Só para usuários autorizados: a descrição pode citar ruas, comércios e pessoas.'}
-            {!usuario && modo === 'supabase' && (
-              <Botao variante="primario" tamanho="compacto" className="mt-3 flex" onClick={() => setLoginAberto(true)}>
-                Entrar
-              </Botao>
-            )}
-          </div>
+          </p>
+          {!usuario && modo === 'supabase' && (
+            <Botao variante="primario" tamanho="normal" className="mt-3 w-full" onClick={() => setLoginAberto(true)}>
+              <Lock aria-hidden className="size-4" /> Entrar para ver
+            </Botao>
+          )}
         </div>
       </Bloco>
     )

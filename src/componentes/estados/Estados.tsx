@@ -1,7 +1,7 @@
 // Estados que ocupam o MESMO lugar do conteúdo (mesma moldura e altura), para nada pular
 // nem desalinhar a grade (DESIGN.md §7).
 import { clsx } from 'clsx'
-import { CloudOff, SearchX } from 'lucide-react'
+import { CloudOff, Lock, SearchX } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Botao } from '@/componentes/ui/Botao'
 
@@ -43,6 +43,21 @@ function Moldura({
       {acao && <div className="mt-2">{acao}</div>}
     </div>
   )
+}
+
+/** Conteúdo só para quem tem acesso à parte restrita (ex.: página de Relatórios sem login) */
+export function EstadoRestrito({
+  titulo,
+  texto,
+  acao,
+  altura,
+}: {
+  titulo: string
+  texto?: ReactNode
+  acao?: ReactNode
+  altura?: string
+}) {
+  return <Moldura icone={<Lock className="size-5" aria-hidden />} titulo={titulo} texto={texto} acao={acao} altura={altura} />
 }
 
 /** Filtro sem resultado: diz o que aconteceu e oferece a saída */

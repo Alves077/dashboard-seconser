@@ -10,7 +10,7 @@ import { useBase, useDetalhes, useRecarregar } from '@/dados/consultas'
 import { useSessao } from '@/dados/sessao'
 import { useDestino, useTema } from '@/lib/ganchos'
 import { useInterface } from './interface'
-import { PAGINAS } from './paginas'
+import { usePaginas } from './usePaginas'
 
 /**
  * Status dos dados num botão só (data · fonte · atualizar), para o cabeçalho ter espaço para crescer.
@@ -92,8 +92,15 @@ function Conta() {
   // dados locais: sem login (o status dos dados já mostra a fonte)
   if (modo === 'local') return null
   if (!usuario) {
+    // Sem login: botão de ação (índigo cheio) para se destacar dos ícones ao lado; no celular só o ícone
     return (
-      <Botao variante="fantasma" tamanho="compacto" onClick={() => setLoginAberto(true)}>
+      <Botao
+        variante="primario"
+        tamanho="compacto"
+        onClick={() => setLoginAberto(true)}
+        aria-label="Entrar"
+        className="ml-1 max-sm:w-9 max-sm:px-0"
+      >
         <LogIn aria-hidden className="size-4" />
         <span className="hidden sm:inline">Entrar</span>
       </Botao>
@@ -133,6 +140,7 @@ export function BarraSuperior() {
   const { tema, alternar } = useTema()
   const { setBuscaAberta } = useInterface()
   const destino = useDestino()
+  const paginas = usePaginas()
 
   return (
     <header className="fixo-na-troca sticky top-0 z-30 border-b border-line bg-card/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md print:hidden">
@@ -146,7 +154,7 @@ export function BarraSuperior() {
         </NavLink>
 
         <nav aria-label="Páginas" className="ml-4 hidden items-center gap-1 lg:flex">
-          {PAGINAS.map((p) => (
+          {paginas.map((p) => (
             <NavLink
               key={p.caminho}
               to={destino(p.caminho)}
