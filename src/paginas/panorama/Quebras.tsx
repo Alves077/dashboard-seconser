@@ -13,8 +13,8 @@ import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { compararTexto, decimal, numero, pct } from '@/lib/formato'
 
-/** Linha clicável com barra: rótulo · barra · valor · complemento */
-function LinhaBarra({
+/** Linha clicável com barra: rótulo · barra · valor · complemento (também usada no Prazo) */
+export function LinhaBarra({
   rotulo,
   apoio,
   valor,
@@ -26,6 +26,7 @@ function LinhaBarra({
   corBarra = 'bg-s1',
   pontoApoio,
   compacta = false,
+  textoValor,
 }: {
   rotulo: string
   apoio?: string
@@ -40,6 +41,8 @@ function LinhaBarra({
   pontoApoio?: string
   /** linha mais baixa com mouse; no toque continua com 44px */
   compacta?: boolean
+  /** valor escrito, quando não é contagem (ex.: "4,2%") */
+  textoValor?: string
 }) {
   const largura = maximo > 0 ? Math.max((valor / maximo) * 100, valor > 0 ? 1.5 : 0) : 0
   return (
@@ -72,7 +75,7 @@ function LinhaBarra({
           <span className={clsx('block h-full rounded-full', corBarra)} style={{ width: `${largura}%` }} />
         </span>
         <span className="numeros min-w-16 text-right text-[13px] text-ink">
-          {numero(valor)}
+          {textoValor ?? numero(valor)}
           {complemento && <span className="ml-1.5 text-xs text-ink-3">{complemento}</span>}
         </span>
       </button>

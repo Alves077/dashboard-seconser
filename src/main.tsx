@@ -10,6 +10,7 @@ import { ProvedorSessao } from '@/dados/sessao'
 import { EmConstrucao } from '@/paginas/EmConstrucao'
 import { Mapa } from '@/paginas/Mapa'
 import { Panorama } from '@/paginas/Panorama'
+import { Prazo } from '@/paginas/Prazo'
 
 // Rotas com "#" (…/dashboard-seconser/#/mapa): o GitHub Pages não sabe responder rotas de
 // aplicação de página única — sem o "#", recarregar a página daria 404.
@@ -19,7 +20,7 @@ const rotas = createHashRouter([
     children: [
       { path: '/', element: <Panorama /> },
       { path: '/mapa', element: <Mapa /> },
-      { path: '/prazo', element: <EmConstrucao /> },
+      { path: '/prazo', element: <Prazo /> },
       { path: '/evolucao', element: <EmConstrucao /> },
       { path: '/relatorios', element: <EmConstrucao /> },
       { path: '*', element: <EmConstrucao /> },

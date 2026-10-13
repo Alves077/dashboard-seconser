@@ -213,3 +213,32 @@ estica as imagens (nomes borrados) e embola os pinos → zoom inteiro que cabe o
 de cada lado), centrado onde há mais pinos à vista (grade 11×11 de centros). 375 px: zoom 12, 878 de 941 pinos
 à vista. "Ver todos" continua mostrando tudo. Computador: igual a antes (12,5; todos à vista). O botão do
 fundo detalhado virou chave liga/desliga (`role="switch"`).
+
+## Fase 4 — Prazo (12/10/2026, refeita após revisão do usuário)
+
+"Estamos atendendo bem?" Prazo e dias só existem para quem **voltou** (executado); o atraso de agora é a fila de hoje.
+1. **4 indicadores** (componente `Indicador` compartilhado com o Panorama): no prazo (Δ em p.p.), tempo médio
+   ("metade em até"), **em atraso agora** (Δ vs. fim do mês anterior; mini-linha = atraso no fim de cada mês) e
+   **precisou voltar** (Δ em p.p.). Mini-tendência de 13 meses em todos — substituiu os dois gráficos mensais
+   (o usuário não viu função neles na página; tendência longa fica para a Evolução).
+2. **Quantos dias levou:** histograma (0–15 dia a dia + 16–30 · 31–90 · > 90; cauda cortada no topo com o número
+   quando passa do dobro da maior barra diária). Escolha **reversível e explicada** de quem entra na conta
+   ("Executados no período" = tudo que voltou no período, mesmo o que saiu antes; "Saíram no período" = só os que
+   saíram e já voltaram, com o número dos que ainda estão na rua). Muda o "contar por" global. Rodapé com 4 fatos.
+3. **Em atraso agora, por região** (barra vermelha, % da fila, quantos com +30 d de atraso, o mais antigo) e
+   **Quanto tempo levou, por região** (calor; faixas até 3 · 4–5 sob "No prazo" e 6–15 · 16–30 · > 30 sob "Fora do
+   prazo", com ícone + texto). Com região escolhida, os dois mostram os bairros dela (botão "← Regiões").
+4. **Precisou voltar à rua** (retrabalho, largura toda): taxa grande, "metade voltou em até N dias da execução",
+   reincidentes (3+ idas); por categoria com barra colorida (`s7`; risco em laranja) e valor em destaque, escala
+   mínima de 10%; **Quais voltaram** (nº da ida, quando voltou, quantos dias depois da execução, situação atual)
+   abrindo a ficha.
+- Bug corrigido: `sr-only` aplicado direto na `<table>` deixava a `<caption>` aparecer — agora num invólucro.
+- Contexto dos números: a piora desde jun/26 é real (equipes no programa de LED, estoque, chuva). **Sem marco de
+  LED nos gráficos** (decisão do usuário).
+- **Ajustes da 2ª revisão (12/10):** menos texto, mais número + (%) — "mediana: N dias" no lugar de "metade em até"
+  (também no Panorama), `pctCurto` (100% em vez de 100,0%); notas dos indicadores encurtadas; "%" colado ao
+  valor. Em atraso por região em três andares (nome e número · barra · detalhe "135 (38%) com +30 dias de atraso ·
+  mais antigo: 230 dias"), sem abreviação. Legenda do histograma centralizada no celular. Retrabalho: cada linha
+  conta a história em datas (executado 29/09 → voltou 05/10 (+6 d) → refeito 06/10 / ainda na rua) e os fatos do
+  topo contam serviços, na mesma unidade da taxa ("voltaram em até 7 dias": 3 (17,6%)).
+- **3ª revisão (12/10):** "Quais voltaram" mostra a história INTEIRA do serviço até hoje (executado → voltou (+d) → refeito → … → ainda na rua), só o último passo colorido — a volta do período sozinha contradizia o selo quando o serviço voltou de novo depois. Tabela de calor nos bairros: todos aparecem (antes os de < 10 executados sumiam e a soma não fechava com a região), linha "Toda a região" no topo, e os de poucos casos num grupo no fim com a quantidade nas células em vez de %.

@@ -1,61 +1,9 @@
 // NO PERÍODO — 4 indicadores (2×2 no celular, 4 numa linha no computador), cada um com a
 // comparação com o período anterior e a tendência dos últimos 13 meses.
-import { clsx } from 'clsx'
-import { MiniLinha } from '@/componentes/graficos/MiniLinha'
-import { Card } from '@/componentes/ui/Card'
+import { Indicador } from '@/componentes/ui/Indicador'
 import type { Panorama } from '@/calculos/panorama'
-import { decimal, numero } from '@/lib/formato'
+import { decimal, enxuto, numero } from '@/lib/formato'
 import { rotuloMes } from '@/lib/datas'
-
-function Indicador({
-  rotulo,
-  valor,
-  sufixo,
-  nota,
-  delta,
-  deltaBom,
-  comparacao,
-  serie,
-  parcialNoFim,
-  descricaoSerie,
-}: {
-  rotulo: string
-  valor: string
-  sufixo?: string
-  nota: string
-  delta: number | null
-  deltaBom: 'subir' | 'descer' | 'neutro'
-  comparacao: string | null
-  serie: (number | null)[]
-  parcialNoFim: boolean
-  descricaoSerie: string
-}) {
-  const tom =
-    delta === null || deltaBom === 'neutro' || Math.abs(delta) < 0.05
-      ? 'text-ink-2'
-      : (deltaBom === 'subir') === delta > 0
-        ? 'text-ok-texto'
-        : 'text-atraso-texto'
-  return (
-    <Card className="flex flex-col px-5 pt-4 pb-3">
-      <h3 className="text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">{rotulo}</h3>
-      <p className="numeros mt-1.5 text-[30px] leading-none font-light tracking-[-0.6px] text-ink sm:text-[32px]">
-        {valor}
-        {sufixo && <span className="ml-1 text-sm font-normal tracking-normal text-ink-2">{sufixo}</span>}
-      </p>
-      <p className="mt-2 text-xs text-ink-2">{nota}</p>
-      <p className={clsx('numeros mt-0.5 min-h-4 text-xs font-medium', tom)}>
-        {delta !== null && comparacao && (
-          <>
-            {delta > 0 ? '▲' : delta < 0 ? '▼' : '='} {decimal(Math.abs(delta))}%{' '}
-            <span className="font-normal text-ink-3">vs. {comparacao}</span>
-          </>
-        )}
-      </p>
-      <MiniLinha valores={serie} parcialNoFim={parcialNoFim} descricao={descricaoSerie} className="mt-auto pt-3" />
-    </Card>
-  )
-}
 
 const variacao = (a: number | null, b: number | null) => (a === null || b === null || b === 0 ? null : ((a - b) / b) * 100)
 
@@ -95,7 +43,7 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         rotulo="Tempo médio"
         valor={decimal(atual.tempoMedio)}
         sufixo={atual.tempoMedio === null ? undefined : 'dias'}
-        nota={atual.tempoMediano === null ? 'sem execução no período' : `metade em até ${decimal(atual.tempoMediano)} dias`}
+        nota={atual.tempoMediano === null ? 'sem execução no período' : `mediana: ${enxuto(atual.tempoMediano)} ${atual.tempoMediano === 1 ? 'dia' : 'dias'}`}
         delta={variacao(atual.tempoMedio, previo?.tempoMedio ?? null)}
         deltaBom="descer"
         comparacao={comparacao}
