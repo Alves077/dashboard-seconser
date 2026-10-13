@@ -4,6 +4,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createHashRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
+import { ErroPagina } from '@/componentes/estados/ErroPagina'
 import { ProvedorInterface } from '@/componentes/layout/interface'
 import { Moldura } from '@/componentes/layout/Moldura'
 import { ProvedorSessao } from '@/dados/sessao'
@@ -16,16 +17,24 @@ import { Relatorios } from '@/paginas/Relatorios'
 
 // Rotas com "#" (…/dashboard-seconser/#/mapa): o GitHub Pages não sabe responder rotas de
 // aplicação de página única — sem o "#", recarregar a página daria 404.
+// errorElement: no lugar do "Unexpected Application Error" do React Router (ver ErroPagina).
+// O de dentro pega erro das páginas e mantém cabeçalho e menu; o de fora pega o resto (ex.: ficha).
 const rotas = createHashRouter([
   {
     element: <Moldura />,
+    errorElement: <ErroPagina telaCheia />,
     children: [
-      { path: '/', element: <Panorama /> },
-      { path: '/mapa', element: <Mapa /> },
-      { path: '/prazo', element: <Prazo /> },
-      { path: '/evolucao', element: <Evolucao /> },
-      { path: '/relatorios', element: <Relatorios /> },
-      { path: '*', element: <EmConstrucao /> },
+      {
+        errorElement: <ErroPagina />,
+        children: [
+          { path: '/', element: <Panorama /> },
+          { path: '/mapa', element: <Mapa /> },
+          { path: '/prazo', element: <Prazo /> },
+          { path: '/evolucao', element: <Evolucao /> },
+          { path: '/relatorios', element: <Relatorios /> },
+          { path: '*', element: <EmConstrucao /> },
+        ],
+      },
     ],
   },
 ])

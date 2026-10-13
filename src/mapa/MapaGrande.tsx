@@ -90,8 +90,13 @@ function centroComMaisPinos(map: L.Map, pontos: Ponto[], miolo: L.LatLngBounds, 
  * → zoom inteiro (nítido) que cabe o miolo (sem os 5% mais afastados de cada lado), centrado onde há mais
  * pinos à vista. "Ver todos" mostra tudo.
  */
-function enquadrar(map: L.Map, pontos: Ponto[], animar: boolean, miolo = false) {
-  if (!pontos.length) return
+function enquadrar(map: L.Map, pontos: Ponto[], animar: boolean, miolo = false): boolean {
+  if (!pontos.length) return true
+  // Mapa sem tamanho (aba em segundo plano, janela minimizada, layout ainda sem altura): o zoom que
+  // "cabe" vira infinito e o centro vira NaN ("Invalid LatLng object: (NaN, NaN)"). Não enquadra agora;
+  // quem chamou tenta de novo quando o mapa ganhar tamanho.
+  const tamanho = map.getSize()
+  if (!tamanho.x || !tamanho.y) return false
   const limites = L.latLngBounds(pontos.map((p) => [p.lat, p.lng] as [number, number]))
   const mover = animar && !semMovimento()
   if (miolo && pontos.length >= 20) {
@@ -101,13 +106,14 @@ function enquadrar(map: L.Map, pontos: Ponto[], animar: boolean, miolo = false) 
     const centro = centroComMaisPinos(map, pontos, nucleo, zoom)
     if (mover) map.flyTo(centro, zoom, { duration: 0.6 })
     else map.setView(centro, zoom, { animate: false })
-    return
+    return true
   }
   // margem pequena + zoom fracionado (zoomSnap 0.25): enquadra mais perto que o zoom inteiro
   const opcoes = { padding: [16, 16] as [number, number], maxZoom: 17 }
   if (mover) map.flyToBounds(limites, { ...opcoes, duration: 0.6 })
   // sem animate:false o Leaflet ainda anima o zoom
   else map.fitBounds(limites, { ...opcoes, animate: false })
+  return true
 }
 
 const quando = (p: Ponto) => (p.situacao === 'ok' ? `executado em ${p.dias} d` : `${p.dias} d em aberto`)
@@ -158,10 +164,15 @@ function Pinos({
   const renderer = useMemo(() => L.canvas({ padding: 0.5 }), [])
   const primeira = useRef(true)
   const jaPosicionou = useRef(false)
+  // enquadramento que não pôde ser feito porque o mapa estava sem tamanho (ver enquadrar)
+  const enquadrePendente = useRef<(() => boolean) | null>(null)
 
   // o espaço do mapa muda (altura medida da página, painel, rotação do celular): o Leaflet precisa saber
   useEffect(() => {
-    const obs = new ResizeObserver(() => map.invalidateSize({ pan: false }))
+    const obs = new ResizeObserver(() => {
+      map.invalidateSize({ pan: false })
+      if (enquadrePendente.current?.()) enquadrePendente.current = null
+    })
     obs.observe(map.getContainer())
     return () => obs.disconnect()
   }, [map])
@@ -239,7 +250,9 @@ function Pinos({
       primeira.current = false
       return
     }
-    enquadrar(map, pontos, !primeira.current, map.getSize().x < LARGURA_ESTREITA)
+    const animar = !primeira.current
+    const fazer = () => enquadrar(map, pontos, animar, map.getSize().x < LARGURA_ESTREITA)
+    enquadrePendente.current = fazer() ? null : fazer
     primeira.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só quando o recorte muda, não a cada ponto
   }, [map, chaveEnquadre])
