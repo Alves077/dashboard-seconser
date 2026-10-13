@@ -32,7 +32,9 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         valor={atual.pctNoPrazo === null ? '—' : decimal(atual.pctNoPrazo)}
         sufixo={atual.pctNoPrazo === null ? undefined : '%'}
         nota={`${numero(atual.noPrazo)} de ${numero(atual.executadas)} executadas em até 5 dias`}
-        delta={variacao(atual.pctNoPrazo, previo?.pctNoPrazo ?? null)}
+        // percentual compara em pontos percentuais (como no Prazo e na Evolução), não em "% de %"
+        delta={atual.pctNoPrazo === null || previo?.pctNoPrazo == null ? null : atual.pctNoPrazo - previo.pctNoPrazo}
+        unidadeDelta="p.p."
         deltaBom="subir"
         comparacao={comparacao}
         serie={serie.map((m) => m.ind.pctNoPrazo)}
