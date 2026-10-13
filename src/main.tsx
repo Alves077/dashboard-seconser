@@ -8,6 +8,7 @@ import { ProvedorInterface } from '@/componentes/layout/interface'
 import { Moldura } from '@/componentes/layout/Moldura'
 import { ProvedorSessao } from '@/dados/sessao'
 import { EmConstrucao } from '@/paginas/EmConstrucao'
+import { Evolucao } from '@/paginas/Evolucao'
 import { Mapa } from '@/paginas/Mapa'
 import { Panorama } from '@/paginas/Panorama'
 import { Prazo } from '@/paginas/Prazo'
@@ -21,7 +22,7 @@ const rotas = createHashRouter([
       { path: '/', element: <Panorama /> },
       { path: '/mapa', element: <Mapa /> },
       { path: '/prazo', element: <Prazo /> },
-      { path: '/evolucao', element: <EmConstrucao /> },
+      { path: '/evolucao', element: <Evolucao /> },
       { path: '/relatorios', element: <EmConstrucao /> },
       { path: '*', element: <EmConstrucao /> },
     ],

@@ -40,6 +40,22 @@ export function useMidia(consulta: string): boolean {
   )
 }
 
+/**
+ * Largura de um elemento, atualizada quando ele muda de tamanho — para gráficos SVG desenhados em
+ * pixels reais (texto e traço sem distorcer). Uso: `const [ref, largura] = useLargura()`.
+ */
+export function useLargura<T extends HTMLElement = HTMLDivElement>() {
+  const [el, setEl] = useState<T | null>(null)
+  const [largura, setLargura] = useState(0)
+  useEffect(() => {
+    if (!el) return
+    const o = new ResizeObserver(([e]) => setLargura(Math.round(e.contentRect.width)))
+    o.observe(el)
+    return () => o.disconnect()
+  }, [el])
+  return [setEl, largura] as const
+}
+
 /** "Hoje" que vira à meia-noite (situação de atraso muda com o dia) */
 export function useHoje(): Dia {
   const [dia, setDia] = useState(hojeAgora)

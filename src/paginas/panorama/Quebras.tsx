@@ -11,7 +11,7 @@ import type { LinhaQuebra } from '@/calculos/panorama'
 import { CATEGORIA_RISCO } from '@/dados/regras'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
-import { compararTexto, decimal, numero, pct } from '@/lib/formato'
+import { compararTexto, decimal, numero, pct, pctCurto } from '@/lib/formato'
 
 /** Linha clicável com barra: rótulo · barra · valor · complemento (também usada no Prazo) */
 export function LinhaBarra({
@@ -234,6 +234,7 @@ export function Bairros({
 }) {
   const { filtros, mudar } = useFiltros()
   const [modo, setModo] = useState<'fila' | 'saidas'>('fila')
+  const porRetorno = filtros.contarPor === 'retorno'
   const [todos, setTodos] = useState(false)
   const campo = modo === 'fila' ? 'fila' : 'saidas'
   const ordem = linhas.filter((l) => l[campo] > 0).sort((a, b) => b[campo] - a[campo] || compararTexto(a.nome, b.nome))
@@ -244,7 +245,13 @@ export function Bairros({
       <CabecalhoCard
         id="titulo-bairros"
         titulo="Bairros"
-        subtitulo={modo === 'fila' ? 'Onde a fila de agora está maior.' : 'Onde mais saiu serviço no período.'}
+        subtitulo={
+          modo === 'fila'
+            ? 'Em aberto hoje, não importa quando saíram (não depende do período).'
+            : porRetorno
+              ? 'Executados dentro do período escolhido.'
+              : 'Saídas para a rua dentro do período escolhido.'
+        }
         acao={
           <ToggleGroup
             aria-label="Ordenar bairros por"
@@ -253,8 +260,8 @@ export function Bairros({
             className="flex h-9 items-center rounded-full border border-line bg-page p-0.5"
           >
             {[
-              { v: 'fila', t: 'Fila agora' },
-              { v: 'saidas', t: 'No período' },
+              { v: 'fila', t: 'Em aberto hoje' },
+              { v: 'saidas', t: porRetorno ? 'Executados no período' : 'Saíram no período' },
             ].map((o) => (
               <Toggle
                 key={o.v}
@@ -285,7 +292,7 @@ export function Bairros({
                   pontoApoio={corRegiao(regiaoDe(l.nome))}
                   valor={l[campo]}
                   maximo={max}
-                  complemento={modo === 'fila' && l.atraso > 0 ? `${pct(l.atraso, l.fila)} atr.` : undefined}
+                  complemento={modo === 'fila' && l.atraso > 0 ? `${pctCurto(l.atraso, l.fila)} atr.` : undefined}
                   ativo={filtros.bairro === l.nome}
                   aoTocar={() =>
                     filtros.bairro === l.nome ? mudar({ bairro: null }) : mudar({ regiao: regiaoDe(l.nome), bairro: l.nome })

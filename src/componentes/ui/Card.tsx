@@ -18,8 +18,9 @@ export function CabecalhoCard({
   id?: string
 }) {
   return (
-    <header className="flex items-start justify-between gap-4 px-5 pt-4">
-      <div className="min-w-0">
+    // sem espaço para os dois, a ação desce para baixo do título (antes espremia o subtítulo no celular)
+    <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-5 pt-4">
+      <div className="min-w-[min(100%,14rem)] flex-1">
         <h2 id={id} className="text-[15px] font-medium tracking-[-0.1px] text-ink">
           {titulo}
         </h2>

@@ -242,3 +242,35 @@ fundo detalhado virou chave liga/desliga (`role="switch"`).
   conta a história em datas (executado 29/09 → voltou 05/10 (+6 d) → refeito 06/10 / ainda na rua) e os fatos do
   topo contam serviços, na mesma unidade da taxa ("voltaram em até 7 dias": 3 (17,6%)).
 - **3ª revisão (12/10):** "Quais voltaram" mostra a história INTEIRA do serviço até hoje (executado → voltou (+d) → refeito → … → ainda na rua), só o último passo colorido — a volta do período sozinha contradizia o selo quando o serviço voltou de novo depois. Tabela de calor nos bairros: todos aparecem (antes os de < 10 executados sumiam e a soma não fechava com a região), linha "Toda a região" no topo, e os de poucos casos num grupo no fim com a quantidade nas células em vez de %.
+
+## Fase 5 — Evolução (12/10/2026)
+
+"Está melhorando ou piorando?" Tudo dentro do período global, em intervalos que acompanham o tamanho dele:
+até 62 dias **dia a dia**, até 190 **semana a semana** (segunda a domingo), acima disso **mês a mês**.
+- O período termina no **último dia com dado** (data da última carga): sem isso, os dias depois da carga viravam
+  "zero saídas"/"dias sem saída". Quando isso encurta o período, a comparação usa a mesma quantidade de dias logo
+  antes, e o topo avisa "dados até 09/10 (última carga)".
+- **4 indicadores** (mini-linha = a própria série do período): entraram, executados (a mais/a menos que as
+  entradas), fila no fim (vs. início do período) e dias sem saída para a rua (e quantos sem execução).
+- **Entraram e foram executados:** duas linhas no MESMO eixo (o antigo tinha dois eixos com o saldo).
+- **Fila em aberto:** áreas empilhadas em atraso (vermelho) + dentro do prazo (âmbar), gráfico próprio.
+- **A fila cresceu ou diminuiu:** saldo (entraram − executados = fila fim − início) por região com barra divergente
+  (centro = zero), ▲/▼ + texto; com região escolhida, os bairros. Conferido: soma das regiões = total (+120 em 30 d).
+- **Quando cada categoria aparece:** calor categoria × intervalo, cor relativa à própria categoria, número escrito,
+  rolagem horizontal com o nome fixo.
+- Componente novo `componentes/graficos/GraficoTempo.tsx` (linhas/empilhado, eixo único do zero, marcação e dica
+  sincronizadas, último intervalo tracejado, tabela oculta) + `LegendaTempo`.
+- Junto: favicon corrigido (o `index.html` repetia o base; o Vite já acrescenta), botões dos bairros do Panorama
+  renomeados ("Em aberto hoje" / "Saíram no período"), cabeçalho dos cartões quebra a ação para baixo do título
+  quando falta espaço.
+- **Revisão da Evolução (12/10):** dia a dia virou serrote (fins de semana e dias sem despacho = zeros) → até 14 dias
+  por dia; até 190 dias **blocos de ~7 dias de tamanho igual** cobrindo o período exato (30 dias = 4 blocos, sem
+  semana de 1 dia na ponta); acima, mês a mês. Gráfico principal com **três séries no mesmo eixo**: entraram,
+  executados (linhas) e a **fila/estoque** no fim de cada bloco (área cinza ao fundo) — nesses blocos os três ficam
+  na mesma ordem de grandeza. Saíram: o gráfico empilhado da fila, o calor por categoria e "dias sem saída" (inflado
+  pelos fins de semana). Entraram: **tempo médio até a execução** (com a linha do prazo) e **% no prazo** (0–100%)
+  ao longo do tempo, e **"Categorias: o que mudou"** (barra = período, traço = anterior, escala de cada categoria).
+  "Todo o período": sem fila no início nem comparação ("ficaram 1.080 em aberto"; cartão "Onde está a fila").
+  Indicadores: entraram, executados, fila no fim, no prazo (p.p.). `GraficoTempo` agora aceita série em área,
+  valores nulos (sem ponto), escala fixa e linha de referência.
+- **"Categorias: o que mudou" virou tabela (12/10):** as barras com escala por categoria enganavam (Poste com 4 parecia maior que Lâmpada com 624). Agora: Categoria · período (datas escritas, ex. 13/09–09/10) · mesmos dias logo antes (17/08–12/09) · diferença (▲/▼ em número; % só quando os dois lados têm 10 ou mais). Ordem: o que mais mudou primeiro. Linha clicável filtra. No celular, datas em 2 linhas e "Dif.".
