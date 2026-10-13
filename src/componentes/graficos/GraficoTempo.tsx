@@ -111,7 +111,15 @@ export function GraficoTempo({
   return (
     <div ref={ref} className="relative">
       {largura > 0 && n > 0 && (
-        <svg width={largura} height={altura} role="img" aria-label={descricao} className="block overflow-visible">
+        // viewBox: se o papel for mais estreito que a tela na impressão, o gráfico encolhe em vez de cortar
+        <svg
+          width={largura}
+          height={altura}
+          viewBox={`0 0 ${largura} ${altura}`}
+          role="img"
+          aria-label={descricao}
+          className="block h-auto max-w-full overflow-visible"
+        >
           {marcas.map((m) => (
             <g key={m}>
               <line x1={ESQ} x2={largura - DIR} y1={y(m)} y2={y(m)} stroke="var(--c-line)" strokeDasharray={m === 0 ? undefined : '2 3'} />

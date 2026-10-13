@@ -274,3 +274,25 @@ até 62 dias **dia a dia**, até 190 **semana a semana** (segunda a domingo), ac
   Indicadores: entraram, executados, fila no fim, no prazo (p.p.). `GraficoTempo` agora aceita série em área,
   valores nulos (sem ponto), escala fixa e linha de referência.
 - **"Categorias: o que mudou" virou tabela (12/10):** as barras com escala por categoria enganavam (Poste com 4 parecia maior que Lâmpada com 624). Agora: Categoria · período (datas escritas, ex. 13/09–09/10) · mesmos dias logo antes (17/08–12/09) · diferença (▲/▼ em número; % só quando os dois lados têm 10 ou mais). Ordem: o que mais mudou primeiro. Linha clicável filtra. No celular, datas em 2 linhas e "Dif.".
+
+## Fase 6 — Relatórios (12/10/2026)
+
+Três folhas A4 (na tela e na impressão; o navegador salva em PDF pelo botão "Imprimir ou salvar PDF"). Aba na URL
+(`?relatorio=periodo|abertos|campo`). Valem os filtros globais. Na impressão: só a folha (barra, filtros e navegação
+já tinham `print:hidden`), sempre em tema claro (`beforeprint`), `@page` A4 com 12 mm, seções e linhas sem quebrar
+no meio, títulos nunca sozinhos no pé da página, cores das barras impressas (`print-color-adjust: exact`).
+1. **Do período** (era o "Relatório Mensal", agora qualquer período): resumo (cada número com dono: saíram,
+   desses já voltaram/no prazo, executados no período contando os que saíram antes, fila início→fim), 6 indicadores
+   com comparação, movimento da fila (extrato no celular), tempo até a execução (barra empilhada nas faixas do Prazo),
+   por região, por categoria, bairros com mais saídas, mais antigos em aberto e **observações** (caixa na tela, texto
+   no papel; some na impressão se vazia; lembrada neste navegador por período e escopo).
+2. **Em aberto** (versão web do `relatorio_abertos.py`): cidade (por região) ou região (por bairro); indicadores,
+   há quanto tempo esperam, por lugar/categoria/origem e os 15 mais antigos (com endereço para quem tem acesso).
+3. **Lista de campo**: região → bairro (alfabético) → mais antigos; colunas de retorno e obs. em branco; endereço e
+   local para quem tem acesso (aviso + "Entrar" para quem não tem); "Todos em aberto / Só em atraso"; cada região
+   começa numa página nova; cabeçalho da tabela repete a cada página.
+- Conferido imprimindo de verdade (Chrome sem janela pelo protocolo de depuração): período em 2 páginas, abertos de
+  Pendotiba em 2, lista de campo de Pendotiba (154 em atraso) em 6.
+- **Revisão (12/10): o relatório 1 voltou a ser o do site antigo.** Aba "Mensal" com o seletor próprio "Mês de referência" (Histórico completo + meses fechados, abre no último fechado; `?mes=AAAAMM|tudo`; o período do filtro não vale nesta aba, região/bairro/categoria/origem valem). Duas versões, seção por seção como o `relatorio.js`: **mês** (indicadores do mês com "vs X em ago/26", movimento da fila com executados do mês × de antes, faixas ≤3/4–7/8–15/>15 dos concluídos, categoria, região com fora do prazo, bairros maior volume e maior backlog ≥15, observações) e **histórico completo** (contexto do último mês fechado, indicadores gerais, composição da fila em aberto com acima de 150 dias, últimos 3 meses com fila no fim, faixas, 8 categorias + "demais", região, bairros com backlog ≥50, evolução mensal em DOIS gráficos — o antigo tinha dois eixos — e os 8 mais antigos). Mesmas cores de célula do antigo (tempo médio >5 âmbar, >15 vermelho; fora do prazo ≥40 âmbar, ≥70 vermelho). Conferido contra o CSV pela lógica antiga (set/26: 1.191 · 511 · 680 · 30,7% · 10,8 d · fila 726→1.286 · 631 = 339+292 · reab. 10/11). Impressão: mês em 2 páginas, histórico em 3.
+- **"Em aberto" igual ao PDF do `relatorio_abertos.py` (13/10):** unidade = saídas sem retorno; espera = dias desde o registro. Contexto ("Pendotiba concentra 154 dos 1.080… espera média… três bairros… por mês de registro"), 6 indicadores com a barrinha de cor (em aberto % da cidade, em atraso, espera média, acima de 30 dias, mais antigo "desde dd/mm/aaaa", institucionais), composição da fila com "dentro do prazo", por bairro (ou região, na cidade toda) com espera média (>15 âmbar, >30 vermelho), > 30 dias, mais antigo e linha de Total, categoria e origem (6 + "Demais"), linha de vereadores, os 10 mais antigos (8 na cidade) com endereço, origem (nome do vereador) e registro. Compacto (`.folha-compacta`): 1 página como o original. Também: folha na tela até 850 px e legendas das barras centralizadas.
+- **Ajustes das tabelas (13/10):** cabeçalhos e números centralizados (1ª coluna e textos longos — endereço, categoria na lista de campo — à esquerda com o cabeçalho junto; bairro/categoria/origem curtos centralizados); cada tabela num cartão com borda (`SecaoFolha cartao` / `.cartao-folha`), como o PDF do script; sem a nota final do "Em aberto". Lista de campo sem "Obs.", "Saiu" → "Saída", endereço mantido (já agrupada por bairro). Número do serviço como pílula que abre a Ficha (`IdServico`) na lista de campo e nos "mais antigos"; no papel, só o número. Impressão: abertos de Pendotiba 1 página, mensal 2, lista de campo 6.

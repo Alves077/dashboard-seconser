@@ -412,11 +412,119 @@ html[data-transicao='volta']::view-transition-new(root) {
   color: var(--c-ink-3);
 }
 
+/* Relatórios: tabela da folha (compacta, legível no papel) */
+.tabela-folha {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--c-ink);
+  font-size: 12px;
+}
+.tabela-folha th {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--c-line);
+  color: var(--c-ink-3);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-align: left;
+  text-transform: uppercase;
+}
+/* sem cor aqui: a cor vem da tabela (herdada), para as classes de destaque das células valerem */
+.tabela-folha td {
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--c-line);
+  vertical-align: top;
+}
+.tabela-folha .num {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  white-space: nowrap;
+}
+/* cabeçalhos centralizados; a 1ª coluna (nomes) fica à esquerda */
+.tabela-folha th {
+  text-align: center;
+}
+.tabela-folha th:first-child,
+.tabela-folha th.esq {
+  text-align: left;
+}
+/* colunas de texto curto (bairro, categoria, origem) centralizadas como o cabeçalho */
+.tabela-folha td.centro {
+  text-align: center;
+}
+/* cada tabela num cartão (como o PDF do relatorio_abertos.py): separação clara entre elas */
+.cartao-folha {
+  padding: 8px 12px 6px;
+  border: 1px solid var(--c-line);
+  border-radius: 8px;
+  break-inside: avoid;
+}
+.cartao-folha .tabela-folha tr:last-child td {
+  border-bottom: 0;
+}
+.tabela-folha tr,
+.secao-folha {
+  break-inside: avoid;
+}
+/* relatório de abertos: compacto como o PDF do relatorio_abertos.py (1 página) */
+.folha-compacta .tabela-folha {
+  font-size: 10.5px;
+}
+.folha-compacta .tabela-folha th,
+.folha-compacta .tabela-folha td {
+  padding: 3px 5px;
+}
+.folha-compacta .tabela-folha td {
+  white-space: nowrap;
+}
+.folha-compacta .tabela-folha td.quebra {
+  white-space: normal;
+}
+/* lista de campo: mais linhas por folha */
+.tabela-campo {
+  font-size: 11.5px;
+}
+.tabela-campo th,
+.tabela-campo td {
+  padding: 4px 5px;
+}
+/* título nunca sozinho no pé da página */
+.folha h3,
+.folha h4 {
+  break-after: avoid;
+}
+
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
 @media print {
   :root {
     color-scheme: light;
   }
   body {
     background: #fff;
+  }
+  /* só a folha: sem o espaçamento da página e sem a moldura do cartão */
+  main#conteudo {
+    max-width: none;
+    padding: 0;
+  }
+  .folha {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  .quebra-pagina {
+    break-before: page;
+  }
+  /* seções grandes (listas longas) podem quebrar entre linhas */
+  .secao-folha.pode-quebrar {
+    break-inside: auto;
   }
 }
