@@ -70,7 +70,7 @@ export function Movimento({ m, primeiraSaida, hoje }: { m: Mov; primeiraSaida: D
       {/* celular: extrato */}
       <ul className="mx-5 my-4 divide-y divide-line rounded-lg bg-page md:hidden">
         {termos.map((x) => (
-          <li key={x.chave} className={clsx('flex items-center gap-3 px-3 py-2.5', x.sinal === '=' && 'bg-ink/[0.03]')}>
+          <li key={x.chave} className={clsx('flex items-center gap-3 px-3 py-2.5', x.sinal === '=' && 'bg-realce')}>
             <span aria-hidden className="w-3 text-center text-sm font-medium text-ink-3">
               {x.sinal}
             </span>

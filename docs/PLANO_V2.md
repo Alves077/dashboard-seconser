@@ -426,6 +426,11 @@ logo abaixo do botão "Filtros": uma linha só que rola para o lado (a barra é 
   Conferido por script em 390/418/700/900/1024/1440 (cada tabela cabe ou rola; nada vaza da folha; sem barra de
   rolagem no computador) e impressão (em aberto região 1 pág., cidade 1, mensal 2, histórico 3, campo 6).
 
+**Hover e cursor (14/10):** hover era a tinta a 3% (no escuro quase invisível) → tokens por tema `realce`/`realce-forte`
+(`bg-realce`, `hover:bg-realce`…) em todo o site; o que é clicável mostra a mãozinha (o Tailwind 4 tirou o
+`cursor: pointer` dos botões). Legenda das faixas: cada item ocupa a sua coluna (tamanho de sempre) e o conteúdo fica centralizado dentro dele
+(antes encostava à esquerda e sobrava espaço à direita).
+
 ### 8.3 Espaços públicos (praças, parques, campos) — depende dos dados
 Hoje só **57** serviços têm `local` (o campo só é preenchido quando o serviço é *dentro* do lugar) e ele está na parte
 **restrita** (`servicos_detalhe`). No texto, "praça" aparece em ~510 serviços, "quadra" em ~570 (mas muitas são

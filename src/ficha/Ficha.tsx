@@ -140,7 +140,7 @@ function ParteRestrita({ servico }: { servico: Servico }) {
     return (
       <Bloco titulo="Descrição, endereço e fotos">
         <div className="rounded-xl border border-line bg-page p-4">
-          <span className="inline-flex items-center gap-1 rounded-full bg-ink/5 px-2 py-0.5 text-xs font-medium text-ink-2">
+          <span className="inline-flex items-center gap-1 rounded-full bg-realce-forte px-2 py-0.5 text-xs font-medium text-ink-2">
             <Lock aria-hidden className="size-3.5" /> Restrito
           </span>
           {/* O que existe aqui, sem mostrar o conteúdo: linhas apagadas no lugar do texto */}
@@ -285,7 +285,7 @@ export function Ficha() {
             <Drawer.Content className="relative pb-6">
               <Drawer.Close
                 aria-label="Fechar ficha"
-                className="pressionavel absolute top-3 right-3 grid size-10 place-items-center rounded-full text-ink-2 hover:bg-ink/5 hover:text-ink"
+                className="pressionavel absolute top-3 right-3 grid size-10 place-items-center rounded-full text-ink-2 hover:bg-realce-forte hover:text-ink"
               >
                 <X aria-hidden className="size-5" />
               </Drawer.Close>

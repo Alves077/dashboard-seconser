@@ -61,7 +61,7 @@ export function LinhaBarra({
         className={clsx(
           'grid w-full grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)_auto] items-center gap-x-3 rounded-md px-2 text-left sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto]',
           compacta ? 'min-h-9 py-1 pointer-coarse:min-h-11' : 'min-h-11 py-1.5',
-          ativo ? 'bg-acao-suave' : aoTocar && 'hover:bg-ink/[0.03]',
+          ativo ? 'bg-acao-suave' : aoTocar && 'hover:bg-realce',
         )}
       >
         <span className={clsx('min-w-0', prefixo && 'flex items-center gap-2.5')}>
@@ -120,7 +120,7 @@ export function Regioes({ linhas }: { linhas: LinhaQuebra[] }) {
           <tbody className="numeros">
             {ordem.map((l) => {
               const ativo = filtros.regiao === l.nome
-              const celula = clsx('py-2.5 first:rounded-l-md last:rounded-r-md', ativo ? 'bg-acao-suave' : 'group-hover:bg-ink/[0.03]')
+              const celula = clsx('py-2.5 first:rounded-l-md last:rounded-r-md', ativo ? 'bg-acao-suave' : 'group-hover:bg-realce')
               return (
                 <tr key={l.nome} onClick={() => alternar(l.nome)} className="group cursor-pointer">
                   <th scope="row" className={clsx(celula, 'pr-2 pl-2 text-left font-normal')}>
@@ -201,7 +201,7 @@ export function Categorias({ linhas, total }: { linhas: LinhaQuebra[]; total: nu
                 aria-pressed={filtros.categoria === domina.nome}
                 className={clsx(
                   'mb-2 w-full rounded-lg px-2 py-2 text-left',
-                  filtros.categoria === domina.nome ? 'bg-acao-suave' : 'hover:bg-ink/[0.03]',
+                  filtros.categoria === domina.nome ? 'bg-acao-suave' : 'hover:bg-realce',
                 )}
               >
                 <span className="flex items-baseline justify-between gap-3">
@@ -313,7 +313,7 @@ export function Bairros({
               <button
                 type="button"
                 onClick={() => setTodos((v) => !v)}
-                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-realce"
               >
                 {todos ? 'Mostrar só os 12 primeiros' : `Mostrar até 30 (de ${numero(ordem.length)})`}
               </button>
@@ -359,7 +359,7 @@ export function Origens({
     <button
       type="button"
       onClick={() => escolherOrigem(null)}
-      className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-ink/[0.03]"
+      className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-realce"
     >
       <ArrowLeft aria-hidden className="size-3.5" />
       Origens
@@ -429,7 +429,7 @@ export function Origens({
             <button
               type="button"
               onClick={() => setTodos((v) => !v)}
-              className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+              className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-realce"
             >
               {todos ? 'Mostrar só os 10 primeiros' : `Mostrar todos (${numero(ordem.length)})`}
             </button>

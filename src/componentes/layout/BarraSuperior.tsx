@@ -33,7 +33,7 @@ function StatusDados() {
         aria-label={em ? `Dados de ${curto}${velho ? `, há ${dias} dias` : ''}. Ver detalhes e atualizar` : 'Status dos dados'}
         className={clsx(
           'pressionavel inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap',
-          velho ? 'bg-andamento/15 text-andamento-texto hover:bg-andamento/25' : 'text-ink-2 hover:bg-ink/5 hover:text-ink',
+          velho ? 'bg-andamento/15 text-andamento-texto hover:bg-andamento/25' : 'text-ink-2 hover:bg-realce-forte hover:text-ink',
         )}
       >
         {isFetching ? (
@@ -125,7 +125,7 @@ function Conta() {
             </div>
             <Menu.Item
               onClick={() => sair()}
-              className="flex h-10 cursor-default items-center rounded-md px-3 text-[13px] text-ink-2 outline-none data-highlighted:bg-ink/5 data-highlighted:text-ink"
+              className="flex h-10 cursor-default items-center rounded-md px-3 text-[13px] text-ink-2 outline-none data-highlighted:bg-realce-forte data-highlighted:text-ink"
             >
               Sair
             </Menu.Item>

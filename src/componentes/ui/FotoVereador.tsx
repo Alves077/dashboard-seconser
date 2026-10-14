@@ -35,7 +35,7 @@ export function FotoVereador({
   const base = clsx('inline-grid shrink-0 place-items-center overflow-hidden rounded-full', className)
   if (!vereador)
     return (
-      <span aria-hidden className={clsx(base, 'bg-ink/5 text-ink-3')}>
+      <span aria-hidden className={clsx(base, 'bg-realce-forte text-ink-3')}>
         <Landmark className="size-[45%]" />
       </span>
     )

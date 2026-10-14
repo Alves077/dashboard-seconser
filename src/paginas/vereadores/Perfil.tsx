@@ -82,7 +82,7 @@ function Lugares({ p }: { p: PerfilVereador }) {
         <button
           type="button"
           onClick={() => mudar({ regiao: null })}
-          className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-ink/[0.03]"
+          className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-realce"
         >
           <ArrowLeft aria-hidden className="size-3.5" />
           Regiões
@@ -143,7 +143,7 @@ function Contagem({
               <button
                 type="button"
                 onClick={() => setTodos((v) => !v)}
-                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-realce"
               >
                 {todos ? 'Mostrar só os 8 primeiros' : `Mostrar todos (${numero(linhas.length)})`}
               </button>
@@ -214,7 +214,7 @@ function EmAberto({ p }: { p: PerfilVereador }) {
                 <button
                   type="button"
                   onClick={() => abrir(servico.chave)}
-                  className="group flex min-h-14 w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-ink/[0.03] sm:gap-4"
+                  className="group flex min-h-14 w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-realce sm:gap-4"
                 >
                   <span className="numeros w-14 shrink-0 text-[13px] font-medium text-ink">{servico.idColab}</span>
                   <span className="min-w-0 flex-1">
@@ -240,7 +240,7 @@ function EmAberto({ p }: { p: PerfilVereador }) {
             <button
               type="button"
               onClick={() => setTodos((v) => !v)}
-              className="h-11 w-full border-t border-line text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+              className="h-11 w-full border-t border-line text-[13px] font-medium text-acao hover:bg-realce"
             >
               {todos ? 'Mostrar só os 10 primeiros' : `Mostrar todos (${numero(base.length)})`}
             </button>
@@ -261,7 +261,7 @@ export function Perfil({ p, quem, aoVoltar }: { p: PerfilVereador; quem: string;
         <button
           type="button"
           onClick={aoVoltar}
-          className="pressionavel -ml-3 flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+          className="pressionavel -ml-3 flex h-9 items-center gap-1.5 rounded-full px-3 text-[13px] font-medium text-acao hover:bg-realce"
         >
           <ArrowLeft aria-hidden className="size-4" />
           Vereadores

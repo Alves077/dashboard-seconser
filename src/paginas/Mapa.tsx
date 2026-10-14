@@ -103,7 +103,7 @@ function LinhaPainel({ c, ativo, aoTocar, ponto, icone }: { c: Contagem; ativo: 
         aria-pressed={ativo}
         className={clsx(
           'flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-left text-[13px] pointer-coarse:min-h-11',
-          ativo ? 'bg-acao-suave font-medium text-ink' : 'text-ink hover:bg-ink/[0.03]',
+          ativo ? 'bg-acao-suave font-medium text-ink' : 'text-ink hover:bg-realce',
         )}
       >
         {ponto && <span aria-hidden className={clsx('size-2.5 shrink-0 rounded-full', ponto)} />}
@@ -136,7 +136,7 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
         </div>
         {d.filaToda !== null && d.intervalo.de !== null && d.filaToda > d.total && (
           // o período também vale aqui: deixar claro que há fila mais antiga fora do mapa
-          <div className="mt-3 rounded-lg bg-ink/[0.03] px-3 py-2.5 text-xs leading-relaxed text-ink-2">
+          <div className="mt-3 rounded-lg bg-realce px-3 py-2.5 text-xs leading-relaxed text-ink-2">
             Só os que saíram para a rua no período ({d.intervalo.rotulo.toLowerCase()}). A fila toda tem{' '}
             <span className="numeros font-medium text-ink">{numero(d.filaToda)}</span>.{' '}
             <button
@@ -164,7 +164,7 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
                 <button
                   type="button"
                   onClick={() => abrir(p.servico.chave)}
-                  className="group flex min-h-12 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-ink/[0.03]"
+                  className="group flex min-h-12 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-realce"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1 truncate text-[13px] text-ink">

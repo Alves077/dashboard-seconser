@@ -35,7 +35,7 @@ export function AtrasoAgora({ linhas, nivelBairro }: { linhas: LinhaAtraso[]; ni
             <button
               type="button"
               onClick={() => mudar({ regiao: null })}
-              className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-ink/[0.03]"
+              className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-realce"
             >
               <ArrowLeft aria-hidden className="size-3.5" />
               Regiões
@@ -58,7 +58,7 @@ export function AtrasoAgora({ linhas, nivelBairro }: { linhas: LinhaAtraso[]; ni
                       type="button"
                       onClick={() => alternar(l.nome)}
                       aria-pressed={sel}
-                      className={clsx('w-full rounded-md px-2 py-2 text-left', sel ? 'bg-acao-suave' : 'hover:bg-ink/[0.03]')}
+                      className={clsx('w-full rounded-md px-2 py-2 text-left', sel ? 'bg-acao-suave' : 'hover:bg-realce')}
                     >
                       <span className="flex items-baseline justify-between gap-3">
                         <span className={clsx('flex min-w-0 items-center gap-2 text-[13px] text-ink', sel && 'font-medium')}>
@@ -91,7 +91,7 @@ export function AtrasoAgora({ linhas, nivelBairro }: { linhas: LinhaAtraso[]; ni
               <button
                 type="button"
                 onClick={() => setTodos((v) => !v)}
-                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-realce"
               >
                 {todos ? 'Mostrar só os 10 primeiros' : `Mostrar todos (${numero(ordem.length)})`}
               </button>

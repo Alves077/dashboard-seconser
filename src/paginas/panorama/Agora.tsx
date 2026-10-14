@@ -69,16 +69,17 @@ function BarraEspera({
               disabled={espera[i] === 0}
               aria-pressed={escolhida === i}
               className={clsx(
-                'pressionavel -mx-1.5 w-[calc(100%+0.75rem)] rounded-md px-1.5 py-1 text-left transition-opacity duration-150 disabled:cursor-default',
-                escolhida === i ? 'bg-acao-suave' : 'enabled:hover:bg-ink/[0.03]',
+                // destaque do tamanho da coluna, conteúdo centralizado nele (sem sobra só de um lado)
+                'pressionavel w-full rounded-md px-2 py-1 text-center transition-opacity duration-150 disabled:cursor-default',
+                escolhida === i ? 'bg-acao-suave' : 'enabled:hover:bg-realce',
                 apagada(i) && 'opacity-50',
               )}
             >
-              <span className="flex items-center gap-1.5 text-xs text-ink-2">
+              <span className="flex items-center justify-center gap-1.5 text-xs text-ink-2">
                 <span aria-hidden className={clsx('size-2.5 shrink-0 rounded-sm', COR_ESPERA[i])} />
                 <span className="truncate">{f.rotulo}</span>
               </span>
-              <span className="numeros mt-0.5 block pl-4 text-[15px] font-medium text-ink">
+              <span className="numeros mt-0.5 block text-[15px] font-medium text-ink">
                 {numero(espera[i])}
                 <span className="ml-1.5 text-xs font-normal text-ink-3">{pct(espera[i], total)}</span>
               </span>
@@ -126,7 +127,7 @@ function OndeEstao({ itens, rotuloFaixa }: { itens: ItemFila[]; rotuloFaixa: str
               setRegiaoLocal(null)
               setTodos(false)
             }}
-            className="pressionavel -mr-2 flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-acao hover:bg-ink/[0.03]"
+            className="pressionavel -mr-2 flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-acao hover:bg-realce"
           >
             <ArrowLeft aria-hidden className="size-3.5" />
             Regiões
@@ -155,7 +156,7 @@ function OndeEstao({ itens, rotuloFaixa }: { itens: ItemFila[]; rotuloFaixa: str
         <button
           type="button"
           onClick={() => setTodos((v) => !v)}
-          className="mt-1 h-10 w-full rounded-md text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+          className="mt-1 h-10 w-full rounded-md text-[13px] font-medium text-acao hover:bg-realce"
         >
           {todos ? 'Mostrar só os 8 primeiros' : `Mostrar todos (${numero(contagem.length)})`}
         </button>
@@ -182,7 +183,7 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
           Agora · fila de hoje ({formatarDia(hoje)})
         </h2>
         {ignorados.length ? (
-          <p className="rounded-full bg-ink/5 px-2.5 py-1 text-xs text-ink-2">
+          <p className="rounded-full bg-realce-forte px-2.5 py-1 text-xs text-ink-2">
             {ignorados.join(' e ')} não se aplica aqui: é a fila de hoje, de qualquer mês.
           </p>
         ) : (
@@ -271,7 +272,7 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
                 <button
                   type="button"
                   onClick={() => setFaixa(null)}
-                  className="pressionavel -mr-2 flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-acao hover:bg-ink/[0.03]"
+                  className="pressionavel -mr-2 flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-acao hover:bg-realce"
                 >
                   <X aria-hidden className="size-3.5" />
                   Todas as faixas
@@ -285,7 +286,7 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
                   <button
                     type="button"
                     onClick={() => abrir(servico.chave)}
-                    className="group flex min-h-14 w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-ink/[0.03] sm:gap-4"
+                    className="group flex min-h-14 w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-realce sm:gap-4"
                   >
                     <span className="numeros w-14 shrink-0 text-[13px] font-medium text-ink">{servico.idColab}</span>
                     <span className="min-w-0 flex-1">
@@ -307,7 +308,7 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
               <button
                 type="button"
                 onClick={() => setMais((v) => !v)}
-                className="h-11 w-full border-t border-line text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+                className="h-11 w-full border-t border-line text-[13px] font-medium text-acao hover:bg-realce"
               >
                 {mais ? 'Mostrar menos' : `Mostrar mais (${plural(Math.min(daFaixa.length, 15) - 5, 'outro', 'outros')})`}
               </button>

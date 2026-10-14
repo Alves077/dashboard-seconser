@@ -73,7 +73,7 @@ export function Faixas({ linhas, nivelBairro }: { linhas: LinhaFaixas[]; nivelBa
           scope="row"
           className={clsx(
             'rounded-md py-1.5 pr-1 pl-2 text-left font-normal',
-            tipo === 'total' ? 'bg-page' : sel ? 'bg-acao-suave' : 'group-hover:bg-ink/[0.03]',
+            tipo === 'total' ? 'bg-page' : sel ? 'bg-acao-suave' : 'group-hover:bg-realce',
           )}
         >
           {tipo === 'total' ? (
@@ -126,7 +126,7 @@ export function Faixas({ linhas, nivelBairro }: { linhas: LinhaFaixas[]; nivelBa
             <button
               type="button"
               onClick={() => mudar({ regiao: null })}
-              className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-ink/[0.03]"
+              className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-realce"
             >
               <ArrowLeft aria-hidden className="size-3.5" />
               Regiões

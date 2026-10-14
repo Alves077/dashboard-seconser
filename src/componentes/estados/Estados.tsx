@@ -59,7 +59,7 @@ function Moldura({
       <div
         className={clsx(
           'mb-1 grid size-10 place-items-center rounded-full',
-          tom === 'erro' ? 'bg-atraso/10 text-atraso-texto' : 'bg-ink/5 text-ink-3',
+          tom === 'erro' ? 'bg-atraso/10 text-atraso-texto' : 'bg-realce-forte text-ink-3',
         )}
       >
         {icone}

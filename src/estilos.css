@@ -18,6 +18,10 @@
   --c-ink-3: #64748d; /* só sobre card branco (4.75:1); no fundo da página usar ink-2 */
   --c-acao: #533afd;
   --c-acao-press: #2e2b8c;
+  /* fundo de hover/realce de linhas e botões discretos. Antes era a tinta a 3% — no escuro (tinta clara sobre
+     fundo escuro) quase não aparecia; agora cada tema tem o seu valor */
+  --c-realce: rgb(13 37 61 / 0.045);
+  --c-realce-forte: rgb(13 37 61 / 0.07);
   --c-acao-suave: #eeedff;
   --c-sobre-acao: #ffffff;
   --c-ok: #0ca30c;
@@ -58,6 +62,8 @@
   --c-acao: #8d87ff;
   --c-acao-press: #b3afff;
   --c-acao-suave: #23224d;
+  --c-realce: rgb(230 237 246 / 0.08);
+  --c-realce-forte: rgb(230 237 246 / 0.12);
   --c-sobre-acao: #0a1324;
   --c-ok-texto: #4ccb4c;
   --c-andamento-texto: #fab219;
@@ -94,6 +100,8 @@
   --color-acao: var(--c-acao);
   --color-acao-press: var(--c-acao-press);
   --color-acao-suave: var(--c-acao-suave);
+  --color-realce: var(--c-realce);
+  --color-realce-forte: var(--c-realce-forte);
   --color-sobre-acao: var(--c-sobre-acao);
   --color-ok: var(--c-ok);
   --color-ok-texto: var(--c-ok-texto);
@@ -127,6 +135,12 @@
 
 /* ── Base ─────────────────────────────────────────────────────────────────── */
 @layer base {
+  /* o Tailwind 4 deixa botão com a seta comum: aqui o que é clicável mostra a mãozinha (no computador) */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  summary {
+    cursor: pointer;
+  }
   html {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;

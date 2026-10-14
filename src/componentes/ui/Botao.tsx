@@ -12,8 +12,8 @@ export const estiloBotao = cva(
       variante: {
         primario: 'rounded-full bg-acao text-sobre-acao hover:bg-acao-press px-4',
         secundario: 'rounded-full border border-line bg-card text-acao hover:border-acao/40 px-4',
-        fantasma: 'rounded-lg text-ink-2 hover:bg-ink/5 hover:text-ink px-3',
-        icone: 'rounded-full text-ink-2 hover:bg-ink/5 hover:text-ink',
+        fantasma: 'rounded-lg text-ink-2 hover:bg-realce-forte hover:text-ink px-3',
+        icone: 'rounded-full text-ink-2 hover:bg-realce-forte hover:text-ink',
       },
       tamanho: {
         normal: 'h-11 text-sm',

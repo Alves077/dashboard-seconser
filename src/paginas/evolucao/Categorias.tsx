@@ -89,7 +89,7 @@ export function Categorias({
                 const ativo = filtros.categoria === l.nome
                 const d = dif(l)
                 const pct = l.anterior !== null && l.anterior >= MINIMO_PCT && l.atual >= MINIMO_PCT ? (d / l.anterior) * 100 : null
-                const celula = clsx('border-t border-line py-2', ativo ? 'bg-acao-suave' : 'group-hover:bg-ink/[0.03]')
+                const celula = clsx('border-t border-line py-2', ativo ? 'bg-acao-suave' : 'group-hover:bg-realce')
                 const alternar = () => mudar({ categoria: ativo ? null : l.nome })
                 return (
                   <tr key={l.nome} onClick={alternar} className="group cursor-pointer">
