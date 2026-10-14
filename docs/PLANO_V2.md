@@ -384,10 +384,8 @@ alerta): resumo da lista ("82 em aberto, 48 deles indicações legislativas"), 3
 nas linhas dos demais, nota do "Em aberto agora" no perfil, selo "Indicação legislativa" na lista de em aberto e opção
 "Todos / Indicações" quando há dos dois tipos (Renato 14/3, Allan 3/1; Binho 26/26 e Pipico 18/18 não precisam).
 `ehIndicacao` em `calculos/vereadores.ts`. Os 18 "Indicação legislativa" sem a tag 3067 têm a tag 367 "indicação" (a dos
-"Indicação (Câmara)"; 367 ≠ 3067) — rótulo do tratamento errado. **A FAZER NO TRABALHO (banco):** trocar o
-`origem_detalhe` desses 18 para "Indicação (Câmara)" e rodar `origem.py --aplicar` + `confere_banco.py` (todos post, set–out/2025):
-541049, 541057, 541065, 541078, 541174, 541950, 541959, 541963, 542000, 548223, 548224, 548246, 548768, 557621, 557626,
-557693, 557707, 557889. Depois o site conta 332 legislativas (= tag 3067). Fotos: círculo
+"Indicação (Câmara)"; 367 ≠ 3067) — rótulo do tratamento errado. **RESOLVIDO no trabalho (14/10):** os 18 eram da época da troca de tags do Colab (ficaram com o vestígio da 367);
+todos têm ofício/indicação na descrição, então receberam a tag 3067 no banco — as 350 legislativas agora batem com a tag. Fotos: círculo
 neutro enquanto chegam e esmaecer de 200 ms (antes "pulavam"); cartões do topo carregam com prioridade.
 
 **Filtros entre páginas (14/10, decisão do usuário):** continuam seguindo de uma página para outra (mesmo recorte em

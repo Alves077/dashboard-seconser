@@ -31,6 +31,25 @@ das páginas (texto e objetos dos gráficos do Chart.js) num Chrome sem janela, 
 5. **Mediana:** o antigo pega `sorted[floor(n/2)]` (errado em lista par); a v2 usa a mediana correta. Nos
    recortes conferidos o valor coincidiu (7, 6 e 3 dias).
 
+## Com o dado real — Supabase, carga 13 (14/10/2026)
+
+O site lendo o Supabase (`VITE_FONTE=supabase`) contra um cálculo independente em Python sobre a `vw_servicos`
+pública baixada do mesmo Supabase (hoje = 14/10):
+
+| O quê | Site | Python |
+|---|---|---|
+| Serviços / saídas | 16.973 / 17.303 | 16.973 / 17.303 |
+| Fila de hoje / em atraso | 920 / 920 | 920 / 920 |
+| Fila por região | Norte 255 · Oceânica 241 · Praias 186 · Pendotiba 143 · Leste 95 | igual |
+| Últimos 30 dias (saída) | 710 saídas · no prazo 81 (11,4%; 399 em aberto vencidos) · 12,1 d | igual |
+| Setembro/26 (saída) | 157 de 1.191 (13,2%; 561 vencidos) · 12,7 d | igual |
+| Vereadores | 1.044 pedidos · 73 em aberto | igual |
+| Selo de atualização | "Dados de 14/10, 16:56" | sincronização 13 terminou 19:56 UTC |
+
+Em relação ao retrato em CSV de 09/10: mesmas 17.303 saídas (a última saída é de 05/10 nos dois), 160 retornos a
+mais (169 saídas mudaram) — por isso a fila caiu de 1.080 para 920. Parte restrita: sem login, `servicos_detalhe`
+responde 401 (protegida). Login e Relatórios com o dado real: conferir com uma conta de acesso.
+
 ## Mudança de definição depois da conferência (14/10/2026)
 
 6. **No prazo contando pela saída:** a v2 passou a contar como fora do prazo os serviços ainda em aberto que já

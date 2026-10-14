@@ -1,4 +1,5 @@
 import type { User } from '@supabase/supabase-js'
+import { useQueryClient } from '@tanstack/react-query'
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { FONTE } from '@/config'
 import { supabase } from '@/lib/supabase'
@@ -26,6 +27,7 @@ const traduzir = (msg: string) => MENSAGENS[msg] ?? 'Não foi possível entrar a
 export function ProvedorSessao({ children }: { children: ReactNode }) {
   const [usuario, setUsuario] = useState<User | null>(null)
   const [carregando, setCarregando] = useState(FONTE === 'supabase')
+  const cliente = useQueryClient()
 
   useEffect(() => {
     if (FONTE !== 'supabase') return
@@ -33,9 +35,17 @@ export function ProvedorSessao({ children }: { children: ReactNode }) {
       setUsuario(data.session?.user ?? null)
       setCarregando(false)
     })
-    const { data } = supabase.auth.onAuthStateChange((_evento, sessao) => setUsuario(sessao?.user ?? null))
+    const { data } = supabase.auth.onAuthStateChange((evento, sessao) => {
+      setUsuario(sessao?.user ?? null)
+      // saiu (aqui, em outra aba ou a sessão expirou): o restrito sai da memória na hora — em computador
+      // compartilhado, nada de descrição/endereço/foto de quem estava logado fica guardado
+      if (evento === 'SIGNED_OUT') {
+        cliente.removeQueries({ queryKey: ['detalhes'] })
+        cliente.removeQueries({ queryKey: ['fotos'] })
+      }
+    })
     return () => data.subscription.unsubscribe()
-  }, [])
+  }, [cliente])
 
   const valor = useMemo<Sessao>(
     () => ({
