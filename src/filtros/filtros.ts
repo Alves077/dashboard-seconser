@@ -15,7 +15,7 @@ import {
   type ChaveMes,
   type Dia,
 } from '@/lib/datas'
-import type { Saida, Situacao } from '@/dados/tipos'
+import type { Saida } from '@/dados/tipos'
 
 export type Atalho =
   | 'tudo'
@@ -49,9 +49,6 @@ export type Periodo =
 
 /** Contar o período pela data de saída (foi para a rua) ou de retorno (foi executado) */
 export type ContarPor = 'saida' | 'retorno'
-
-/** Recorte por situação — NÃO é filtro global (no Panorama só confundia); Mapa e Relatórios usam localmente */
-export type FiltroSituacao = 'todas' | 'abertos' | 'atraso' | 'ok'
 
 export interface Filtros {
   periodo: Periodo
@@ -216,12 +213,6 @@ export function noIntervalo(s: Saida, i: Intervalo, por: ContarPor): boolean {
   const d = por === 'saida' ? s.dataSaida : s.dataRetorno
   if (d === null) return false // contando por retorno, quem não voltou fica de fora
   return (i.de === null || d >= i.de) && (i.ate === null || d <= i.ate)
-}
-
-export function bateSituacao(sit: Situacao, f: FiltroSituacao): boolean {
-  if (f === 'todas') return true
-  if (f === 'abertos') return sit !== 'ok'
-  return sit === f
 }
 
 /** Aplica todos os filtros às saídas */

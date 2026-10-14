@@ -113,7 +113,7 @@ em desenvolvimento usa o CSV local; em produção, só depois da autorização.
 
 ## 8. Estado (12/10/2026) — fase 1 (base) pronta
 
-- Projeto Vite 8 + React 19 + TS 6 na raiz da `v2`; site antigo em `legado/` (referência até a troca; sai depois).
+- Projeto Vite 8 + React 19 + TS 6 na raiz da `v2`; site antigo em `legado/` (referência até a troca; **removido da v2 em 13/10** — continua na branch `main`).
   Imagens em `public/img`. Bibliotecas: Tailwind 4, Base UI (diálogo/gaveta/popover/menu/toggle), cmdk (busca),
   Sonner (avisos), TanStack Query, supabase-js, Recharts, react-leaflet, Virtuoso, clsx/cva, Inter (fontsource).
 - Rodar: `npm install`, copiar `.env.example` → `.env.local` (DADOS_LOCAIS = pasta do base_csv), `npm run dev` →
@@ -302,3 +302,5 @@ no meio, títulos nunca sozinhos no pé da página, cores das barras impressas (
 
 
 Feita: ver `docs/CONFERENCIA_V2.md`. Site antigo × v2 sobre o mesmo CSV (antigo alimentado pelo cache do navegador, sem rede): Visão Geral/Qualidade/Tendência/Relatório batem com Panorama/Prazo/Evolução/Mensal em tudo que mede a mesma coisa; diferenças só de definição (reaberturas no Panorama, abertos de hoje × do período, mês em curso, faixas, mediana). Corrigido: delta do "No prazo" do Panorama em p.p. Próximo: publicação (Actions + divisão do código por página).
+
+**Divisão do código (13/10):** cada página é um arquivo à parte (`src/paginas/carregar.ts`, `React.lazy` + `Suspense` na Moldura com `EsqueletoPagina`); depois da 1ª página, as outras são baixadas quando o navegador fica ocioso — trocar de página continua instantâneo, e a anterior fica na tela até a nova chegar (sem esqueleto). Bibliotecas em arquivos próprios (`react`, `base-ui`, `supabase` — `vite.config.ts`), para ficarem no cache quando só o código do site muda; `papaparse` só baixa com a fonte CSV. Abertura: um arquivo de 1,09 MB (328 kB gzip) → ~290 kB gzip em 5–6 arquivos, sem o aviso de pacote grande; páginas de 1–11 kB gzip cada. Falta: workflow do GitHub Actions. Limpeza: saíram `recharts` e `react-virtuoso` (não usados), código morto (`bateSituacao`, `varRegiao`, `Comparacao`), o `legado/`, os prints e o Apps Script do site antigo (tudo segue na `main`); README reescrito para a v2. **Tema: abre sempre no claro**; escuro só pelo botão.

@@ -1,7 +1,7 @@
 # Conferência dos números — site antigo × v2 (13/10/2026)
 
 **Como foi feita:** os dois sites rodaram sobre o **mesmo dado** (retrato `vw_servicos.csv` de 09/10/2026,
-17.303 saídas), na mesma data de referência (13/10). O site antigo (`legado/`) foi servido localmente com o
+17.303 saídas), na mesma data de referência (13/10). O site antigo (`legado/` na época; hoje só na branch `main`) foi servido localmente com o
 cache do navegador (`localStorage['dip_csv_v2']`) pré-carregado com esse CSV convertido para as colunas da
 planilha (categoria = **revisada**, a mesma da v2) — sem rede e sem mexer no código dele. Os números foram lidos
 das páginas (texto e objetos dos gráficos do Chart.js) num Chrome sem janela, nos mesmos recortes.

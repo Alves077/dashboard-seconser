@@ -206,8 +206,8 @@ ação, retângulo `rounded.sm` para campos e filtros.
 
 - Índigo é a **única** cor de ação e nunca representa dado.
 - Foco visível em tudo que é clicável: `outline: 2px solid primary; outline-offset: 2px`.
-- Modo escuro é **escolhido** (tokens próprios acima), não uma inversão. Segue o sistema por padrão, com o botão de
-  tema do site atual (persistido) e script anti-flash no `<head>`.
+- Modo escuro é **escolhido** (tokens próprios acima), não uma inversão. Abre **sempre no claro** (mesmo com o sistema no
+  escuro — decisão de 13/10/2026); o escuro só pelo botão de tema (persistido), com script anti-flash no `<head>`.
 
 ### Situação (reservadas)
 | Situação | Cor | Ícone | Onde |

@@ -38,5 +38,20 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
     },
+    // Bibliotecas grandes em arquivos próprios: mudam raramente, então ficam no cache do navegador
+    // quando só o código do site muda. As páginas já saem separadas (src/paginas/carregar.ts).
+    build: {
+      rolldownOptions: {
+        output: {
+          codeSplitting: {
+            groups: [
+              { name: 'react', test: /node_modules[\\/](react|react-dom|scheduler|react-router)[\\/]/ },
+              { name: 'base-ui', test: /node_modules[\\/](@base-ui|@floating-ui|tabbable|react-remove-scroll)/ },
+              { name: 'supabase', test: /node_modules[\\/]@supabase[\\/]/ },
+            ],
+          },
+        },
+      },
+    },
   }
 })

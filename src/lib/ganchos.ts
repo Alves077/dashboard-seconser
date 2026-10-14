@@ -19,6 +19,7 @@ export function useTema() {
   const alternar = useCallback(() => {
     const novo: Tema = lerTema() === 'escuro' ? 'claro' : 'escuro'
     document.documentElement.dataset.theme = novo === 'escuro' ? 'dark' : 'light'
+    document.querySelector<HTMLMetaElement>('meta[name="theme-color"]')?.setAttribute('content', novo === 'escuro' ? '#0a1324' : '#f6f9fc')
     try {
       localStorage.setItem('tema', novo)
     } catch {

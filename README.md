@@ -1,154 +1,57 @@
-# Dashboard DIP · Seconser Niterói
+# Dashboard DIP · SECONSER Niterói
 
-Dashboard operacional do **Departamento de Iluminação Pública (DIP)** da Seconser Niterói. Acompanha o fluxo de entrada e saída de demandas, qualidade do atendimento e distribuição geográfica dos serviços no município.
+Painel dos serviços de iluminação pública do **Departamento de Iluminação Pública (DIP)** da SECONSER Niterói:
+fila em aberto, prazo de atendimento, evolução no tempo, mapa e relatórios para impressão.
 
 🔗 **[Acessar o dashboard](https://alves077.github.io/dashboard-seconser/)**
 
----
+> Esta branch (`v2`) é o site novo. O site no ar hoje ainda é o antigo (branch `main`).
 
 ## Páginas
 
-### Visão Geral
-Painel principal com KPIs consolidados (total de serviços, concluídos, em aberto, em atraso, reaberturas e tempo médio) e indicadores de situação em tempo real na topbar. Distribuição por categoria, reaberturas por categoria e região, tempo de execução por faixa, serviços por região com volume/percentual/tempo médio/atraso, top 10 bairros e volume mensal de demandas com curvas de entradas e concluídos.
+Organizadas pela pergunta de quem usa:
 
-Filtros: **Período** (todo o período / últimos 1, 3, 6, 12 meses — meses calendário completos) + **Mês** (mês específico, mutuamente exclusivo com Período) + **Região** + **Categoria**. Os filtros de Região e Categoria se atualizam de acordo com o período selecionado.
+| Página | Pergunta |
+|---|---|
+| **Panorama** | Como estamos agora? — fila de hoje, entradas e execuções do período, regiões, categorias e bairros |
+| **Mapa** | Onde está o problema? — um pino por serviço, abertos por padrão, painel por região/bairro |
+| **Prazo** | Estamos atendendo bem? — % no prazo (5 dias), tempo de execução, atraso de agora, reaberturas |
+| **Evolução** | Está melhorando ou piorando? — entradas × execuções com a fila, tempo e prazo mês a mês, categorias |
+| **Relatórios** | O que levo para a reunião ou para a rua? — mensal/histórico, em aberto e lista de campo, em A4 (acesso restrito) |
 
-Responsivo: KPIs em 2 colunas, grids em coluna única, barras horizontais adaptadas para mobile.
-
-![Visão Geral — desktop](docs/screenshots/visao-geral.png)
-![Visão Geral — mobile](docs/screenshots/visao-geral-mobile.png)
-
-### Mapa
-Visualização georreferenciada de todos os registros sobre o mapa de Niterói (OpenStreetMap via Leaflet). Filtros dependentes por região e categoria, com zoom automático ao filtrar. Coordenadas validadas por bounding box do município — pontos fora de Niterói são descartados silenciosamente.
-
-Painel lateral com KPIs de situação atual, abertos por região, top bairros em aberto, serviços mais antigos em atraso e distribuição por categoria. Em mobile, o mapa é ocultado e apenas o painel lateral é exibido.
-
-![Mapa — todos os pontos](docs/screenshots/mapa-completo.png)
-![Mapa — somente abertos](docs/screenshots/mapa-abertos.png)
-![Mapa — filtro por região](docs/screenshots/mapa-regiao.png)
-![Mapa — mobile](docs/screenshots/mapa-mobile.png)
-
-### Qualidade
-Indicadores de qualidade: taxa de conclusão, reincidência, resolução rápida (≤3 dias), cauda longa (>15 dias), tempo médio e percentual em atraso agora. Atraso por região (piores primeiro), reincidência por categoria, histograma de frequência por dia de execução, distribuição de faixas por região (tabela com totais) e evolução mensal de tempo médio e cauda longa (eixos duplos).
-
-Filtros: **Período** (último mês / 3, 6, 12 meses / todo — meses calendário completos) + **Categoria** (limitada às categorias presentes no período selecionado).
-
-![Qualidade — desktop](docs/screenshots/qualidade.png)
-![Qualidade — mobile](docs/screenshots/qualidade-mobile.png)
-
-### Tendência
-Análise temporal: mês de pico, último mês completo, variação mensal, média mensal, saldo acumulado e cumprimento de prazo global. Gráfico de fluxo (entradas × concluídos × saldo acumulado em eixo direito), tabela de calor de sazonalidade por categoria (top 6) e evolução mensal de percentual fora do prazo e tempo médio de execução.
-
-Filtros: **Período** (últimos 3, 6, 12 meses / todo) + **Região** + **Categoria** — todos dependentes entre si.
-
-![Tendência — desktop](docs/screenshots/tendencia.png)
-![Tendência — mobile](docs/screenshots/tendencia-mobile.png)
-
-### Relatório Mensal
-Página standalone (`relatorio.html`) acessível via nav do dashboard (link oculto em mobile). Gera um relatório mensal imprimível com seleção de mês de referência.
-
-Conteúdo: contexto de saldo do mês anterior, KPIs do mês (entradas, concluídos, no prazo, tempo médio, em aberto, reaberturas), distribuição por categoria e top bairros (com concluídos e em atraso), distribuição por faixa de execução (donut + legenda com absoluto e %) e distribuição por região. Campo de observações que some na impressão se vazio. Otimizado para impressão em PDF.
-
-![Relatório Mensal](docs/screenshots/relatorio.png)
-
----
+Filtros globais (período, região/bairro, categoria, origem) ficam na URL e valem em todas as páginas. Cada serviço
+abre uma **Ficha** com o histórico de saídas; descrição, endereço e fotos só para quem tem acesso.
 
 ## Stack
 
-| Camada | Tecnologia |
-|---|---|
-| Frontend | HTML5 + CSS3 + JavaScript puro (sem framework) |
-| Gráficos | Chart.js 4.4.1 |
-| Mapa | Leaflet.js 1.9.4 |
-| Parse de dados | PapaParse 5.4.1 |
-| Fonte de dados | Google Sheets privado via Google Apps Script (proxy com token) |
-| Cache L1 | CacheService do Apps Script (TTL 5 min, chunks de 90 KB) |
-| Cache L2 | localStorage no browser (TTL 30 min, chave `dip_csv_v2`) |
-| Hospedagem | GitHub Pages |
-| Tema | Dark mode via CSS custom properties + localStorage (anti-FOUC) |
+Vite + React + TypeScript · Tailwind CSS · Base UI · TanStack Query · React Router · Leaflet (OpenStreetMap) ·
+Supabase (dados e login) · GitHub Pages. Gráficos em SVG próprio, com paleta validada para daltonismo
+(ver `DESIGN.md`).
 
----
+## Dados
 
-## Fonte de Dados
+Os serviços vêm do banco da SECONSER (coleta do Colab + tratamento), sincronizados uma vez por dia para o
+Supabase. O site lê a camada pública (sem dados pessoais); a parte restrita (descrição, endereço, fotos) exige
+login e está protegida por regras de acesso no próprio banco (RLS).
 
-Os dados são exportados de uma planilha Excel alimentada manualmente pela equipe do DIP, processada via Power Query e publicada no Google Sheets. O dashboard acessa os dados via **Google Apps Script** com autenticação por token, mantendo a planilha privada.
+Situação de cada serviço: com retorno → **OK**; sem retorno e mais de 5 dias desde a saída → **em atraso**;
+senão → **em atendimento**. Uma linha = uma saída para a rua; um serviço pode ter mais de uma (reabertura).
 
-O cache opera em duas camadas: o Apps Script armazena o CSV fragmentado em memória por 5 minutos (evitando leituras repetidas da planilha), e o browser armazena localmente por 30 minutos (evitando requisições ao servidor). O botão **Atualizar** limpa o cache local e força uma nova busca — útil após importar dados novos.
+## Rodar localmente
 
-A coluna `Situação` do CSV é **ignorada** — o dashboard recalcula dinamicamente a situação de cada serviço com base na data atual e no prazo, garantindo leituras corretas em fins de semana e feriados em que a planilha não é atualizada.
+Precisa do Node 22 (Vite 8 pede ≥ 20.19 ou ≥ 22.12).
 
----
-
-## Modelo de Dados
-
-| Coluna | Tipo | Descrição |
-|---|---|---|
-| ID Colab | Inteiro | Identificador do serviço (pode repetir em reaberturas) |
-| Categoria | Texto | Tipo de ocorrência |
-| Bairro | Texto | Bairro do serviço |
-| Região | Texto | Região de Niterói |
-| Data Saída | Data dd/mm/aaaa | Data de abertura/envio |
-| Data Retorno | Data dd/mm/aaaa | Data de conclusão (vazio se em aberto) |
-| Prazo | Data dd/mm/aaaa | Data Saída + 5 dias úteis |
-| Situação | Texto | OK / Em Atendimento / Em Atraso — **ignorado, recalculado no cliente** |
-| Dias Execução | Inteiro | Dias entre saída e retorno |
-| Faixa Execução | Texto | 0. Em Atendimento / 1. Até 3 dias / 2. 4 a 7 dias / 3. 8 a 15 dias / 4. Mais de 15 dias |
-| Ocorrências | Inteiro | Quantas vezes o ID aparece na tabela |
-| Latitude | Decimal (vírgula) | Coordenada geográfica |
-| Longitude | Decimal (vírgula) | Coordenada geográfica |
-
----
-
-## Estrutura de Arquivos
-
-```
-dashboard-seconser/
-├── index.html                  — Visão Geral (página principal)
-├── relatorio.html              — Relatório mensal standalone
-├── css/
-│   ├── main.css                — Entry point via @import
-│   ├── base.css                — Reset, variáveis CSS, body, loading, botões
-│   ├── layout.css              — Topbar, nav, filtros, page, grids
-│   ├── components.css          — KPIs, cards, barras, badges, rankings
-│   ├── responsive.css          — Breakpoints 1100px e 720px
-│   └── mapa.css                — Estilos exclusivos da página de mapa
-├── js/
-│   ├── config.js               — URL do Apps Script, CACHE_TTL_MS, estado global, paleta
-│   ├── utils.js                — Funções utilitárias (formatação, datas, agrupamentos)
-│   ├── data.js                 — Fetch + cache L2 + normalização + recálculo de Situação
-│   ├── charts.js               — Fábricas de gráficos Chart.js (donut, barras, linhas)
-│   ├── filters.js              — Filtros e topbar da Visão Geral
-│   ├── render.js               — Render da Visão Geral
-│   └── main.js                 — Ponto de entrada
-├── pages/
-│   ├── mapa.html               — Mapa (JS inline)
-│   ├── qualidade.html
-│   ├── qualidade.js
-│   ├── tendencia.html
-│   └── tendencia.js
-├── img/
-│   ├── logo-seconser.png
-│   └── favicon.png              — Brasão de Niterói (favicon de todas as páginas)
-└── docs/
-    ├── apps-script.gs           — Código do proxy Apps Script (publicar como Web App)
-    └── screenshots/
-        ├── visao-geral.png
-        ├── visao-geral-mobile.png
-        ├── mapa-completo.png
-        ├── mapa-abertos.png
-        ├── mapa-regiao.png
-        ├── mapa-mobile.png
-        ├── qualidade.png
-        ├── qualidade-mobile.png
-        ├── tendencia.png
-        ├── tendencia-mobile.png
-        └── relatorio.png
+```bash
+npm install
+cp .env.example .env.local   # e ajuste: VITE_FONTE=csv + DADOS_LOCAIS=<pasta com os CSVs>
+npm run dev                  # http://localhost:5173/dashboard-seconser/
 ```
 
----
+Com `VITE_FONTE=csv`, o `npm run dev` lê um retrato do banco em CSV de uma pasta **fora** do repositório (dado
+real nunca entra no git). `npm run build` gera o site em `dist/`.
 
-## Atualização dos Dados
+## Documentação
 
-Para atualizar os dados do dashboard, basta atualizar a planilha Excel de origem e exportar para o Google Sheets via Power Query. O dashboard buscará os dados atualizados automaticamente após expiração do cache de 30 minutos, ou imediatamente ao clicar em **Atualizar**.
-
-Para trocar a planilha de origem, atualize o ID no Google Apps Script e a URL em `js/config.js`.
+- `docs/PLANO_V2.md` — plano, decisões e estado de cada fase
+- `docs/CONFERENCIA_V2.md` — conferência dos números contra o site antigo
+- `DESIGN.md` — sistema visual (cores, tipografia, gráficos, celular, estados)

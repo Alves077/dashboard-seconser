@@ -6,7 +6,7 @@ import { Info } from 'lucide-react'
 import { useEffect, type ReactNode } from 'react'
 import type { Servico } from '@/dados/tipos'
 import { useFicha } from '@/lib/ganchos'
-import { decimal, numero, pct } from '@/lib/formato'
+import { numero, pct } from '@/lib/formato'
 
 /** Na impressão, sempre tema claro (o escuro gastaria tinta e sai ilegível no papel) */
 export function useImpressaoClara() {
@@ -102,29 +102,6 @@ export function NumeroFolha({ rotulo, valor, apoio, tom }: { rotulo: string; val
       <p className="numeros mt-0.5 text-[20px] leading-tight font-light text-ink">{valor}</p>
       {apoio && <p className={clsx('numeros mt-0.5 text-[10.5px]', tom ?? 'text-ink-2')}>{apoio}</p>}
     </div>
-  )
-}
-
-/** "▲ 12,3% vs. ago/26" (ou em pontos percentuais), com a cor do sentido bom */
-export function Comparacao({
-  delta,
-  bom,
-  pp = false,
-  vs,
-}: {
-  delta: number | null
-  bom: 'subir' | 'descer' | 'neutro'
-  pp?: boolean
-  vs: string | null
-}) {
-  if (delta === null || vs === null) return null
-  const tom =
-    bom === 'neutro' || Math.abs(delta) < 0.05 ? 'text-ink-2' : (bom === 'subir') === delta > 0 ? 'text-ok-texto' : 'text-atraso-texto'
-  return (
-    <span className={tom}>
-      {delta > 0 ? '▲' : delta < 0 ? '▼' : '='} {decimal(Math.abs(delta))}
-      {pp ? ' p.p.' : '%'} <span className="text-ink-3">vs. {vs}</span>
-    </span>
   )
 }
 

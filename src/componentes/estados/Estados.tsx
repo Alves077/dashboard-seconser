@@ -4,10 +4,36 @@ import { clsx } from 'clsx'
 import { CloudOff, Lock, SearchX } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Botao } from '@/componentes/ui/Botao'
+import { Card } from '@/componentes/ui/Card'
 
 /** Bloco que pulsa no formato do conteúdo final. Com movimento reduzido, fica parado. */
 export function Esqueleto({ className }: { className?: string }) {
   return <div aria-hidden className={clsx('animate-pulse rounded-md bg-line motion-reduce:animate-none', className)} />
+}
+
+/** Página genérica (título, 4 indicadores, um bloco grande) enquanto o arquivo da página chega */
+export function EsqueletoPagina() {
+  return (
+    <div aria-busy="true" className="flex flex-col gap-4">
+      <div className="mb-2">
+        <Esqueleto className="h-7 w-40" />
+        <Esqueleto className="mt-3 h-4 w-2/3" />
+      </div>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Card key={i} className="px-5 py-4">
+            <Esqueleto className="h-3 w-24" />
+            <Esqueleto className="mt-3 h-8 w-20" />
+            <Esqueleto className="mt-3 h-3 w-full" />
+          </Card>
+        ))}
+      </div>
+      <Card className="p-5">
+        <Esqueleto className="h-4 w-56" />
+        <Esqueleto className="mt-5 h-60 w-full" />
+      </Card>
+    </div>
+  )
 }
 
 function Moldura({

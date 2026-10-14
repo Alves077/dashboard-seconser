@@ -2,7 +2,6 @@
 // restrito (detalhes e fotos) só para quem pode ver.
 //   csv      → retrato local do banco servido pelo `npm run dev` (vite.config.ts); restrito liberado
 //   supabase → projeto dip-iluminacao; restrito só logado e na lista de acessos (RLS)
-import Papa from 'papaparse'
 import { FONTE } from '@/config'
 import { supabase } from '@/lib/supabase'
 import { chaveServico, lerBairro, lerCategoria, lerDetalhe, lerVereador, montarBase } from './montar'
@@ -36,7 +35,11 @@ async function lerCsv(nome: string): Promise<{ linhas: Record<string, string>[];
   const texto = await r.text()
   const lm = r.headers.get('Last-Modified')
   // arquivo grande vai para o worker (não trava a tela); os pequenos, direto
-  const linhas = texto.length > 200_000 ? await lerEmSegundoPlano(texto) : Papa.parse<Record<string, string>>(texto, { header: true, skipEmptyLines: true }).data
+  // (o papaparse só é baixado aqui: com a fonte Supabase, em produção, ele nem chega ao navegador)
+  const linhas =
+    texto.length > 200_000
+      ? await lerEmSegundoPlano(texto)
+      : (await import('papaparse')).default.parse<Record<string, string>>(texto, { header: true, skipEmptyLines: true }).data
   return { linhas, modificado: lm ? new Date(lm) : null }
 }
 

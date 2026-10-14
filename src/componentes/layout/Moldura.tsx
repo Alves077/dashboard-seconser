@@ -1,10 +1,13 @@
 import { clsx } from 'clsx'
+import { Suspense, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router'
 import { Toaster } from 'sonner'
 import { PaletaBusca } from '@/busca/PaletaBusca'
+import { EsqueletoPagina } from '@/componentes/estados/Estados'
 import { Ficha } from '@/ficha/Ficha'
 import { BarraFiltros } from '@/filtros/BarraFiltros'
 import { useTema } from '@/lib/ganchos'
+import { preCarregarPaginas } from '@/paginas/carregar'
 import { BarraSuperior } from './BarraSuperior'
 import { DialogoEntrar } from './DialogoEntrar'
 import { NavInferior } from './NavInferior'
@@ -12,6 +15,7 @@ import { NavInferior } from './NavInferior'
 export function Moldura() {
   const { tema } = useTema()
   const { pathname } = useLocation()
+  useEffect(preCarregarPaginas, [])
   return (
     <>
       <a
@@ -30,7 +34,11 @@ export function Moldura() {
           pathname === '/mapa' ? 'lg:pb-0' : 'lg:pb-12',
         )}
       >
-        <Outlet />
+        {/* páginas carregadas sob demanda (paginas/carregar.ts): o esqueleto só aparece na 1ª abertura;
+            ao trocar de página, a anterior fica na tela até a nova chegar */}
+        <Suspense fallback={<EsqueletoPagina />}>
+          <Outlet />
+        </Suspense>
       </main>
       <NavInferior />
       <Ficha />
