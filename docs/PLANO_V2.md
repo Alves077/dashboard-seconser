@@ -348,6 +348,17 @@ antes de animar) e a lista antiga reaparecia. "Regional Centro e Ponta D'Areia" 
   em `public/img/vereadores/<id>.webp`. Sem depender do site da Câmara (link pode mudar; cada visita não avisa a Câmara).
   Sem foto (Eduardo Paiva, Fael): iniciais. Vereador novo: foto nova à mão (anotar no `ROTINA_DIARIA`).
 
+**Fotos FEITAS (13–14/10):** 22 fotos do site da Câmara recortadas no rosto, na mesma escala (topo da cabeça, queixo
+e centro marcados à mão com grade de 5%; cabeça = 58% do quadrado; moldura branca descontada) → `public/img/vereadores/<id>.webp`
+256×256, WebP 95% (~15 kB cada, ~330 kB no total, só baixam quando aparecem). Parâmetros em `docs/fotos-vereadores.json`;
+refazer: `scripts/recortar-fotos-vereadores.mjs <pasta das originais>` (Chrome sem janela). 1ª versão tinha recortes
+errados (Fernanda: queixo marcado em 48% da altura, era 60% → cabeça cortada) — remarcados. **Limite de qualidade:**
+10 originais têm só 130×140 (Pipico, Emanuel Rocha, Fabiano, Leandro Portugal, Leonardo Giordano, Gallo, Cal, Prof. Tulio,
+Beto da Pipa, Romério) — nítidas até ~64 px, suaves acima; a Câmara não publica versão maior (página só tem essa), o
+siscam não tem foto e o TSE bloqueia acesso automático (403). `FotoVereador` (`componentes/ui`): foto pelo id; sem foto
+(Eduardo Paiva, Fael) ou arquivo faltando (vereador novo) → iniciais; "Sem vereador identificado" → ícone da Câmara.
+Já aparece na lista de vereadores do card Quem pede.
+
 ### 8.3 Espaços públicos (praças, parques, campos) — depende dos dados
 Hoje só **57** serviços têm `local` (o campo só é preenchido quando o serviço é *dentro* do lugar) e ele está na parte
 **restrita** (`servicos_detalhe`). No texto, "praça" aparece em ~510 serviços, "quadra" em ~570 (mas muitas são

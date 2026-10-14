@@ -4,11 +4,13 @@ import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
 import { clsx } from 'clsx'
 import { ArrowLeft, Zap } from 'lucide-react'
-import { useState, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { EstadoVazio } from '@/componentes/estados/Estados'
+import { FotoVereador } from '@/componentes/ui/FotoVereador'
 import { Card, CabecalhoCard } from '@/componentes/ui/Card'
 import type { LinhaQuebra } from '@/calculos/panorama'
-import { CATEGORIA_RISCO } from '@/dados/regras'
+import { useBase } from '@/dados/consultas'
+import { CATEGORIA_RISCO, SEM_VEREADOR } from '@/dados/regras'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { compararTexto, decimal, numero, pct, pctCurto } from '@/lib/formato'
@@ -28,6 +30,7 @@ export function LinhaBarra({
   pontoApoio,
   compacta = false,
   textoValor,
+  prefixo,
 }: {
   rotulo: string
   apoio?: string
@@ -44,6 +47,8 @@ export function LinhaBarra({
   compacta?: boolean
   /** valor escrito, quando não é contagem (ex.: "4,2%") */
   textoValor?: string
+  /** antes do nome, à esquerda (ex.: foto do vereador) */
+  prefixo?: ReactNode
 }) {
   const largura = maximo > 0 ? Math.max((valor / maximo) * 100, valor > 0 ? 1.5 : 0) : 0
   return (
@@ -59,7 +64,9 @@ export function LinhaBarra({
           ativo ? 'bg-acao-suave' : 'hover:bg-ink/[0.03]',
         )}
       >
-        <span className="min-w-0">
+        <span className={clsx('min-w-0', prefixo && 'flex items-center gap-2.5')}>
+          {prefixo}
+          <span className="min-w-0">
           {/* nome quebra em até 2 linhas em vez de cortar ("Direcionamento / ofuscamento") */}
           <span className={clsx('flex items-start gap-1 text-[13px] leading-snug', ativo ? 'font-medium text-ink' : 'text-ink')}>
             {icone && <span className="mt-0.5">{icone}</span>}
@@ -71,6 +78,7 @@ export function LinhaBarra({
               {apoio}
             </span>
           )}
+          </span>
         </span>
         <span aria-hidden className="h-2 w-full rounded-full bg-line/60">
           <span className={clsx('block h-full rounded-full', corBarra)} style={{ width: `${largura}%` }} />
@@ -338,6 +346,9 @@ export function Origens({
   const { filtros, mudar } = useFiltros()
   const [todos, setTodos] = useState(false)
   const nivelQuem = quens !== null && filtros.origem !== null
+  const { data: base } = useBase()
+  const vereadores = useMemo(() => new Map((base?.vereadores ?? []).map((v) => [v.nome, v])), [base])
+  const comFoto = filtros.origem === 'Vereador'
   // entrar numa origem desliza a lista da direita; voltar, da esquerda (estilos.css, .vt-quem-*)
   const escolherOrigem = (nome: string | null) => {
     direcaoDaTroca(nome ? 'quem-entra' : 'quem-volta')
@@ -409,7 +420,8 @@ export function Origens({
                 complemento={pct(l.saidas, totalOrigem)}
                 ativo={filtros.quem === l.nome}
                 aoTocar={() => mudar({ quem: filtros.quem === l.nome ? null : l.nome })}
-                compacta
+                prefixo={comFoto ? <FotoVereador vereador={l.nome === SEM_VEREADOR ? null : (vereadores.get(l.nome) ?? null)} /> : undefined}
+                compacta={!comFoto}
               />
             ))}
           </ol>
