@@ -3,7 +3,7 @@
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
 import { clsx } from 'clsx'
-import { Zap } from 'lucide-react'
+import { ArrowLeft, Zap } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { EstadoVazio } from '@/componentes/estados/Estados'
 import { Card, CabecalhoCard } from '@/componentes/ui/Card'
@@ -12,6 +12,7 @@ import { CATEGORIA_RISCO } from '@/dados/regras'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { compararTexto, decimal, numero, pct, pctCurto } from '@/lib/formato'
+import { direcaoDaTroca } from '@/lib/ganchos'
 
 /** Linha clicável com barra: rótulo · barra · valor · complemento (também usada no Prazo) */
 export function LinhaBarra({
@@ -317,33 +318,118 @@ export function Bairros({
 }
 
 // ── Quem pede (origem) ─────────────────────────────────────────────────────
-export function Origens({ linhas, total, className }: { linhas: LinhaQuebra[]; total: number; className?: string }) {
+// Como região → bairros: tocar numa origem abre os nomes dela (regionais, vereadores, associações…),
+// os 10 com mais saídas e "Mostrar todos"; tocar num nome filtra o site todo (filtro "quem").
+// Origem com um nome só (Cidadão, Ouvidoria…) não abre: só filtra.
+const NOME_DO_QUEM: Record<string, string> = { Regional: 'regional', Vereador: 'vereador', Associação: 'associação', Secretaria: 'secretaria' }
+
+export function Origens({
+  linhas,
+  quens,
+  total,
+  className,
+}: {
+  linhas: LinhaQuebra[]
+  /** 2º nível da origem escolhida (null = nada para abrir) */
+  quens: LinhaQuebra[] | null
+  total: number
+  className?: string
+}) {
   const { filtros, mudar } = useFiltros()
-  const ordem = linhas.filter((l) => l.saidas > 0 || l.nome === filtros.origem).sort((a, b) => b.saidas - a.saidas)
-  const max = Math.max(1, ...ordem.map((l) => l.saidas))
-  return (
-    <Card aria-labelledby="titulo-origens" className={className}>
-      <CabecalhoCard id="titulo-origens" titulo="Quem pede" subtitulo="De onde vieram as saídas do período." />
-      <div className="px-3 pt-2 pb-3">
-        {ordem.length === 0 ? (
-          <Vazio />
-        ) : (
-          <ul>
-            {ordem.map((l) => (
+  const [todos, setTodos] = useState(false)
+  const nivelQuem = quens !== null && filtros.origem !== null
+  // entrar numa origem desliza a lista da direita; voltar, da esquerda (estilos.css, .vt-quem-*)
+  const escolherOrigem = (nome: string | null) => {
+    direcaoDaTroca(nome ? 'quem-entra' : 'quem-volta')
+    mudar({ origem: nome })
+  }
+  // "← Origens" com qualquer origem escolhida, abra ela uma lista de nomes ou não (Cidadão, Ouvidoria…)
+  const voltar = filtros.origem !== null && (
+    <button
+      type="button"
+      onClick={() => escolherOrigem(null)}
+      className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-ink/[0.03]"
+    >
+      <ArrowLeft aria-hidden className="size-3.5" />
+      Origens
+    </button>
+  )
+
+  let titulo: string
+  let subtitulo: string
+  let corpo: ReactNode
+  if (!nivelQuem) {
+    const ordem = linhas.filter((l) => l.saidas > 0 || l.nome === filtros.origem).sort((a, b) => b.saidas - a.saidas)
+    const max = Math.max(1, ...ordem.map((l) => l.saidas))
+    titulo = filtros.origem ? `Quem pede · ${filtros.origem}` : 'Quem pede'
+    subtitulo = filtros.origem
+      ? 'Saídas do período desta origem.'
+      : 'De onde vieram as saídas do período. Toque para ver as regionais, os vereadores…'
+    corpo =
+      ordem.length === 0 ? (
+        <Vazio />
+      ) : (
+        <ul>
+          {ordem.map((l) => (
+            <LinhaBarra
+              key={l.nome}
+              rotulo={l.nome}
+              valor={l.saidas}
+              maximo={max}
+              complemento={pct(l.saidas, total)}
+              ativo={filtros.origem === l.nome}
+              aoTocar={() => escolherOrigem(filtros.origem === l.nome ? null : l.nome)}
+              compacta
+            />
+          ))}
+        </ul>
+      )
+  } else {
+    const ordem = quens
+      .filter((l) => l.saidas > 0 || l.nome === filtros.quem)
+      .sort((a, b) => b.saidas - a.saidas || compararTexto(a.nome, b.nome))
+    const visiveis = todos ? ordem : ordem.slice(0, 10)
+    const max = Math.max(1, ...visiveis.map((l) => l.saidas))
+    const totalOrigem = quens.reduce((s, l) => s + l.saidas, 0)
+    titulo = `Quem pede · ${filtros.origem}`
+    subtitulo = `Saídas do período por ${NOME_DO_QUEM[filtros.origem!] ?? 'nome'}. Toque num nome para filtrar o site todo.`
+    corpo =
+      visiveis.length === 0 ? (
+        <Vazio />
+      ) : (
+        <>
+          <ol>
+            {visiveis.map((l) => (
               <LinhaBarra
                 key={l.nome}
                 rotulo={l.nome}
+                apoio={l.fila > 0 ? `${numero(l.fila)} na fila agora` : undefined}
                 valor={l.saidas}
                 maximo={max}
-                complemento={pct(l.saidas, total)}
-                ativo={filtros.origem === l.nome}
-                aoTocar={() => mudar({ origem: filtros.origem === l.nome ? null : l.nome })}
+                complemento={pct(l.saidas, totalOrigem)}
+                ativo={filtros.quem === l.nome}
+                aoTocar={() => mudar({ quem: filtros.quem === l.nome ? null : l.nome })}
                 compacta
               />
             ))}
-          </ul>
-        )}
-      </div>
+          </ol>
+          {ordem.length > 10 && (
+            <button
+              type="button"
+              onClick={() => setTodos((v) => !v)}
+              className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-ink/[0.03]"
+            >
+              {todos ? 'Mostrar só os 10 primeiros' : `Mostrar todos (${numero(ordem.length)})`}
+            </button>
+          )}
+        </>
+      )
+  }
+
+  return (
+    <Card aria-labelledby="titulo-origens" className={clsx('vt-quem-cartao flex flex-col', className)}>
+      <CabecalhoCard id="titulo-origens" titulo={titulo} subtitulo={subtitulo} acao={voltar} />
+      <div className="vt-quem-lista flex flex-1 flex-col px-3 pt-2 pb-3">{corpo}</div>
     </Card>
   )
 }

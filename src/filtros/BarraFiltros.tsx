@@ -120,6 +120,8 @@ function FiltrosAtivos() {
   if (filtros.bairro) chips.push({ texto: `Bairro: ${filtros.bairro}`, tirar: () => mudar({ bairro: null }) })
   if (filtros.categoria) chips.push({ texto: filtros.categoria, tirar: () => mudar({ categoria: null }) })
   if (filtros.origem) chips.push({ texto: `Quem pediu: ${filtros.origem}`, tirar: () => mudar({ origem: null }) })
+  // o 2º nível da origem não tem seletor (são dezenas de nomes): escolhe-se tocando nas listas; aqui só sai
+  if (filtros.quem) chips.push({ texto: filtros.quem, tirar: () => mudar({ quem: null }) })
   if (!chips.length) return null
   return (
     <div className="flex flex-wrap items-center gap-2">

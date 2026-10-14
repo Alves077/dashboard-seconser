@@ -132,7 +132,7 @@ export function Panorama() {
   }, [chavePeriodo])
 
   const porRetorno = filtros.contarPor === 'retorno'
-  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.origem].filter(Boolean).join(' · ')
+  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.quem ?? filtros.origem].filter(Boolean).join(' · ')
 
   return (
     <>
@@ -176,7 +176,7 @@ export function Panorama() {
               </div>
               <div className="flex flex-col gap-4">
                 <Categorias linhas={d.categorias} total={d.atual.saidas} />
-                <Origens linhas={d.origens} total={d.atual.saidas} className="lg:flex-1" />
+                <Origens key={filtros.origem ?? ''} linhas={d.origens} quens={d.quens} total={d.atual.saidas} className="lg:flex-1" />
               </div>
             </div>
           </section>

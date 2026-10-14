@@ -117,7 +117,7 @@ function PaginaRelatorios() {
   const { filtros } = useFiltros()
   const hoje = useHoje()
 
-  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.origem].filter(Boolean).join(' · ') || 'Cidade inteira'
+  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.quem ?? filtros.origem].filter(Boolean).join(' · ') || 'Cidade inteira'
   // mês de referência (como no antigo): meses fechados, o mais recente por padrão; "tudo" = histórico completo
   const meses = useMemo(() => (base ? mesesDoRelatorio(base, hoje) : []), [base, hoje])
   const paramMes = params.get('mes')
@@ -232,7 +232,7 @@ function PaginaRelatorios() {
             <>
               <CabecalhoFolha
                 titulo={`Serviços em Aberto · ${filtros.bairro ? `Bairro ${filtros.bairro}` : filtros.regiao ? `Região ${filtros.regiao}` : 'Niterói'}`}
-                subtitulo={[filtros.categoria, filtros.origem].filter(Boolean).join(' · ') || undefined}
+                subtitulo={[filtros.categoria, filtros.quem ?? filtros.origem].filter(Boolean).join(' · ') || undefined}
                 meta={[geradoLongo, `${numero(abertos.n)} serviços em aberto`, dadosAte].filter(Boolean)}
               />
               <RelatorioAbertosFolha r={abertos} detalhes={comEndereco} hoje={hoje} />

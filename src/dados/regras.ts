@@ -1,7 +1,7 @@
 // Regras de negócio das saídas — as mesmas da vw_servicos (MySQL e Supabase) e do site antigo.
 import { PRAZO_DIAS } from '@/config'
 import type { Dia } from '@/lib/datas'
-import type { Saida, Situacao } from './tipos'
+import type { Saida, Servico, Situacao } from './tipos'
 
 /** Saída + 5 dias corridos */
 export function prazo(s: Saida): Dia {
@@ -64,6 +64,19 @@ export const ROTULO_SITUACAO: Record<Situacao, string> = {
 
 /** Categoria revisada que conta como risco elétrico (DESIGN.md: destaque nos abertos) */
 export const CATEGORIA_RISCO = 'Fiação e risco elétrico'
+
+/** Pedido de vereador sem o nome identificado (Indicação da Câmara que não achamos no siscam) */
+export const SEM_VEREADOR = 'Sem vereador identificado'
+
+/**
+ * "Quem" dentro da origem — o 2º nível, como o bairro dentro da região: o vereador (pela pessoa,
+ * não pelo tipo de pedido — ofício, indicação…), ou o detalhe da origem (a regional, a associação…).
+ * Cidadão não tem 2º nível (null).
+ */
+export function quemDe(s: Servico): string | null {
+  if (s.origem === 'Vereador') return s.vereador ?? SEM_VEREADOR
+  return s.origemDetalhe
+}
 
 /** Mediana certa (lista par = média dos dois do meio) */
 export function mediana(valores: number[]): number | null {

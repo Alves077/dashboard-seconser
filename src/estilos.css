@@ -239,11 +239,79 @@ html[data-transicao='volta']::view-transition-new(root) {
     transform: translateX(-24px);
   }
 }
+/* Card "Quem pede" (origem → regionais/vereadores): o card muda de altura suavemente e a lista
+   desliza — entrar numa origem vem da direita, voltar vem da esquerda. Só o card se move (a página
+   fica parada); outras trocas de filtro fazem só o crossfade de sempre. */
+.vt-quem-cartao {
+  view-transition-name: quem-cartao;
+}
+.vt-quem-lista {
+  view-transition-name: quem-lista;
+}
+::view-transition-group(quem-cartao),
+::view-transition-group(quem-lista) {
+  animation-duration: 280ms;
+  animation-timing-function: var(--ease-saida);
+}
+::view-transition-image-pair(quem-lista) {
+  overflow: clip;
+}
+::view-transition-old(quem-cartao),
+::view-transition-new(quem-cartao),
+::view-transition-old(quem-lista),
+::view-transition-new(quem-lista) {
+  animation-duration: 200ms;
+  animation-timing-function: var(--ease-saida);
+}
+/* Sem intervalo entre as duas (um "buraco" vazio no meio parecia erro de carregamento): a antiga
+   some depressa enquanto a nova já vem entrando, as duas andando para o mesmo lado. */
+html[data-transicao='quem-entra']::view-transition-old(quem-lista) {
+  animation: 150ms var(--ease-saida) both quem-sai-esquerda;
+}
+html[data-transicao='quem-entra']::view-transition-new(quem-lista) {
+  animation: 240ms var(--ease-saida) both quem-entra-direita;
+}
+html[data-transicao='quem-volta']::view-transition-old(quem-lista) {
+  animation: 150ms var(--ease-saida) both quem-sai-direita;
+}
+html[data-transicao='quem-volta']::view-transition-new(quem-lista) {
+  animation: 240ms var(--ease-saida) both quem-entra-esquerda;
+}
+@keyframes quem-sai-esquerda {
+  to {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
+@keyframes quem-entra-direita {
+  from {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes quem-sai-direita {
+  to {
+    opacity: 0;
+    transform: translateX(16px);
+  }
+}
+@keyframes quem-entra-esquerda {
+  from {
+    opacity: 0;
+    transform: translateX(-16px);
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
   ::view-transition-new(root),
   html[data-transicao]::view-transition-old(root),
-  html[data-transicao]::view-transition-new(root) {
+  html[data-transicao]::view-transition-new(root),
+  ::view-transition-group(quem-cartao),
+  ::view-transition-group(quem-lista),
+  ::view-transition-old(quem-cartao),
+  ::view-transition-new(quem-cartao),
+  ::view-transition-old(quem-lista),
+  ::view-transition-new(quem-lista) {
     animation: none;
   }
 }

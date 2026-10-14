@@ -14,6 +14,8 @@ export function useFiltros() {
           const f = { ...lerFiltros(atual), ...parcial }
           // bairro só faz sentido dentro da região escolhida
           if (parcial.regiao !== undefined && parcial.bairro === undefined) f.bairro = null
+          // e o "quem" (a regional, o vereador…) só dentro da origem escolhida
+          if (parcial.origem !== undefined && parcial.quem === undefined) f.quem = null
           return escreverFiltros(f, atual)
         },
         // troca suave (crossfade curto) em vez de os números pularem; ver estilos.css

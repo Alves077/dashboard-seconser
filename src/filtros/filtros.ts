@@ -15,6 +15,7 @@ import {
   type ChaveMes,
   type Dia,
 } from '@/lib/datas'
+import { quemDe } from '@/dados/regras'
 import type { Saida } from '@/dados/tipos'
 
 export type Atalho =
@@ -58,6 +59,9 @@ export interface Filtros {
   categoria: string | null
   /** quem pediu: Cidadão, Regional, Vereador… */
   origem: string | null
+  /** 2º nível da origem (a regional, o vereador…; ver quemDe) — só vale com uma origem escolhida.
+   *  Escolhido tocando nas listas, não num seletor (são dezenas de nomes). */
+  quem: string | null
 }
 
 /** Padrão ao abrir: últimos 30 dias (Panorama = "como estamos agora"; decisão de 12/10/2026) */
@@ -72,6 +76,7 @@ export const FILTROS_PADRAO: Filtros = {
   bairro: null,
   categoria: null,
   origem: null,
+  quem: null,
 }
 
 // ── URL ────────────────────────────────────────────────────────────────────
@@ -96,13 +101,14 @@ export function lerFiltros(p: URLSearchParams): Filtros {
     bairro: p.get('bairro') || null,
     categoria: p.get('categoria') || null,
     origem: p.get('origem') || null,
+    quem: (p.get('origem') && p.get('quem')) || null,
   }
 }
 
 /** Escreve os filtros na URL, mantendo outros parâmetros (ex.: ?servico= da Ficha) */
 export function escreverFiltros(f: Filtros, base: URLSearchParams): URLSearchParams {
   const p = new URLSearchParams(base)
-  for (const k of ['periodo', 'mes', 'de', 'ate', 'por', 'regiao', 'bairro', 'categoria', 'origem', 'situacao']) p.delete(k)
+  for (const k of ['periodo', 'mes', 'de', 'ate', 'por', 'regiao', 'bairro', 'categoria', 'origem', 'quem', 'situacao']) p.delete(k)
   const per = f.periodo
   if (per.tipo === 'mes') {
     const { ano, mes0 } = partes(diaDaChave(per.mes))
@@ -118,6 +124,7 @@ export function escreverFiltros(f: Filtros, base: URLSearchParams): URLSearchPar
   if (f.bairro) p.set('bairro', f.bairro)
   if (f.categoria) p.set('categoria', f.categoria)
   if (f.origem) p.set('origem', f.origem)
+  if (f.origem && f.quem) p.set('quem', f.quem)
   return p
 }
 
@@ -204,7 +211,8 @@ export function filtrarLugar(saidas: Saida[], f: Filtros): Saida[] {
       (!f.regiao || sv.regiao === f.regiao) &&
       (!f.bairro || sv.bairro === f.bairro) &&
       (!f.categoria || sv.categoria === f.categoria) &&
-      (!f.origem || sv.origem === f.origem)
+      (!f.origem || sv.origem === f.origem) &&
+      (!f.quem || quemDe(sv) === f.quem)
     )
   })
 }
@@ -230,7 +238,8 @@ export function contarAtivos(f: Filtros): number {
     (f.regiao ? 1 : 0) +
     (f.bairro ? 1 : 0) +
     (f.categoria ? 1 : 0) +
-    (f.origem ? 1 : 0)
+    (f.origem ? 1 : 0) +
+    (f.quem ? 1 : 0)
   )
 }
 
@@ -257,6 +266,8 @@ export function contarOpcoes(saidas: Saida[], f: Filtros, hoje: Dia): Record<Dim
     const sem = { ...f, [d]: null }
     // bairro depende da região escolhida; região não depende do bairro
     if (d === 'regiao') sem.bairro = null
+    // idem: o "quem" depende da origem
+    if (d === 'origem') sem.quem = null
     const m = new Map<string, number>()
     for (const s of filtrarLugar(base, sem)) {
       const v = valorDe[d](s)

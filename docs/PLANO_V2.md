@@ -304,3 +304,58 @@ no meio, títulos nunca sozinhos no pé da página, cores das barras impressas (
 Feita: ver `docs/CONFERENCIA_V2.md`. Site antigo × v2 sobre o mesmo CSV (antigo alimentado pelo cache do navegador, sem rede): Visão Geral/Qualidade/Tendência/Relatório batem com Panorama/Prazo/Evolução/Mensal em tudo que mede a mesma coisa; diferenças só de definição (reaberturas no Panorama, abertos de hoje × do período, mês em curso, faixas, mediana). Corrigido: delta do "No prazo" do Panorama em p.p. Próximo: publicação (Actions + divisão do código por página).
 
 **Divisão do código (13/10):** cada página é um arquivo à parte (`src/paginas/carregar.ts`, `React.lazy` + `Suspense` na Moldura com `EsqueletoPagina`); depois da 1ª página, as outras são baixadas quando o navegador fica ocioso — trocar de página continua instantâneo, e a anterior fica na tela até a nova chegar (sem esqueleto). Bibliotecas em arquivos próprios (`react`, `base-ui`, `supabase` — `vite.config.ts`), para ficarem no cache quando só o código do site muda; `papaparse` só baixa com a fonte CSV. Abertura: um arquivo de 1,09 MB (328 kB gzip) → ~290 kB gzip em 5–6 arquivos, sem o aviso de pacote grande; páginas de 1–11 kB gzip cada. Falta: workflow do GitHub Actions. Limpeza: saíram `recharts` e `react-virtuoso` (não usados), código morto (`bateSituacao`, `varRegiao`, `Comparacao`), o `legado/`, os prints e o Apps Script do site antigo (tudo segue na `main`); README reescrito para a v2. **Tema: abre sempre no claro**; escuro só pelo botão.
+
+## Fase 8 — partes novas: plano (13/10/2026, revisto com o usuário)
+
+**Decisões (13/10):** vereadores **públicos, com limites** (abaixo); **LED fica só no banco** por enquanto (repensar se a
+chefia perguntar); a origem **não** ganha um 2º nível no seletor da barra (seriam ~60 opções) — o detalhe se escolhe
+**tocando nas listas**, como região → bairros; fotos dos vereadores **baixadas e tratadas** (não o link da Câmara).
+Fica para depois (item 3 dos dados, ruas): busca por rua confiável, reincidência por rua, pedidos de vereador fora da
+planilha (4b). Risco elétrico já está feito.
+
+Números do retrato de 09/10 (serviços): Cidadão 9.909 · Regional 5.156 (19 regionais; ARMISE 1.158, ARO 1.134, Rio do
+Ouro 910…) · Vereador 1.044 (22 com nome; Binho 257, Rodrigo Farah 246, Renato Cariello 105, Fernanda Louback 103,
+Pipico 94, Beto da Pipa 77, demais ≤ 13; 54 "Indicação (Câmara)" sem nome) · Associação 371 · Direção SECONSER 255 ·
+Ouvidoria 189 · Prefeitura Móvel 29 · Secretaria 16 · Deputado 4.
+
+### 8.1 Origem → "quem" tocando na lista
+- No card **Quem pede** do Panorama: tocar numa origem troca a lista para os nomes dela (regionais, vereadores,
+  associações…), como região → bairros; "← todas as origens" volta. Tocar num nome aplica o filtro **quem**.
+- `quem` vai na URL (`?origem=Regional&quem=ARMISE`; vereador pelo id: `quem=v3`) e vale em todas as páginas, como o
+  bairro. Na barra de filtros aparece como **etiqueta removível** (não como seletor). Trocar/limpar a origem limpa o quem.
+
+**8.1 FEITO (13/10):** `quem` em `Filtros` (URL `quem`, só com origem; trocar/limpar a origem limpa o quem; etiqueta
+removível na barra; títulos das páginas mostram o quem no lugar da origem). `quemDe` (`dados/regras.ts`): vereador
+**pela pessoa** (não pelo tipo — ofício/indicação), `SEM_VEREADOR` = "Sem vereador identificado" (54); demais pelo
+`origem_detalhe`; Cidadão sem 2º nível. Card "Quem pede" do Panorama: origem com ≥ 2 nomes abre a lista (10 primeiros
++ "Mostrar todos"), com "N na fila agora" e o escolhido marcado; "← Origens" volta. "← Origens" aparece com qualquer origem escolhida (também Cidadão, Ouvidoria…). Transição só no card
+(View Transitions, `.vt-quem-*` em estilos.css): altura do card muda suave, lista sai e entra deslizando (entrar = da
+direita, voltar = da esquerda); a página não desliza; sem intervalo vazio entre as listas. A marca de direção (`direcaoDaTroca`) só sai quando a
+transição termina (`:active-view-transition`) — com tempo fixo de 500 ms ela sumia no meio (a troca calcula ~250 ms
+antes de animar) e a lista antiga reaparecia. "Regional Centro e Ponta D'Areia" (563549) é real — fica. Conferido contra o CSV (Regional
+5.186: ARMISE 1.158/fila 54, ARO 1.134/76…; Vereador 1.046: Binho 257/26, Rodrigo Farah 246/11…).
+
+### 8.2 Página "Vereadores" (pública, `/vereadores`)
+- Cartões com foto e nome (os 6 com mais pedidos grandes; os demais numa lista compacta; linha "Indicação da Câmara sem
+  vereador identificado"). Tocar abre o **perfil**: pedidos no período e por mês (13 meses), situação dos pedidos
+  (executados / em aberto), bairros e categorias, lista dos em aberto (pílula da Ficha) e "Ver no mapa" (filtro quem).
+- **Limites (o sensível):** a página mostra **o que cada vereador pediu e em que pé está**, não "quem é atendido mais
+  rápido". Sem tempo médio nem % no prazo por vereador, sem comparação entre vereadores, sem cores de bom/ruim; ordem
+  por número de pedidos. Prazo é desempenho da SECONSER, e lado a lado por vereador seria lido como favorecimento.
+  (O Prazo e a Evolução continuam aceitando o filtro, para uso interno quando alguém escolher de propósito.)
+- **Fotos:** as do site da Câmara variam (130×140 a 360×390, JPEG com extensão .png, umas com moldura branca, rosto
+  pequeno em algumas). Baixar uma vez, recortar cada uma à mão no rosto (mesma escala), salvar quadrada pequena (WebP)
+  em `public/img/vereadores/<id>.webp`. Sem depender do site da Câmara (link pode mudar; cada visita não avisa a Câmara).
+  Sem foto (Eduardo Paiva, Fael): iniciais. Vereador novo: foto nova à mão (anotar no `ROTINA_DIARIA`).
+
+### 8.3 Espaços públicos (praças, parques, campos) — depende dos dados
+Hoje só **57** serviços têm `local` (o campo só é preenchido quando o serviço é *dentro* do lugar) e ele está na parte
+**restrita** (`servicos_detalhe`). No texto, "praça" aparece em ~510 serviços, "quadra" em ~570 (mas muitas são
+"lote/quadra"), "praia" em ~230 (inclui nomes de rua). Para virar recorte no site: **no trabalho**, classificar o tipo de
+lugar (praça, parque, campo/quadra esportiva, praia/orla, escadaria, ciclovia) em mais serviços e levar `tipo_local` +
+nome do lugar para a camada **pública** (nome de lugar não é dado pessoal). Depois, no site: recorte por tipo de lugar
+(origem-like, tocando na lista) e camada no mapa.
+
+### 8.4 Ordem
+8.1 filtro quem → 8.2 fotos tratadas → cartões → perfil → conferência dos números contra o CSV (Python) → docs.
+8.3 quando o dado existir. Cada etapa testada no celular e no computador, claro e escuro.

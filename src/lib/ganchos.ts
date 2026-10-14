@@ -110,11 +110,36 @@ export function useDestino() {
 /**
  * Marca a direção da próxima troca de filtro (estilos.css: data-transicao). "entra" = foco num
  * recorte (desliza da direita); "volta" = de volta à visão geral. Some sozinha depois da troca.
+ * "quem-entra"/"quem-volta": o mesmo, mas só dentro do card Quem pede (a página não desliza).
+ *
+ * A marca só sai quando a transição TERMINA (não num tempo fixo): a troca pode levar ~250 ms
+ * calculando a página antes de a animação começar, e tirar a marca no meio fazia a lista antiga
+ * reaparecer por um instante. Navegador sem :active-view-transition → tempo fixo folgado.
  */
-export function direcaoDaTroca(direcao: 'entra' | 'volta') {
+export function direcaoDaTroca(direcao: 'entra' | 'volta' | 'quem-entra' | 'quem-volta') {
   const raiz = document.documentElement
   raiz.dataset.transicao = direcao
-  window.setTimeout(() => {
+  const tirar = () => {
     if (raiz.dataset.transicao === direcao) delete raiz.dataset.transicao
-  }, 500)
+  }
+  let temSeletor = true
+  const ativa = () => {
+    try {
+      return raiz.matches(':active-view-transition')
+    } catch {
+      temSeletor = false
+      return false
+    }
+  }
+  const inicio = performance.now()
+  let comecou = false
+  const vigiar = () => {
+    const agora = ativa()
+    if (!temSeletor) return void window.setTimeout(tirar, 1200)
+    if (agora) comecou = true
+    // terminou, ou nunca começou (sem View Transitions / troca sem animação), ou passou do limite
+    if ((comecou && !agora) || (!comecou && performance.now() - inicio > 1000) || performance.now() - inicio > 3000) tirar()
+    else requestAnimationFrame(vigiar)
+  }
+  requestAnimationFrame(vigiar)
 }

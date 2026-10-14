@@ -79,7 +79,7 @@ export function Evolucao() {
   const { filtros } = useFiltros()
   const hoje = useHoje()
   const e = useMemo(() => (base ? calcularEvolucao(base, filtros, hoje) : null), [base, filtros, hoje])
-  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.origem].filter(Boolean).join(' · ')
+  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.quem ?? filtros.origem].filter(Boolean).join(' · ')
   const comparacao = e ? rotuloComparacao(e.periodoAnterior) : null
 
   return (

@@ -233,7 +233,7 @@ export function Mapa() {
   const { grade, alturaFixa } = useAlturaAteOFim()
   // muda o recorte → o mapa reenquadra (o período só conta quando "mostrar" usa período)
   const usaPeriodo = OPCOES_MOSTRAR.find((o) => o.id === mostrar)!.usaPeriodo
-  const chaveEnquadre = JSON.stringify([filtros.regiao, filtros.bairro, filtros.categoria, filtros.origem, mostrar, usaPeriodo ? [filtros.periodo, filtros.contarPor] : null])
+  const chaveEnquadre = JSON.stringify([filtros.regiao, filtros.bairro, filtros.categoria, filtros.origem, filtros.quem, mostrar, usaPeriodo ? [filtros.periodo, filtros.contarPor] : null])
 
   return (
     <>

@@ -87,7 +87,7 @@ export function Prazo() {
   const d = useMemo(() => (base ? calcularPrazo(base, filtros, hoje) : null), [base, filtros, hoje])
 
   const porRetorno = filtros.contarPor === 'retorno'
-  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.origem].filter(Boolean).join(' · ')
+  const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.quem ?? filtros.origem].filter(Boolean).join(' · ')
 
   return (
     <>

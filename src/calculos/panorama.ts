@@ -4,6 +4,7 @@
 //   NO PERÍODO  — saídas dentro do período escolhido (por data de saída ou de retorno).
 import {
   CATEGORIA_RISCO,
+  quemDe,
   diasEmAberto,
   diasExecucao,
   emAberto,
@@ -190,6 +191,21 @@ function quebrar(
   })
 }
 
+/**
+ * 2º nível da origem escolhida (as regionais, os vereadores…), como os bairros de uma região.
+ * Conta SEM o "quem" escolhido, para a lista mostrar todos com o escolhido marcado.
+ * null quando não há o que abrir: nenhuma origem, ou origem com um nome só (Cidadão, Ouvidoria…).
+ */
+function quebrarQuem(base: Base, f: Filtros, intervalo: Intervalo, hoje: Dia): LinhaQuebra[] | null {
+  if (!f.origem) return null
+  const lugar = filtrarLugar(base.saidas, { ...f, quem: null })
+  const nomes = new Set(lugar.map((s) => quemDe(s.servico)))
+  if (nomes.size < 2 && !f.quem) return null
+  const noPeriodo = lugar.filter((s) => noIntervalo(s, intervalo, f.contarPor))
+  const agora = calcularAgora([...new Set(lugar.map((s) => s.servico))], hoje)
+  return quebrar(noPeriodo, agora.itens, (s) => quemDe(s) ?? s.origem, hoje)
+}
+
 // ── Tudo do Panorama ───────────────────────────────────────────────────────
 
 export function calcularPanorama(base: Base, f: Filtros, hoje: Dia) {
@@ -217,6 +233,7 @@ export function calcularPanorama(base: Base, f: Filtros, hoje: Dia) {
     categorias: quebrar(noPeriodo, agora.itens, (s) => s.categoria ?? 'Sem categoria', hoje),
     bairros: quebrar(noPeriodo, agora.itens, (s) => s.bairro, hoje),
     origens: quebrar(noPeriodo, agora.itens, (s) => s.origem, hoje),
+    quens: quebrarQuem(base, f, intervalo, hoje),
   }
 }
 

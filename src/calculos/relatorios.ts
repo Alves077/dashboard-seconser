@@ -257,7 +257,7 @@ export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia) {
   const abertasCidade = base.saidas.filter((s) => s.dataRetorno === null)
   const itens: ItemAberto[] = filtrarLugar(abertasCidade, f).map((s) => ({ saida: s, servico: s.servico, dias: hoje - s.dataSaida }))
   const n = itens.length
-  const filtrado = !!(f.regiao || f.bairro || f.categoria || f.origem)
+  const filtrado = !!(f.regiao || f.bairro || f.categoria || f.origem || f.quem)
   const porBairro = !!(f.regiao || f.bairro)
 
   const atraso = itens.filter((it) => situacao(it.saida, hoje) === 'atraso').length
