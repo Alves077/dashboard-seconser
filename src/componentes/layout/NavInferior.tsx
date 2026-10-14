@@ -3,6 +3,9 @@ import { NavLink } from 'react-router'
 import { useDestino } from '@/lib/ganchos'
 import { usePaginas } from './usePaginas'
 
+// classes inteiras (o Tailwind não enxerga nome montado): 5 páginas sem acesso, 6 com os Relatórios
+const COLUNAS: Record<number, string> = { 4: 'grid-cols-4', 5: 'grid-cols-5', 6: 'grid-cols-6' }
+
 // Celular/tablet: navegação embaixo, ao alcance do polegar (uso na rua, com uma mão).
 export function NavInferior() {
   const destino = useDestino()
@@ -12,7 +15,7 @@ export function NavInferior() {
       aria-label="Páginas"
       className="nav-na-troca fixed inset-x-0 bottom-0 z-30 border-t border-line bg-card/95 pb-[env(safe-area-inset-bottom,0px)] backdrop-blur-md lg:hidden print:hidden"
     >
-      <ul className={clsx('mx-auto grid max-w-lg', paginas.length === 5 ? 'grid-cols-5' : 'grid-cols-4')}>
+      <ul className={clsx('mx-auto grid max-w-lg', COLUNAS[paginas.length] ?? 'grid-cols-6')}>
         {paginas.map(({ caminho, nome, icone: Icone }) => (
           <li key={caminho}>
             <NavLink

@@ -359,6 +359,37 @@ siscam não tem foto e o TSE bloqueia acesso automático (403). `FotoVereador` (
 (Eduardo Paiva, Fael) ou arquivo faltando (vereador novo) → iniciais; "Sem vereador identificado" → ícone da Câmara.
 Já aparece na lista de vereadores do card Quem pede.
 
+**8.2 Página FEITA (14/10):** `/vereadores` (menu: 5ª página, ícone da Câmara; no celular a barra de baixo vai a 6
+itens). Cálculos em `calculos/vereadores.ts` (unidade = pedido/serviço; "no período" = com saída no período; em aberto =
+fila de hoje; origem sempre Vereador, valem lugar e categoria). **Lista:** frase-resumo (pedidos, nº de vereadores, % de
+todos os pedidos, em aberto), cartões com foto dos 6 com mais pedidos no período (pedidos, executados, em aberto hoje),
+"Demais vereadores" (2 colunas no computador) e a linha "Sem vereador identificado"; nota de rodapé explicando que prazo
+fica no Prazo/Evolução. **Perfil** = filtro global `origem=Vereador&quem=<nome>` (link compartilhável; "Ver no mapa"
+leva o filtro): foto, "N pedidos desde mês/ano", 3 números num cartão (pedidos no período, já executados, em aberto
+agora), pedidos por mês desde o começo da base (até 24 meses; com 13 meses a Fernanda — 99 dos 103 em jul–ago/25 —
+sumia; escala só com inteiros), bairros e categorias (tocar filtra), em aberto hoje (mais antigos primeiro, abre a
+Ficha). Sem tempo médio/% no prazo/cores de bom-ruim. Origem de outro tipo na URL → aviso "não vale aqui" com botão para
+tirar. Conferido contra o CSV (1.044 pedidos, 82 em aberto, 6,2%; Binho 257/231/26, Rodrigo 246/235/11, Renato
+105/91/14, Fernanda 103/103/0, Pipico 94/76/18, Beto 77/70/7). Testado celular/computador, claro/escuro.
+
+**Ajustes do perfil (14/10, pedido do usuário):** onde = **regiões primeiro**, tocar abre os bairros da região ("← Regiões");
+**indicações legislativas** (`origem_detalhe` = "Indicação legislativa": 350 no total, 332 com a tag 3067 do Colab — 18
+só com o rótulo, anotados no checkpoint para conferir no trabalho); **tempo até a execução** (média das saídas executadas
+no período + mediana; sem comparação nem cor — exceção pedida ao limite de 13/10, só no perfil); em aberto com o mesmo
+selo de dias do Panorama (cor da situação, raio de risco; no celular o selo desce). 5 números num cartão (2 colunas no
+celular). Conferido: Binho 196 indicações, 6,9 dias (mediana 2) em 231 execuções.
+
+**Indicações em aberto e fotos (14/10):** indicação legislativa em aberto ganha destaque discreto (cor de ação, não de
+alerta): resumo da lista ("82 em aberto, 48 deles indicações legislativas"), 3ª linha fixa nos cartões, "· N indicações"
+nas linhas dos demais, nota do "Em aberto agora" no perfil, selo "Indicação legislativa" na lista de em aberto e opção
+"Todos / Indicações" quando há dos dois tipos (Renato 14/3, Allan 3/1; Binho 26/26 e Pipico 18/18 não precisam).
+`ehIndicacao` em `calculos/vereadores.ts`. Os 18 "Indicação legislativa" sem a tag 3067 têm a tag 367 "indicação" (a dos
+"Indicação (Câmara)"; 367 ≠ 3067) — rótulo do tratamento errado. **A FAZER NO TRABALHO (banco):** trocar o
+`origem_detalhe` desses 18 para "Indicação (Câmara)" e rodar `origem.py --aplicar` + `confere_banco.py` (todos post, set–out/2025):
+541049, 541057, 541065, 541078, 541174, 541950, 541959, 541963, 542000, 548223, 548224, 548246, 548768, 557621, 557626,
+557693, 557707, 557889. Depois o site conta 332 legislativas (= tag 3067). Fotos: círculo
+neutro enquanto chegam e esmaecer de 200 ms (antes "pulavam"); cartões do topo carregam com prioridade.
+
 ### 8.3 Espaços públicos (praças, parques, campos) — depende dos dados
 Hoje só **57** serviços têm `local` (o campo só é preenchido quando o serviço é *dentro* do lugar) e ele está na parte
 **restrita** (`servicos_detalhe`). No texto, "praça" aparece em ~510 serviços, "quadra" em ~570 (mas muitas são

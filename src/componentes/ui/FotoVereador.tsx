@@ -16,9 +16,22 @@ function iniciais(nome: string) {
   return partes[0][0] + partes[partes.length - 1][0]
 }
 
-/** `vereador` null = pedido sem vereador identificado (ícone da Câmara no lugar da foto) */
-export function FotoVereador({ vereador, className = 'size-8' }: { vereador: Vereador | null; className?: string }) {
+/**
+ * `vereador` null = pedido sem vereador identificado (ícone da Câmara no lugar da foto).
+ * Enquanto a foto chega fica um círculo neutro e ela aparece com um esmaecer curto (antes "pulava" na
+ * tela). `prioridade` = carregar já, sem esperar a rolagem (cartões no topo da página).
+ */
+export function FotoVereador({
+  vereador,
+  className = 'size-8',
+  prioridade = false,
+}: {
+  vereador: Vereador | null
+  className?: string
+  prioridade?: boolean
+}) {
   const [falhou, setFalhou] = useState(false)
+  const [carregou, setCarregou] = useState(false)
   const base = clsx('inline-grid shrink-0 place-items-center overflow-hidden rounded-full', className)
   if (!vereador)
     return (
@@ -33,13 +46,24 @@ export function FotoVereador({ vereador, className = 'size-8' }: { vereador: Ver
       </span>
     )
   return (
-    <img
-      src={`${import.meta.env.BASE_URL}img/vereadores/${vereador.id}.webp`}
-      alt=""
-      loading="lazy"
-      decoding="async"
-      onError={() => setFalhou(true)}
-      className={clsx(base, 'bg-line object-cover')}
-    />
+    <span aria-hidden className={clsx(base, 'bg-line')}>
+      <img
+        // já no cache: o onLoad pode ter passado antes do React ligar o evento
+        ref={(el) => {
+          if (el?.complete && el.naturalWidth > 0) setCarregou(true)
+        }}
+        src={`${import.meta.env.BASE_URL}img/vereadores/${vereador.id}.webp`}
+        alt=""
+        loading={prioridade ? 'eager' : 'lazy'}
+        fetchPriority={prioridade ? 'high' : 'auto'}
+        decoding="async"
+        onLoad={() => setCarregou(true)}
+        onError={() => setFalhou(true)}
+        className={clsx(
+          'size-full object-cover transition-opacity duration-200 ease-out motion-reduce:transition-none',
+          carregou ? 'opacity-100' : 'opacity-0',
+        )}
+      />
+    </span>
   )
 }
