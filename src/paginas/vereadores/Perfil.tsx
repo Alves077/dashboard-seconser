@@ -306,7 +306,7 @@ export function Perfil({ p, quem, aoVoltar }: { p: PerfilVereador; quem: string;
           nota={
             p.tempoMediano === null
               ? 'nada executado no período'
-              : `média · mediana ${enxuto(p.tempoMediano)} ${p.tempoMediano === 1 ? 'dia' : 'dias'}`
+              : `média · mediana ${enxuto(p.tempoMediano)} ${p.tempoMediano === 1 ? 'dia' : 'dias'}${p.tempoProvisorio ? ' · provisório (muitos ainda em aberto)' : ''}`
           }
         />
         <Numero

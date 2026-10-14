@@ -1,10 +1,21 @@
 // NO PERÍODO — 4 indicadores (2×2 no celular, 4 numa linha no computador), cada um com a
 // comparação com o período anterior e a tendência dos últimos 13 meses.
 import { Indicador } from '@/componentes/ui/Indicador'
+import { desdeProvisorio } from '@/componentes/graficos/MiniLinha'
 import { mesesDoPeriodo } from '@/filtros/filtros'
 import type { Panorama } from '@/calculos/panorama'
-import { decimal, enxuto, numero } from '@/lib/formato'
+import { decimal, enxuto, numero, pctCurto } from '@/lib/formato'
 import { rotuloMes } from '@/lib/datas'
+
+/** "provisório: 57% ainda em aberto" na nota do tempo médio */
+const provisorio = (i: { abertas: number; saidas: number; provisorio: boolean }) =>
+  i.provisorio ? ` · provisório: ${pctCurto(i.abertas, i.saidas)} ainda em aberto` : ''
+
+/** No prazo: N de (executados + em aberto já vencidos) */
+export const notaNoPrazo = (i: { noPrazo: number; executadas: number; vencidas: number }) =>
+  i.vencidas > 0
+    ? `${numero(i.noPrazo)} de ${numero(i.executadas + i.vencidas)} (${numero(i.vencidas)} em aberto já fora do prazo)`
+    : `${numero(i.noPrazo)} de ${numero(i.executadas)} executadas em até 5 dias`
 
 const variacao = (a: number | null, b: number | null) => (a === null || b === null || b === 0 ? null : ((a - b) / b) * 100)
 
@@ -34,7 +45,7 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         rotulo="No prazo"
         valor={atual.pctNoPrazo === null ? '—' : decimal(atual.pctNoPrazo)}
         sufixo={atual.pctNoPrazo === null ? undefined : '%'}
-        nota={`${numero(atual.noPrazo)} de ${numero(atual.executadas)} executadas em até 5 dias`}
+        nota={notaNoPrazo(atual)}
         // percentual compara em pontos percentuais (como no Prazo e na Evolução), não em "% de %"
         delta={atual.pctNoPrazo === null || previo?.pctNoPrazo == null ? null : atual.pctNoPrazo - previo.pctNoPrazo}
         unidadeDelta="p.p."
@@ -49,12 +60,14 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         rotulo="Tempo médio"
         valor={decimal(atual.tempoMedio)}
         sufixo={atual.tempoMedio === null ? undefined : 'dias'}
-        nota={atual.tempoMediano === null ? 'sem execução no período' : `mediana: ${enxuto(atual.tempoMediano)} ${atual.tempoMediano === 1 ? 'dia' : 'dias'}`}
-        delta={variacao(atual.tempoMedio, previo?.tempoMedio ?? null)}
+        nota={atual.tempoMediano === null ? 'sem execução no período' : `mediana: ${enxuto(atual.tempoMediano)} ${atual.tempoMediano === 1 ? 'dia' : 'dias'}${provisorio(atual)}`}
+        // provisório: comparar com o anterior enganaria (a média ainda vai subir)
+        delta={atual.provisorio ? null : variacao(atual.tempoMedio, previo?.tempoMedio ?? null)}
         deltaBom="descer"
         comparacao={comparacao}
         serie={serie.map((m) => m.ind.tempoMedio)}
         parcialNoFim={parcial}
+        provisorioDesde={desdeProvisorio(serie.map((m) => m.ind.provisorio))}
         destaque={destaque}
         descricaoSerie={desc('Tempo médio', (m) => (m.ind.tempoMedio === null ? 'sem dado' : `${decimal(m.ind.tempoMedio)} dias`))}
       />

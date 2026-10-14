@@ -62,6 +62,12 @@ export function calcularAgora(servicos: Servico[], hoje: Dia) {
 
 // ── Indicadores do período ─────────────────────────────────────────────────
 
+/**
+ * Período "provisório": mais que isto das saídas ainda em aberto. O tempo médio só conta quem já voltou
+ * (os rápidos) e ainda vai subir — contando pela saída, os meses recentes pareciam melhores do que são.
+ */
+export const LIMIAR_PROVISORIO = 0.1
+
 export interface Indicadores {
   saidas: number
   executadas: number
@@ -72,16 +78,34 @@ export interface Indicadores {
   /** saídas que eram volta à rua de um serviço já atendido (2ª saída em diante) */
   reaberturas: number
   pctReaberturas: number | null
+  /** saídas do período ainda sem retorno */
+  abertas: number
+  /** dessas, as que já passaram do prazo — contam como FORA do prazo: não têm mais como ficar dentro */
+  vencidas: number
+  /** muita coisa ainda em aberto (> LIMIAR_PROVISORIO): o tempo médio ainda vai mudar */
+  provisorio: boolean
 }
 
-export function indicadores(saidas: Saida[]): Indicadores {
+/**
+ * No prazo (regra de 14/10/2026, decisão do usuário): executados em até 5 dias ÷ (executados + em aberto que
+ * já passaram dos 5 dias). Contando pela saída, os meses recentes têm muita coisa em aberto; "entre os
+ * executados" deixava de fora justamente os atrasados (set/26: 30,7% → 13,2%, o número real). Contando pelo
+ * retorno, tudo já voltou e a conta é a de sempre. O Relatório Mensal mantém a regra do site antigo.
+ */
+export function indicadores(saidas: Saida[], hoje: Dia): Indicadores {
   const exec: number[] = []
   let dentro = 0
   let reab = 0
+  let abertas = 0
+  let vencidas = 0
   for (const s of saidas) {
     if (s.ordem > 1) reab++
     const d = diasExecucao(s)
-    if (d === null) continue
+    if (d === null) {
+      abertas++
+      if (situacao(s, hoje) === 'atraso') vencidas++
+      continue
+    }
     exec.push(d)
     if (noPrazo(s)) dentro++
   }
@@ -89,11 +113,14 @@ export function indicadores(saidas: Saida[]): Indicadores {
     saidas: saidas.length,
     executadas: exec.length,
     noPrazo: dentro,
-    pctNoPrazo: exec.length ? (dentro / exec.length) * 100 : null,
+    pctNoPrazo: exec.length + vencidas ? (dentro / (exec.length + vencidas)) * 100 : null,
     tempoMedio: media(exec),
     tempoMediano: mediana(exec),
     reaberturas: reab,
     pctReaberturas: saidas.length ? (reab / saidas.length) * 100 : null,
+    abertas,
+    vencidas,
+    provisorio: saidas.length > 0 && abertas / saidas.length > LIMIAR_PROVISORIO,
   }
 }
 
@@ -113,7 +140,7 @@ export function serieMensal(saidas: Saida[], por: ContarPor, hoje: Dia) {
   const meses: { mes: ChaveMes; ind: Indicadores; parcial: boolean }[] = []
   for (let d = diaDaChave(primeiro); chaveMes(d) <= ultimo; d = somarMeses(d, 1)) {
     const k = chaveMes(d)
-    meses.push({ mes: k, ind: indicadores(grupos.get(k) ?? []), parcial: k === ultimo })
+    meses.push({ mes: k, ind: indicadores(grupos.get(k) ?? [], hoje), parcial: k === ultimo })
   }
   // antes do 1º mês com dado a série não existe (não é zero)
   const ini = meses.findIndex((m) => m.ind.saidas > 0)
@@ -186,7 +213,7 @@ function quebrar(
     if (situacao(it.saida, hoje) === 'atraso') g.atraso++
   }
   return [...porNome].map(([nome, g]) => {
-    const ind = indicadores(g.saidas)
+    const ind = indicadores(g.saidas, hoje)
     return { nome, saidas: g.saidas.length, fila: g.fila, atraso: g.atraso, pctNoPrazo: ind.pctNoPrazo, tempoMedio: ind.tempoMedio }
   })
 }
@@ -225,8 +252,8 @@ export function calcularPanorama(base: Base, f: Filtros, hoje: Dia) {
     anterior,
     primeiraSaida: Number.isFinite(primeiraSaida) ? primeiraSaida : null,
     agora,
-    atual: indicadores(noPeriodo),
-    previo: noAnterior ? indicadores(noAnterior) : null,
+    atual: indicadores(noPeriodo, hoje),
+    previo: noAnterior ? indicadores(noAnterior, hoje) : null,
     serie: serieMensal(lugar, f.contarPor, hoje),
     movimento: movimento(lugar, intervalo, hoje),
     regioes: quebrar(noPeriodo, agora.itens, (s) => s.regiao, hoje),

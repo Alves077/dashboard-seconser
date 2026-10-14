@@ -2,7 +2,9 @@
 // em atraso agora e precisou voltar. Cada um com a comparação e a tendência de 13 meses.
 // Percentuais comparam em pontos percentuais; o atraso de agora compara com o fim do mês passado.
 import { Indicador } from '@/componentes/ui/Indicador'
+import { desdeProvisorio } from '@/componentes/graficos/MiniLinha'
 import { mesesDoPeriodo } from '@/filtros/filtros'
+import { notaNoPrazo } from '@/paginas/panorama/Indicadores'
 import type { Prazo } from '@/calculos/prazo'
 import { rotuloMes } from '@/lib/datas'
 import { decimal, enxuto, numero, pctCurto } from '@/lib/formato'
@@ -26,7 +28,7 @@ export function Indicadores({ p, comparacao }: { p: Prazo; comparacao: string | 
         rotulo="No prazo"
         valor={decimal(atual.pctNoPrazo)}
         sufixo={atual.pctNoPrazo === null ? undefined : '%'}
-        nota={`${numero(atual.noPrazo)} de ${numero(atual.executadas)} executados`}
+        nota={notaNoPrazo(atual)}
         delta={diferenca(atual.pctNoPrazo, previo?.pctNoPrazo)}
         unidadeDelta="p.p."
         deltaBom="subir"
@@ -40,12 +42,18 @@ export function Indicadores({ p, comparacao }: { p: Prazo; comparacao: string | 
         rotulo="Tempo médio"
         valor={decimal(atual.tempoMedio)}
         sufixo={atual.tempoMedio === null ? undefined : 'dias'}
-        nota={atual.tempoMediano === null ? 'sem execução no período' : `mediana: ${enxuto(atual.tempoMediano)} ${atual.tempoMediano === 1 ? 'dia' : 'dias'}`}
-        delta={variacao(atual.tempoMedio, previo?.tempoMedio ?? null)}
+        nota={
+          atual.tempoMediano === null
+            ? 'sem execução no período'
+            : `mediana: ${enxuto(atual.tempoMediano)} ${atual.tempoMediano === 1 ? 'dia' : 'dias'}${atual.provisorio ? ` · provisório: ${pctCurto(atual.abertas, atual.saidas)} ainda em aberto` : ''}`
+        }
+        // provisório: comparar com o anterior enganaria (a média ainda vai subir)
+        delta={atual.provisorio ? null : variacao(atual.tempoMedio, previo?.tempoMedio ?? null)}
         deltaBom="descer"
         comparacao={comparacao}
         serie={serie.map((m) => m.tempoMedio)}
         parcialNoFim={parcial}
+        provisorioDesde={desdeProvisorio(serie.map((m) => m.provisorio))}
         destaque={destaque}
         descricaoSerie={desc('Tempo médio', (m) => (m.tempoMedio === null ? 'sem dado' : `${decimal(m.tempoMedio)} dias`))}
       />

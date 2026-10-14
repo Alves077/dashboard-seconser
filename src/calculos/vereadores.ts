@@ -112,6 +112,7 @@ export function calcularPerfil(base: Base, f: Filtros, quem: string, hoje: Dia) 
   // tempo até a execução: as saídas do período (como no resto do site, conta cada ida à rua)
   const ind = indicadores(
     filtrarLugar(base.saidas, { ...f, origem: ORIGEM_VEREADOR, quem }).filter((s) => noIntervalo(s, intervalo, f.contarPor)),
+    hoje,
   )
 
   // pedidos por mês: mês da 1ª saída (quando o pedido foi para a rua pela 1ª vez), desde o começo da base
@@ -140,6 +141,8 @@ export function calcularPerfil(base: Base, f: Filtros, quem: string, hoje: Dia) 
     tempoMedio: ind.tempoMedio,
     tempoMediano: ind.tempoMediano,
     execucoes: ind.executadas,
+    /** tempo médio provisório: muitos pedidos do período ainda em aberto */
+    tempoProvisorio: ind.provisorio,
     emAberto: agora.total,
     /** desde o começo da base, com os mesmos filtros de lugar/categoria */
     total: servicos.length,

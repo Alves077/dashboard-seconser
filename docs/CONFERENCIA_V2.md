@@ -31,6 +31,13 @@ das páginas (texto e objetos dos gráficos do Chart.js) num Chrome sem janela, 
 5. **Mediana:** o antigo pega `sorted[floor(n/2)]` (errado em lista par); a v2 usa a mediana correta. Nos
    recortes conferidos o valor coincidiu (7, 6 e 3 dias).
 
+## Mudança de definição depois da conferência (14/10/2026)
+
+6. **No prazo contando pela saída:** a v2 passou a contar como fora do prazo os serviços ainda em aberto que já
+   passaram dos 5 dias (antes, como no site antigo, só entravam os executados). Meses antigos quase não mudam
+   (abr/26: 74,8% → 74,7%); os recentes mudam muito (set/26: 30,7% → 13,2%), porque é neles que há muita coisa em
+   aberto. O tempo médio desses meses aparece como provisório. O Relatório Mensal segue a regra antiga.
+
 ## Corrigido durante a conferência
 
 - Panorama: a variação do "No prazo" saía em % relativo ("▼ 19,6% vs. ago/26"); agora em pontos percentuais

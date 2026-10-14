@@ -431,6 +431,20 @@ logo abaixo do botão "Filtros": uma linha só que rola para o lado (a barra é 
 `cursor: pointer` dos botões). Legenda das faixas: cada item ocupa a sua coluna (tamanho de sempre) e o conteúdo fica centralizado dentro dele
 (antes encostava à esquerda e sobrava espaço à direita).
 
+**No prazo e tempo médio contando pela saída (14/10, decisão do usuário):** nos meses recentes muita coisa ainda está
+em aberto (set/26: 57% dos 1.191) — o tempo médio só via os rápidos (a mini-linha "caía" quando o tempo sobe) e o "no
+prazo entre os executados" deixava de fora os atrasados. Agora (`indicadores(saidas, hoje)` em `calculos/panorama.ts`):
+- **No prazo** = em até 5 dias ÷ (executados + em aberto que já passaram do prazo). Set/26: 30,7% → **13,2%** (157 de
+  1.191; 680 em aberto vencidos). Pelo retorno não muda (tudo já voltou). Vale no Panorama (KPI, frase, tabela de
+  regiões), Prazo (KPI, frase, mini-linha) e Evolução (gráfico e KPI, que agora seguem o "Contar por").
+- **Tempo médio** continua só dos executados, mas com **provisório** quando > 10% do período ainda está em aberto
+  (`LIMIAR_PROVISORIO`): nota "provisório: 57% ainda em aberto", sem a comparação com o período anterior, e linhas
+  tracejadas a partir do 1º mês provisório (mini-linhas e gráficos — `provisorioDesde`). Dica do gráfico: "N dos que
+  saíram ainda em aberto — vai mudar".
+- Evolução pela saída: os blocos são o mês em que saíram (antes era sempre o mês de execução; pelo retorno continua).
+- **Relatório Mensal não muda** (fiel ao site antigo). Conferido contra o CSV: jun/26 19,4 d · 21,5%; jul 9,9 · 49,3%;
+  ago 12,3 · 28,4%; set 10,8 · 13,2%; abr 4,9 · 74,7%.
+
 ### 8.3 Espaços públicos (praças, parques, campos) — depende dos dados
 Hoje só **57** serviços têm `local` (o campo só é preenchido quando o serviço é *dentro* do lugar) e ele está na parte
 **restrita** (`servicos_detalhe`). No texto, "praça" aparece em ~510 serviços, "quadra" em ~570 (mas muitas são

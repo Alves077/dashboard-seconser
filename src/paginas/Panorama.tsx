@@ -47,7 +47,11 @@ function Resumo({ d, porRetorno, periodo }: { d: Dados; porRetorno: boolean; per
           {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua
           {atual.pctNoPrazo !== null && (
             <>
-              ; dos <B>{numero(atual.executadas)}</B> já executados, <B>{numero(atual.noPrazo)}</B> ({decimal(atual.pctNoPrazo)}%) ficaram no prazo
+              ; <B>{numero(atual.noPrazo)}</B> ({decimal(atual.pctNoPrazo)}%) foram executados dentro do prazo
+              {atual.vencidas > 0 &&
+                (atual.vencidas === 1
+                  ? ', contando também o que ainda está em aberto e já passou dos 5 dias'
+                  : `, contando também os ${numero(atual.vencidas)} ainda em aberto que já passaram dos 5 dias`)}
             </>
           )}
           .

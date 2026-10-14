@@ -8,6 +8,8 @@ import { Card, CabecalhoCard } from '@/componentes/ui/Card'
 import { MINIMO_BLOCO, type Evolucao } from '@/calculos/evolucao'
 import { PRAZO_DIAS } from '@/config'
 import { decimal, numero } from '@/lib/formato'
+import { desdeProvisorio } from '@/componentes/graficos/MiniLinha'
+import { useFiltros } from '@/filtros/useFiltros'
 
 const POR = { dia: 'Por dia', semana: 'Em blocos de 7 dias', mes: 'Por mês' } as const
 
@@ -59,18 +61,47 @@ export function Fluxo({ e }: { e: Evolucao }) {
   )
 }
 
+/** Contando pela saída: o que muda no texto e na dica (os meses recentes ainda têm muita coisa em aberto) */
+function useCoorte(e: Evolucao) {
+  const porSaida = useFiltros().filtros.contarPor === 'saida'
+  const provisorioDesde = porSaida ? desdeProvisorio(e.pontos.map((p) => p.provisorio)) : undefined
+  const abertos = (i: number) =>
+    porSaida && e.pontos[i].abertos > 0 ? (
+      <p className="numeros text-ink-3">
+        {numero(e.pontos[i].abertos)} dos que saíram ainda em aberto
+        {e.pontos[i].provisorio && ' — vai mudar'}
+      </p>
+    ) : null
+  return { porSaida, provisorioDesde, abertos }
+}
+
 export function Tempo({ e }: { e: Evolucao }) {
   const { blocos, pontos, passo } = e
+  const { porSaida, provisorioDesde, abertos } = useCoorte(e)
   return (
     <Card aria-labelledby="titulo-tempo">
-      <CabecalhoCard id="titulo-tempo" titulo="Tempo médio até a execução" subtitulo={`${POR[passo]}, em dias, pela data de execução.`} />
+      <CabecalhoCard
+        id="titulo-tempo"
+        titulo="Tempo médio até a execução"
+        subtitulo={
+          porSaida
+            ? `${POR[passo]} em que saíram para a rua, em dias. Tracejado: muitos ainda em aberto — a média vai subir.`
+            : `${POR[passo]}, em dias, pela data de execução.`
+        }
+      />
       <div className="px-5 pt-3 pb-4">
         <GraficoTempo
           intervalos={blocos}
           series={[{ id: 'tempo', nome: 'Tempo médio', cor: COR_QUALIDADE, valores: pontos.map((p) => p.tempoMedio) }]}
           formatar={(v) => decimal(v).replace(',0', '')}
           referencia={{ valor: PRAZO_DIAS, rotulo: `prazo · ${PRAZO_DIAS} dias` }}
-          extra={(i) => <p className="numeros text-ink-2">{numero(pontos[i].executados)} executados</p>}
+          provisorioDesde={provisorioDesde}
+          extra={(i) => (
+            <>
+              <p className="numeros text-ink-2">{numero(pontos[i].executados)} executados</p>
+              {abertos(i)}
+            </>
+          )}
           descricao={`Tempo médio até a execução, ${POR[passo].toLowerCase()}`}
         />
         <p className="mt-2 text-[11px] text-ink-3">Bloco com menos de {MINIMO_BLOCO} executados fica sem ponto.</p>
@@ -81,16 +112,30 @@ export function Tempo({ e }: { e: Evolucao }) {
 
 export function NoPrazo({ e }: { e: Evolucao }) {
   const { blocos, pontos, passo } = e
+  const { porSaida, abertos } = useCoorte(e)
   return (
     <Card aria-labelledby="titulo-noprazo">
-      <CabecalhoCard id="titulo-noprazo" titulo="Executados no prazo" subtitulo={`${POR[passo]}: parte dos executados em até ${PRAZO_DIAS} dias.`} />
+      <CabecalhoCard
+        id="titulo-noprazo"
+        titulo="Executados no prazo"
+        subtitulo={
+          porSaida
+            ? `${POR[passo]} em que saíram: executados em até ${PRAZO_DIAS} dias, contando como fora os em aberto que já passaram do prazo.`
+            : `${POR[passo]}: parte dos executados em até ${PRAZO_DIAS} dias.`
+        }
+      />
       <div className="px-5 pt-3 pb-4">
         <GraficoTempo
           intervalos={blocos}
           series={[{ id: 'prazo', nome: 'No prazo', cor: COR_QUALIDADE, valores: pontos.map((p) => p.pctNoPrazo) }]}
           formatar={(v) => `${Math.round(v)}%`}
           marcasFixas={[0, 25, 50, 75, 100]}
-          extra={(i) => <p className="numeros text-ink-2">{numero(pontos[i].executados)} executados</p>}
+          extra={(i) => (
+            <>
+              <p className="numeros text-ink-2">{numero(pontos[i].executados)} executados</p>
+              {abertos(i)}
+            </>
+          )}
           descricao={`Parte dos executados no prazo, ${POR[passo].toLowerCase()}`}
         />
         <p className="mt-2 text-[11px] text-ink-3">Bloco com menos de {MINIMO_BLOCO} executados fica sem ponto.</p>

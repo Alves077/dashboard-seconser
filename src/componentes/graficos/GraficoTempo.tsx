@@ -48,6 +48,7 @@ export function GraficoTempo({
   marcasFixas,
   referencia,
   extra,
+  provisorioDesde,
   descricao,
 }: {
   intervalos: IntervaloTempo[]
@@ -61,6 +62,8 @@ export function GraficoTempo({
   referencia?: { valor: number; rotulo: string }
   /** linhas a mais na dica (ex.: saldo do bloco) */
   extra?: (i: number) => ReactNode
+  /** a partir deste bloco os valores ainda vão mudar (muita coisa em aberto): tracejado e "provisório" na dica */
+  provisorioDesde?: number
   descricao: string
 }) {
   const [ref, largura] = useLargura()
@@ -75,13 +78,15 @@ export function GraficoTempo({
   const y = (v: number) => TOPO + (1 - v / topo) * (altura - TOPO - BAIXO)
 
   const parcial = n > 1 && intervalos[n - 1].parcial
+  // até `corte` a linha é cheia; dali até o fim, tracejada (bloco em curso e/ou blocos provisórios)
+  const corte = Math.min(provisorioDesde ?? n, parcial ? n - 1 : n)
+  const aberto = (i: number) => i >= corte
 
-  /** trechos contínuos (sem atravessar null); o último trecho até o bloco em curso sai à parte */
+  /** trechos contínuos (sem atravessar null) até o corte; do último ponto cheio ao fim sai à parte, tracejado */
   function trechos(valores: (number | null)[]) {
     const cheios: [number, number][][] = []
     let atual: [number, number][] = []
-    const ultimo = parcial ? n - 2 : n - 1
-    for (let i = 0; i <= ultimo; i++) {
+    for (let i = 0; i < corte; i++) {
       const v = valores[i]
       if (v === null) {
         if (atual.length) cheios.push(atual)
@@ -89,9 +94,12 @@ export function GraficoTempo({
       } else atual.push([x(i), y(v)])
     }
     if (atual.length) cheios.push(atual)
-    const a = valores[n - 2]
-    const b = valores[n - 1]
-    const emCurso: [number, number][] | null = parcial && a !== null && b !== null ? [[x(n - 2), y(a)], [x(n - 1), y(b)]] : null
+    const resto: [number, number][] = []
+    for (let i = Math.max(0, corte - 1); i < n; i++) {
+      const v = valores[i]
+      if (v !== null) resto.push([x(i), y(v)])
+    }
+    const emCurso = corte < n && resto.length >= 2 ? resto : null
     return { cheios, emCurso }
   }
   const caminho = (pts: [number, number][]) => pts.map(([px, py], i) => `${i ? 'L' : 'M'}${px.toFixed(1)},${py.toFixed(1)}`).join(' ')
@@ -157,8 +165,8 @@ export function GraficoTempo({
                         cx={x(i)}
                         cy={y(v)}
                         r={foco === i ? 4.5 : 3}
-                        fill={parcial && i === n - 1 ? 'var(--c-card)' : s.cor}
-                        stroke={parcial && i === n - 1 ? s.cor : 'var(--c-card)'}
+                        fill={aberto(i) ? 'var(--c-card)' : s.cor}
+                        stroke={aberto(i) ? s.cor : 'var(--c-card)'}
                         strokeWidth={foco === i ? 2 : 1.5}
                       />
                     ),
@@ -209,6 +217,9 @@ export function GraficoTempo({
           <p className="font-medium">
             {intervalos[foco].nome}
             {intervalos[foco].parcial && <span className="font-normal text-ink-3"> · em curso</span>}
+            {!intervalos[foco].parcial && provisorioDesde !== undefined && foco >= provisorioDesde && (
+              <span className="font-normal text-ink-3"> · provisório</span>
+            )}
           </p>
           <dl className="numeros mt-1 grid grid-cols-[1fr_auto] gap-x-3 gap-y-0.5">
             {series.map((s) => (

@@ -218,6 +218,8 @@ export interface MesPrazo {
   tempoMedio: number | null
   /** em atraso no fim do mês (no mês atual, hoje) */
   atraso: number
+  /** mês com muita coisa ainda em aberto: tempo médio provisório */
+  provisorio: boolean
   pctReabertura: number | null
 }
 
@@ -242,8 +244,8 @@ function serie(lugar: Saida[], por: ContarPor, hoje: Dia): MesPrazo[] {
     let atraso = 0
     for (const s of lugar) if (s.dataSaida + PRAZO_DIAS < fim && (s.dataRetorno === null || s.dataRetorno > fim)) atraso++
     const ss = grupos.get(k) ?? []
-    const ind = indicadores(ss)
-    meses.push({ mes: k, parcial, pctNoPrazo: ind.pctNoPrazo, tempoMedio: ind.tempoMedio, atraso, pctReabertura: taxaReabertura(ss).pct })
+    const ind = indicadores(ss, hoje)
+    meses.push({ mes: k, parcial, pctNoPrazo: ind.pctNoPrazo, tempoMedio: ind.tempoMedio, atraso, provisorio: ind.provisorio, pctReabertura: taxaReabertura(ss).pct })
   }
   // antes do 1º mês com dado a série não existe (não é zero)
   const ini = meses.findIndex((m) => (grupos.get(m.mes)?.length ?? 0) > 0)
@@ -278,8 +280,8 @@ export function calcularPrazo(base: Base, f: Filtros, hoje: Dia) {
     intervalo,
     anterior,
     primeiraSaida: Number.isFinite(primeiraSaida) ? primeiraSaida : null,
-    atual: indicadores(noPeriodo),
-    previo: noAnterior ? indicadores(noAnterior) : null,
+    atual: indicadores(noPeriodo, hoje),
+    previo: noAnterior ? indicadores(noAnterior, hoje) : null,
     agora: { fila: agora.total, atraso: agora.atraso, atrasoLongo: agora.itens.filter((i) => situacao(i.saida, hoje) === 'atraso' && i.dias - PRAZO_DIAS > 30).length },
     /** saídas do período que ainda não voltaram (contando pela saída, ficam fora da conta) */
     semRetorno: noPeriodo.length - executadas.length,

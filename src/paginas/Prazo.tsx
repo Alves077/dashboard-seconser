@@ -28,14 +28,17 @@ function Resumo({ d, periodo }: { d: Dados; periodo: Periodo }) {
   const longos = dist.mais30
   return (
     <p className="text-[15px] leading-relaxed text-ink-2">
-      {quando}, <B>{numero(atual.noPrazo)}</B> de {numero(atual.executadas)} executados (<B>{decimal(atual.pctNoPrazo)}%</B>) ficaram dentro dos{' '}
-      {PRAZO_DIAS} dias
+      {quando}, <B>{numero(atual.noPrazo)}</B> de {numero(atual.executadas + atual.vencidas)} (<B>{decimal(atual.pctNoPrazo)}%</B>) foram executados dentro
+      dos {PRAZO_DIAS} dias.
+      {atual.vencidas > 0 &&
+        (atual.vencidas === 1
+          ? ' O que ainda está em aberto e já passou do prazo conta como fora.'
+          : ` Os ${numero(atual.vencidas)} ainda em aberto que já passaram do prazo contam como fora.`)}
       {longos > 0 && (
         <>
-          {' '}e <B>{numero(longos)}</B> ({pctCurto(longos, dist.total)}) passaram de 30 dias
+          {' '}Dos executados, <B>{numero(longos)}</B> ({pctCurto(longos, dist.total)}) passaram de 30 dias.
         </>
       )}
-      .
     </p>
   )
 }
@@ -113,7 +116,7 @@ export function Prazo() {
                 No período · {d.intervalo.rotulo}
               </h2>
               <span className="text-xs text-ink-3">
-                {porRetorno ? 'executados no período' : 'executados entre os que saíram no período'}
+                {porRetorno ? 'executados no período' : 'entre os que saíram no período (em aberto já vencido conta como fora do prazo)'}
                 {d.intervalo.parcial && d.intervalo.de !== null && ' · em curso, números ainda mudam'}
               </span>
             </div>

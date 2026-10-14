@@ -8,9 +8,10 @@
 // Por bloco: entraram (saídas), executados (retornos), fila (em aberto no fim do bloco), tempo médio e
 // % no prazo dos executados no bloco. Por construção: fila no fim − fila no início = entraram − executados.
 import { PRAZO_DIAS } from '@/config'
-import { media } from '@/dados/regras'
+import { media, situacao } from '@/dados/regras'
 import type { Base, Saida, Servico } from '@/dados/tipos'
-import { filtrarLugar, intervaloAnterior, intervaloDo, type Filtros } from '@/filtros/filtros'
+import { filtrarLugar, intervaloAnterior, intervaloDo, type ContarPor, type Filtros } from '@/filtros/filtros'
+import { LIMIAR_PROVISORIO } from './panorama'
 import {
   chaveMes,
   diaDe,
@@ -91,37 +92,86 @@ export interface Ponto {
   fila: number
   tempoMedio: number | null
   pctNoPrazo: number | null
+  /** contando pela saída: dos que saíram no bloco, quantos ainda estão em aberto */
+  abertos: number
+  /** muita coisa do bloco ainda em aberto: o tempo médio ainda vai subir */
+  provisorio: boolean
 }
 
-function serie(saidas: Saida[], blocos: Bloco[]): Ponto[] {
+/**
+ * Tempo médio e no prazo de um bloco. Pelo retorno (execução): os que voltaram no bloco, de qualquer mês de
+ * saída. Pela saída: os que SAÍRAM no bloco — tempo médio só dos já executados (provisório se mais de 10%
+ * ainda está em aberto) e no prazo = em até 5 dias ÷ (executados + em aberto já vencidos), a mesma regra do
+ * Panorama e do Prazo (14/10/2026).
+ */
+function qualidade(dias: number[], vencidas: number) {
+  const conta = dias.length >= MINIMO_BLOCO
+  const decididas = dias.length + vencidas
+  return {
+    tempoMedio: conta ? media(dias) : null,
+    pctNoPrazo: decididas >= MINIMO_BLOCO ? (dias.filter((d) => d <= PRAZO_DIAS).length / decididas) * 100 : null,
+  }
+}
+
+function serie(saidas: Saida[], blocos: Bloco[], por: ContarPor, hoje: Dia): Ponto[] {
   const n = blocos.length
   const de = blocos[0].ini
   const ate = blocos[n - 1].fim
   const qual = (d: Dia) => blocos.findIndex((b) => d <= b.fim)
   const entraram = blocos.map(() => 0)
+  const executados = blocos.map(() => 0)
   const dias: number[][] = blocos.map(() => [])
+  const abertos = blocos.map(() => 0)
+  const vencidas = blocos.map(() => 0)
   const fila = blocos.map(() => 0)
   for (const s of saidas) {
-    if (s.dataSaida >= de && s.dataSaida <= ate) entraram[qual(s.dataSaida)]++
+    const saiuNoPeriodo = s.dataSaida >= de && s.dataSaida <= ate
+    if (saiuNoPeriodo) entraram[qual(s.dataSaida)]++
     const r = s.dataRetorno
-    if (r !== null && r >= de && r <= ate) dias[qual(r)].push(r - s.dataSaida)
+    if (r !== null && r >= de && r <= ate) executados[qual(r)]++
+    if (por === 'retorno') {
+      if (r !== null && r >= de && r <= ate) dias[qual(r)].push(r - s.dataSaida)
+    } else if (saiuNoPeriodo) {
+      const i = qual(s.dataSaida)
+      if (r !== null) dias[i].push(r - s.dataSaida)
+      else {
+        abertos[i]++
+        if (situacao(s, hoje) === 'atraso') vencidas[i]++
+      }
+    }
     if (s.dataSaida > ate || (r !== null && r < de)) continue
     for (let i = 0; i < n; i++) {
       const f = blocos[i].fim
       if (s.dataSaida <= f && (r === null || r > f)) fila[i]++
     }
   }
-  return blocos.map((_, i) => {
-    const ds = dias[i]
-    const conta = ds.length >= MINIMO_BLOCO
-    return {
-      entraram: entraram[i],
-      executados: ds.length,
-      fila: fila[i],
-      tempoMedio: conta ? media(ds) : null,
-      pctNoPrazo: conta ? (ds.filter((d) => d <= PRAZO_DIAS).length / ds.length) * 100 : null,
+  return blocos.map((_, i) => ({
+    entraram: entraram[i],
+    executados: executados[i],
+    fila: fila[i],
+    ...qualidade(dias[i], vencidas[i]),
+    abertos: abertos[i],
+    provisorio: por === 'saida' && entraram[i] > 0 && abertos[i] / entraram[i] > LIMIAR_PROVISORIO,
+  }))
+}
+
+/** No prazo de uma janela inteira, pela regra do "Contar por" (ver qualidade) */
+function qualidadeJanela(saidas: Saida[], de: Dia, ate: Dia, por: ContarPor, hoje: Dia) {
+  const dias: number[] = []
+  let vencidas = 0
+  let executados = 0
+  for (const s of saidas) {
+    const r = s.dataRetorno
+    if (r !== null && r >= de && r <= ate) executados++
+    if (por === 'retorno') {
+      if (r !== null && r >= de && r <= ate) dias.push(r - s.dataSaida)
+    } else if (s.dataSaida >= de && s.dataSaida <= ate) {
+      if (r !== null) dias.push(r - s.dataSaida)
+      else if (situacao(s, hoje) === 'atraso') vencidas++
     }
-  })
+  }
+  const decididas = dias.length + vencidas
+  return { executados, pctNoPrazo: decididas ? (dias.filter((d) => d <= PRAZO_DIAS).length / decididas) * 100 : null }
 }
 
 const abertasEm = (saidas: Saida[], dia: Dia) => saidas.filter((s) => s.dataSaida <= dia && (s.dataRetorno === null || s.dataRetorno > dia)).length
@@ -197,7 +247,7 @@ export function calcularEvolucao(base: Base, f: Filtros, hoje: Dia) {
   const dias = ate - de + 1
   const passo = escolherPasso(dias)
   const blocos = montarBlocos(de, ate, passo, hoje)
-  const pontos = serie(lugar, blocos)
+  const pontos = serie(lugar, blocos, f.contarPor, hoje)
 
   // comparação justa: se o período foi cortado no último dia com dado, compara com a mesma
   // quantidade de dias logo antes (e não com o período anterior inteiro)
@@ -206,24 +256,15 @@ export function calcularEvolucao(base: Base, f: Filtros, hoje: Dia) {
   const janelaAnterior = anterior ? { de: anterior.de!, ate: Math.min(anterior.ate!, limite) } : null
   const somaAnterior = janelaAnterior
     ? (() => {
-        const ds: number[] = []
+        const q = qualidadeJanela(lugar, janelaAnterior.de, janelaAnterior.ate, f.contarPor, hoje)
         let entraram = 0
-        for (const s of lugar) {
-          if (s.dataSaida >= janelaAnterior.de && s.dataSaida <= janelaAnterior.ate) entraram++
-          const r = s.dataRetorno
-          if (r !== null && r >= janelaAnterior.de && r <= janelaAnterior.ate) ds.push(r - s.dataSaida)
-        }
-        return {
-          entraram,
-          executados: ds.length,
-          pctNoPrazo: ds.length ? (ds.filter((d) => d <= PRAZO_DIAS).length / ds.length) * 100 : null,
-        }
+        for (const s of lugar) if (s.dataSaida >= janelaAnterior.de && s.dataSaida <= janelaAnterior.ate) entraram++
+        return { entraram, executados: q.executados, pctNoPrazo: q.pctNoPrazo }
       })()
     : null
 
-  // dos executados no período inteiro
-  const diasExec: number[] = []
-  for (const s of lugar) if (s.dataRetorno !== null && s.dataRetorno >= de && s.dataRetorno <= ate) diasExec.push(s.dataRetorno - s.dataSaida)
+  // o período inteiro (mesma regra dos blocos)
+  const qTotal = qualidadeJanela(lugar, de, ate, f.contarPor, hoje)
 
   const nivelBairro = f.regiao !== null
   const semLugar = filtrarLugar(base.saidas, nivelBairro ? { ...f, bairro: null } : { ...f, regiao: null, bairro: null })
@@ -242,8 +283,8 @@ export function calcularEvolucao(base: Base, f: Filtros, hoje: Dia) {
     cortadoPelaCarga: cortado && limite < hoje,
     total: {
       entraram: pontos.reduce((t, p) => t + p.entraram, 0),
-      executados: diasExec.length,
-      pctNoPrazo: diasExec.length ? (diasExec.filter((d) => d <= PRAZO_DIAS).length / diasExec.length) * 100 : null,
+      executados: qTotal.executados,
+      pctNoPrazo: qTotal.pctNoPrazo,
       /** "todo o período" começa do zero: não há fila no início para comparar */
       filaInicio: todo ? null : abertasEm(lugar, de - 1),
       filaFim: pontos[pontos.length - 1]?.fila ?? 0,

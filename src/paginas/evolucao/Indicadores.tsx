@@ -6,10 +6,12 @@ import type { Evolucao } from '@/calculos/evolucao'
 import { PRAZO_DIAS } from '@/config'
 import { formatarDiaCurto } from '@/lib/datas'
 import { decimal, numero } from '@/lib/formato'
+import { useFiltros } from '@/filtros/useFiltros'
 
 const variacao = (a: number, b: number | null | undefined) => (b === null || b === undefined || b === 0 ? null : ((a - b) / b) * 100)
 
 export function Indicadores({ e, comparacao }: { e: Evolucao; comparacao: string | null }) {
+  const porSaida = useFiltros().filtros.contarPor === 'saida'
   const { total, anterior, pontos, blocos } = e
   const parcial = blocos.length > 0 && blocos[blocos.length - 1].parcial
   const desc = (o: string, f: (i: number) => string) => `${o}: ${blocos.map((b, i) => `${b.rotulo} ${f(i)}`).join('; ')}`
@@ -54,7 +56,7 @@ export function Indicadores({ e, comparacao }: { e: Evolucao; comparacao: string
         rotulo="No prazo"
         valor={decimal(total.pctNoPrazo)}
         sufixo={total.pctNoPrazo === null ? undefined : '%'}
-        nota={`dos executados, em até ${PRAZO_DIAS} dias`}
+        nota={porSaida ? `dos que saíram, em até ${PRAZO_DIAS} dias (em aberto vencido conta fora)` : `dos executados, em até ${PRAZO_DIAS} dias`}
         delta={total.pctNoPrazo === null || anterior?.pctNoPrazo == null ? null : total.pctNoPrazo - anterior.pctNoPrazo}
         unidadeDelta="p.p."
         deltaBom="subir"

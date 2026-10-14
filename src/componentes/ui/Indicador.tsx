@@ -16,6 +16,7 @@ export function Indicador({
   comparacao,
   serie,
   parcialNoFim,
+  provisorioDesde,
   destaque,
   descricaoSerie,
 }: {
@@ -31,6 +32,8 @@ export function Indicador({
   comparacao: string | null
   serie: (number | null)[]
   parcialNoFim: boolean
+  /** a partir deste ponto a tendência é provisória (tracejada; ver MiniLinha) */
+  provisorioDesde?: number
   /** meses do período escolhido, marcados na mini-linha (ver MiniLinha) */
   destaque?: boolean[]
   descricaoSerie: string
@@ -57,7 +60,7 @@ export function Indicador({
           </>
         )}
       </p>
-      <MiniLinha valores={serie} parcialNoFim={parcialNoFim} destaque={destaque} descricao={descricaoSerie} className="mt-auto pt-3" />
+      <MiniLinha valores={serie} parcialNoFim={parcialNoFim} provisorioDesde={provisorioDesde} destaque={destaque} descricao={descricaoSerie} className="mt-auto pt-3" />
     </Card>
   )
 }

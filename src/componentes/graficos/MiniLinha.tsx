@@ -4,9 +4,16 @@
 // número do indicador está na tendência (ex.: ago/26 no meio de 13 meses).
 import { clsx } from 'clsx'
 
+/** Índice do 1º ponto provisório (muita coisa ainda em aberto), ou undefined se nenhum */
+export function desdeProvisorio(provisorios: boolean[]): number | undefined {
+  const i = provisorios.findIndex(Boolean)
+  return i < 0 ? undefined : i
+}
+
 export function MiniLinha({
   valores,
   parcialNoFim,
+  provisorioDesde,
   destaque,
   descricao,
   className,
@@ -15,6 +22,8 @@ export function MiniLinha({
   valores: (number | null)[]
   /** o último ponto é o mês corrente, incompleto: trecho final tracejado */
   parcialNoFim?: boolean
+  /** a partir deste ponto os valores ainda vão mudar (muita coisa em aberto): trecho tracejado até o fim */
+  provisorioDesde?: number
   /** um por ponto: true = mês dentro do período escolhido */
   destaque?: boolean[]
   descricao: string
@@ -32,12 +41,13 @@ export function MiniLinha({
   const y = (v: number) => (max === min ? A / 2 : A - m - ((v - min) / (max - min)) * (A - 2 * m))
   const pts = valores.map((v, i) => (v === null ? null : ([m + i * passo, y(v)] as const)))
 
+  // até `corte` a linha é cheia; dali até o fim, tracejada (mês em curso e/ou meses provisórios)
+  const corte = Math.min(provisorioDesde ?? pts.length, parcialNoFim ? pts.length - 1 : pts.length)
   // segmentos contínuos (sem atravessar meses vazios)
   const caminhos: string[] = []
   let atual = ''
   pts.forEach((p, i) => {
-    const fimTracejado = parcialNoFim && i === pts.length - 1
-    if (!p || fimTracejado) {
+    if (!p || i >= corte) {
       if (atual) caminhos.push(atual)
       atual = ''
       return
@@ -45,9 +55,11 @@ export function MiniLinha({
     atual += `${atual ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`
   })
   if (atual) caminhos.push(atual)
+  // tracejado: do último ponto cheio até o fim, pulando meses vazios
+  const tracejados = pts.slice(Math.max(0, corte - 1)).filter((p): p is readonly [number, number] => p !== null)
+  const tracejado = tracejados.length >= 2 ? tracejados.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('') : null
 
   const ultimo = pts[pts.length - 1]
-  const penultimo = pts[pts.length - 2]
 
   // trechos contínuos de meses marcados → uma faixa cada (meio passo para cada lado do ponto)
   const faixas: [number, number][] = []
@@ -70,9 +82,9 @@ export function MiniLinha({
         {caminhos.map((d) => (
           <path key={d} d={d} fill="none" stroke="var(--c-s1)" strokeWidth={1.75} vectorEffect="non-scaling-stroke" strokeLinejoin="round" strokeLinecap="round" />
         ))}
-        {parcialNoFim && ultimo && penultimo && (
+        {tracejado && (
           <path
-            d={`M${penultimo[0]},${penultimo[1]}L${ultimo[0]},${ultimo[1]}`}
+            d={tracejado}
             fill="none"
             stroke="var(--c-s1)"
             strokeWidth={1.75}
