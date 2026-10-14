@@ -1,11 +1,14 @@
 // Lista de campo: os serviços em aberto para levar à rua. Região → bairro (ordem alfabética) → mais
 // antigos primeiro; coluna de retorno em branco para preencher à mão. Endereço e local para quem tem
 // acesso. O número do serviço abre a ficha (na tela). Na impressão, cada região começa numa página nova.
+// Celular: cartões (consulta na rua, com uma mão) no lugar da tabela; a coluna de retorno, que é para
+// escrever à mão, fica só no papel — imprimindo pelo celular sai a tabela.
+import { SeloSituacao } from '@/componentes/ui/SeloSituacao'
 import type { RegiaoCampo } from '@/calculos/relatorios'
 import { CATEGORIA_RISCO, situacao } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
-import { formatarDiaCurto, type Dia } from '@/lib/datas'
-import { numero } from '@/lib/formato'
+import { formatarDia, formatarDiaCurto, type Dia } from '@/lib/datas'
+import { dias, numero } from '@/lib/formato'
 import { IdServico } from './Folha'
 
 export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCampo[]; detalhes: Map<string, Detalhe> | null; hoje: Dia }) {
@@ -13,8 +16,9 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
   return (
     <>
       <p className="mb-4 text-[10.5px] leading-relaxed text-ink-3">
-        Dias = desde a última saída para a rua (em vermelho, passou dos 5 dias). "(2ª ida)" = serviço que voltou à rua. Anotar à mão a data de
-        retorno.<span className="print:hidden"> Toque no número do serviço para ver a ficha.</span>
+        Dias = desde a última saída para a rua (em vermelho, passou dos 5 dias). "(2ª ida)" = serviço que voltou à rua.
+        <span className="max-sm:hidden print:inline"> Anotar à mão a data de retorno.</span>
+        <span className="print:hidden"> Toque no número do serviço para ver a ficha.</span>
       </p>
       {regioes.map((reg, i) => (
         <section key={reg.nome} className={i > 0 ? 'quebra-pagina mt-8 print:mt-0' : undefined}>
@@ -29,8 +33,34 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
               <h4 className="mb-1 text-[12px] font-semibold text-ink">
                 {b.nome} <span className="numeros font-normal text-ink-3">· {numero(b.itens.length)}</span>
               </h4>
-              {/* tela estreita: a tabela rola de lado; no papel, cabe na largura */}
-              <div className="overflow-x-auto print:overflow-visible">
+              <ul className="divide-y divide-line rounded-lg border border-line sm:hidden print:hidden">
+                {b.itens.map(({ servico, saida, dias: d }) => {
+                  const det = detalhes?.get(servico.chave)
+                  return (
+                    <li key={servico.chave} className="px-3 py-2.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[12px]">
+                          <IdServico servico={servico} ordem={saida.ordem} />
+                        </span>
+                        <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} />
+                      </div>
+                      <p className="mt-1.5 text-[13px] text-ink">
+                        {servico.categoria === CATEGORIA_RISCO && <span aria-label="risco">⚡ </span>}
+                        {servico.categoria}
+                      </p>
+                      {detalhes && (
+                        <p className="text-[12px] text-ink-2">
+                          {det?.endereco ?? '—'}
+                          {det?.local && <span className="block text-[11px] text-ink-3">{det.local}</span>}
+                        </p>
+                      )}
+                      <p className="mt-0.5 text-[11px] text-ink-3">Saiu em {formatarDia(saida.dataSaida)}</p>
+                    </li>
+                  )
+                })}
+              </ul>
+              {/* computador e papel: a tabela (no papel, com a coluna de retorno para escrever à mão) */}
+              <div className="overflow-x-auto max-sm:hidden print:block print:overflow-visible">
                 <table className="tabela-folha tabela-campo min-w-[640px] table-fixed print:min-w-0">
                   <thead>
                     <tr>

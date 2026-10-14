@@ -38,7 +38,8 @@ export function LinhaBarra({
   maximo: number
   complemento?: ReactNode
   ativo: boolean
-  aoTocar: () => void
+  /** sem ação = linha só de leitura (não é botão) */
+  aoTocar?: () => void
   icone?: ReactNode
   corBarra?: string
   /** pontinho de cor antes do texto de apoio (ex.: região do bairro) */
@@ -50,18 +51,17 @@ export function LinhaBarra({
   /** antes do nome, à esquerda (ex.: foto do vereador) */
   prefixo?: ReactNode
 }) {
+  const Elemento = aoTocar ? 'button' : 'div'
   const largura = maximo > 0 ? Math.max((valor / maximo) * 100, valor > 0 ? 1.5 : 0) : 0
   return (
     <li>
-      <button
-        type="button"
-        onClick={aoTocar}
-        aria-pressed={ativo}
+      <Elemento
+        {...(aoTocar ? { type: 'button' as const, onClick: aoTocar, 'aria-pressed': ativo } : {})}
         title={apoio ? `${rotulo} · ${apoio}` : rotulo}
         className={clsx(
           'grid w-full grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)_auto] items-center gap-x-3 rounded-md px-2 text-left sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto]',
           compacta ? 'min-h-9 py-1 pointer-coarse:min-h-11' : 'min-h-11 py-1.5',
-          ativo ? 'bg-acao-suave' : 'hover:bg-ink/[0.03]',
+          ativo ? 'bg-acao-suave' : aoTocar && 'hover:bg-ink/[0.03]',
         )}
       >
         <span className={clsx('min-w-0', prefixo && 'flex items-center gap-2.5')}>
@@ -87,7 +87,7 @@ export function LinhaBarra({
           {textoValor ?? numero(valor)}
           {complemento && <span className="ml-1.5 text-xs text-ink-3">{complemento}</span>}
         </span>
-      </button>
+      </Elemento>
     </li>
   )
 }

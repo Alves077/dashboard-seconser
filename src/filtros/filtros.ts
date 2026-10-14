@@ -185,6 +185,20 @@ export function intervaloDo(per: Periodo, hoje: Dia): Intervalo {
   }
 }
 
+/**
+ * Para a mini-linha dos indicadores (13 meses): quais meses o período escolhido toca. undefined quando
+ * não há o que marcar — "todo o período", ou o período cobre a série inteira / nenhum mês dela.
+ */
+export function mesesDoPeriodo(meses: ChaveMes[], i: Intervalo): boolean[] | undefined {
+  if (i.de === null || i.ate === null) return undefined
+  const marca = meses.map((m) => {
+    const ini = diaDaChave(m)
+    return ini <= i.ate! && fimDoMes(ini) >= i.de!
+  })
+  const n = marca.filter(Boolean).length
+  return n === 0 || n === marca.length ? undefined : marca
+}
+
 /** O período de mesmo tamanho logo antes (para "▲ 12% vs. anterior"); null para "todo o período" */
 export function intervaloAnterior(i: Intervalo): Intervalo | null {
   if (i.de === null || i.ate === null) return null

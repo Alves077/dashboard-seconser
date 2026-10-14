@@ -134,6 +134,20 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
           {d.porSituacao.andamento > 0 && <SeloSituacao situacao="andamento" texto={`${numero(d.porSituacao.andamento)} no prazo`} />}
           {d.porSituacao.ok > 0 && <SeloSituacao situacao="ok" texto={`${numero(d.porSituacao.ok)} executados`} />}
         </div>
+        {d.filaToda !== null && d.intervalo.de !== null && d.filaToda > d.total && (
+          // o período também vale aqui: deixar claro que há fila mais antiga fora do mapa
+          <div className="mt-3 rounded-lg bg-ink/[0.03] px-3 py-2.5 text-xs leading-relaxed text-ink-2">
+            Só os que saíram para a rua no período ({d.intervalo.rotulo.toLowerCase()}). A fila toda tem{' '}
+            <span className="numeros font-medium text-ink">{numero(d.filaToda)}</span>.{' '}
+            <button
+              type="button"
+              onClick={() => mudar({ periodo: { tipo: 'atalho', atalho: 'tudo' } })}
+              className="font-medium text-acao underline-offset-2 hover:underline"
+            >
+              Ver a fila toda
+            </button>
+          </div>
+        )}
         {d.semCoordenada > 0 && (
           <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-3">
             <MapPinOff aria-hidden className="size-3.5" />
@@ -224,7 +238,7 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
 
 export function Mapa() {
   const { data: base, isLoading, error, refetch } = useBase()
-  const { filtros, limpar } = useFiltros()
+  const { filtros, limpar, mudar } = useFiltros()
   const { chave: selecionado, abrir } = useFicha()
   const [mostrar, setMostrar] = useMostrar()
   const hoje = useHoje()
@@ -252,12 +266,23 @@ export function Mapa() {
             {isLoading || !d ? (
               <Esqueleto className="h-full w-full rounded-none" />
             ) : d.pontos.length === 0 ? (
-              <EstadoVazio
-                titulo="Nenhum serviço para mostrar"
-                texto={mostrar === 'abertos' || mostrar === 'atraso' ? 'Com esses filtros, a fila está zerada.' : 'Nada neste período com esses filtros.'}
-                aoLimpar={limpar}
-                altura="h-full"
-              />
+              d.filaToda ? (
+                // há fila, só que nada dela saiu para a rua neste período
+                <EstadoVazio
+                  titulo="Nenhum em aberto saiu neste período"
+                  texto={`A fila toda tem ${numero(d.filaToda)} ${d.filaToda === 1 ? 'serviço' : 'serviços'}, que saíram antes.`}
+                  rotuloAcao="Ver a fila toda"
+                  aoLimpar={() => mudar({ periodo: { tipo: 'atalho', atalho: 'tudo' } })}
+                  altura="h-full"
+                />
+              ) : (
+                <EstadoVazio
+                  titulo="Nenhum serviço para mostrar"
+                  texto={mostrar === 'abertos' || mostrar === 'atraso' ? 'Com esses filtros, a fila está zerada.' : 'Nada neste período com esses filtros.'}
+                  aoLimpar={limpar}
+                  altura="h-full"
+                />
+              )
             ) : (
               <Suspense fallback={<Esqueleto className="h-full w-full rounded-none" />}>
                 <MapaGrande

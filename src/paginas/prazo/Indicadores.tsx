@@ -2,6 +2,7 @@
 // em atraso agora e precisou voltar. Cada um com a comparação e a tendência de 13 meses.
 // Percentuais comparam em pontos percentuais; o atraso de agora compara com o fim do mês passado.
 import { Indicador } from '@/componentes/ui/Indicador'
+import { mesesDoPeriodo } from '@/filtros/filtros'
 import type { Prazo } from '@/calculos/prazo'
 import { rotuloMes } from '@/lib/datas'
 import { decimal, enxuto, numero, pctCurto } from '@/lib/formato'
@@ -12,6 +13,7 @@ const diferenca = (a: number | null, b: number | null | undefined) => (a === nul
 export function Indicadores({ p, comparacao }: { p: Prazo; comparacao: string | null }) {
   const { atual, previo, agora, retrabalho: r, serie } = p
   const parcial = serie.length > 0 && serie[serie.length - 1].parcial
+  const destaque = mesesDoPeriodo(serie.map((m) => m.mes), p.intervalo)
   const meses = serie.length ? `${rotuloMes(serie[0].mes)} a ${rotuloMes(serie[serie.length - 1].mes)}` : ''
   const desc = (o: string, f: (m: (typeof serie)[number]) => string) =>
     `${o} mês a mês, ${meses}: ${serie.map((m) => `${rotuloMes(m.mes)} ${f(m)}`).join('; ')}`
@@ -31,6 +33,7 @@ export function Indicadores({ p, comparacao }: { p: Prazo; comparacao: string | 
         comparacao={comparacao}
         serie={serie.map((m) => m.pctNoPrazo)}
         parcialNoFim={parcial}
+        destaque={destaque}
         descricaoSerie={desc('No prazo', (m) => (m.pctNoPrazo === null ? 'sem dado' : `${decimal(m.pctNoPrazo)}%`))}
       />
       <Indicador
@@ -43,6 +46,7 @@ export function Indicadores({ p, comparacao }: { p: Prazo; comparacao: string | 
         comparacao={comparacao}
         serie={serie.map((m) => m.tempoMedio)}
         parcialNoFim={parcial}
+        destaque={destaque}
         descricaoSerie={desc('Tempo médio', (m) => (m.tempoMedio === null ? 'sem dado' : `${decimal(m.tempoMedio)} dias`))}
       />
       <Indicador
@@ -71,6 +75,7 @@ export function Indicadores({ p, comparacao }: { p: Prazo; comparacao: string | 
         comparacao={comparacao}
         serie={serie.map((m) => m.pctReabertura)}
         parcialNoFim={parcial}
+        destaque={destaque}
         descricaoSerie={desc('Reabertura', (m) => (m.pctReabertura === null ? 'sem dado' : `${decimal(m.pctReabertura)}%`))}
       />
     </div>

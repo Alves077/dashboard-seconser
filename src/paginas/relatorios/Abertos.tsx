@@ -7,7 +7,7 @@ import { origemTexto, type LinhaSimplesAberto, type RelatorioAbertos } from '@/c
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, rotuloMes, type Dia } from '@/lib/datas'
 import { decimal, numero, pct } from '@/lib/formato'
-import { BarraFaixas, IdServico, SecaoFolha } from './Folha'
+import { BarraFaixas, IdServico, Rolavel, SecaoFolha } from './Folha'
 
 // cores do script: verde · dourado · âmbar escuro · vermelho · vermelho escuro
 const COR_ESPERA = [
@@ -38,26 +38,28 @@ function Kpi({ rotulo, valor, unidade, apoio, cor }: { rotulo: string; valor: st
 
 function TabelaSimples({ titulo, linhas, total }: { titulo: string; linhas: LinhaSimplesAberto[]; total: number }) {
   return (
-    <table className="tabela-folha">
-      <thead>
-        <tr>
-          <th>{titulo}</th>
-          <th className="num">Abertos</th>
-          <th className="num">%</th>
-          <th className="num">Espera média</th>
-        </tr>
-      </thead>
-      <tbody>
-        {linhas.map((l) => (
-          <tr key={l.nome}>
-            <td className="font-medium">{l.nome}</td>
-            <td className="num">{numero(l.abertos)}</td>
-            <td className="num">{pct(l.abertos, total)}</td>
-            <td className="num">{decimal(l.media)}d</td>
+    <Rolavel minimo="max-sm:min-w-[21rem]">
+      <table className="tabela-folha">
+        <thead>
+          <tr>
+            <th>{titulo}</th>
+            <th className="num">Abertos</th>
+            <th className="num">%</th>
+            <th className="num">Espera média</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {linhas.map((l) => (
+            <tr key={l.nome}>
+              <td className="font-medium">{l.nome}</td>
+              <td className="num">{numero(l.abertos)}</td>
+              <td className="num">{pct(l.abertos, total)}</td>
+              <td className="num">{decimal(l.media)}d</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Rolavel>
   )
 }
 
@@ -127,46 +129,50 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
       </SecaoFolha>
 
       <SecaoFolha titulo="Distribuição">
-        <div className="grid grid-cols-1 gap-x-5 gap-y-4 sm:grid-cols-[1.15fr_1fr] print:grid-cols-[1.15fr_1fr]">
+        {/* tela: "por bairro" na largura toda e categoria + origem lado a lado embaixo (em duas colunas as tabelas
+            não cabiam: vazavam da folha ou ganhavam barra de rolagem); papel: as duas colunas de sempre (1 página) */}
+        <div className="grid grid-cols-1 gap-x-5 gap-y-4 max-sm:[&>*]:min-w-0 print:grid-cols-[1.15fr_1fr]">
           <div className="cartao-folha">
             <p className="mb-1 text-[12px] font-semibold text-ink">Por {grupo.toLowerCase()}</p>
-            <table className="tabela-folha">
-              <thead>
-                <tr>
-                  <th>{grupo}</th>
-                  <th className="num">Abertos</th>
-                  <th className="num">%</th>
-                  <th className="num">Espera média</th>
-                  <th className="num">&gt; 30 dias</th>
-                  <th className="num">Mais antigo</th>
-                </tr>
-              </thead>
-              <tbody>
-                {r.lugares.map((l) => (
-                  <tr key={l.nome}>
-                    <td className="font-medium">{l.nome}</td>
-                    <td className="num">{numero(l.abertos)}</td>
-                    <td className="num">{pct(l.abertos, r.n)}</td>
-                    <td className={clsx('num', corDias(l.media))}>{decimal(l.media)}d</td>
-                    <td className="num">{l.mais30 ? numero(l.mais30) : '—'}</td>
-                    <td className={clsx('num font-semibold', corDias(l.maisAntigo))}>{numero(l.maisAntigo)}d</td>
+            <Rolavel>
+              <table className="tabela-folha">
+                <thead>
+                  <tr>
+                    <th>{grupo}</th>
+                    <th className="num">Abertos</th>
+                    <th className="num">%</th>
+                    <th className="num">Espera média</th>
+                    <th className="num">&gt; 30 dias</th>
+                    <th className="num">Mais antigo</th>
                   </tr>
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="font-semibold">
-                  <td className="border-t border-ink/30">Total</td>
-                  <td className="num border-t border-ink/30">{numero(r.n)}</td>
-                  <td className="num border-t border-ink/30">100%</td>
-                  <td className="num border-t border-ink/30">{decimal(r.media)}d</td>
-                  <td className="num border-t border-ink/30">{numero(r.mais30)}</td>
-                  <td className="num border-t border-ink/30">{numero(r.maisAntigo)}d</td>
-                </tr>
-              </tfoot>
-            </table>
+                </thead>
+                <tbody>
+                  {r.lugares.map((l) => (
+                    <tr key={l.nome}>
+                      <td className="font-medium">{l.nome}</td>
+                      <td className="num">{numero(l.abertos)}</td>
+                      <td className="num">{pct(l.abertos, r.n)}</td>
+                      <td className={clsx('num', corDias(l.media))}>{decimal(l.media)}d</td>
+                      <td className="num">{l.mais30 ? numero(l.mais30) : '—'}</td>
+                      <td className={clsx('num font-semibold', corDias(l.maisAntigo))}>{numero(l.maisAntigo)}d</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="font-semibold">
+                    <td className="border-t border-ink/30">Total</td>
+                    <td className="num border-t border-ink/30">{numero(r.n)}</td>
+                    <td className="num border-t border-ink/30">100%</td>
+                    <td className="num border-t border-ink/30">{decimal(r.media)}d</td>
+                    <td className="num border-t border-ink/30">{numero(r.mais30)}</td>
+                    <td className="num border-t border-ink/30">{numero(r.maisAntigo)}d</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </Rolavel>
             <p className="mt-1.5 text-[10.5px] text-ink-3">Espera contada do registro do serviço até {formatarDia(hoje)}.</p>
           </div>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:[&>*]:min-w-0 print:flex print:flex-col">
             <div className="cartao-folha">
               <p className="mb-1 text-[12px] font-semibold text-ink">Por categoria</p>
               <TabelaSimples titulo="Categoria" linhas={r.categorias} total={r.n} />
@@ -183,34 +189,36 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
       </SecaoFolha>
 
       <SecaoFolha titulo="Serviços mais antigos ainda em aberto" cartao>
-        <table className="tabela-folha">
-          <thead>
-            <tr>
-              <th>Serviço</th>
-              {detalhes && <th className="esq">Endereço</th>}
-              <th>Bairro</th>
-              <th>Categoria</th>
-              <th>Origem</th>
-              <th className="num">Registro</th>
-              <th className="num">Dias</th>
-            </tr>
-          </thead>
-          <tbody>
-            {r.antigos.map(({ servico, saida, dias }) => (
-              <tr key={servico.chave}>
-                <td>
-                  <IdServico servico={servico} />
-                </td>
-                {detalhes && <td className="quebra">{detalhes.get(servico.chave)?.endereco ?? '—'}</td>}
-                <td className="centro">{servico.bairro}</td>
-                <td className="centro">{servico.categoria}</td>
-                <td className="centro">{origemTexto(servico)}</td>
-                <td className="num">{formatarDia(saida.dataSaida)}</td>
-                <td className="num font-semibold text-atraso-texto">{numero(dias)}</td>
+        <Rolavel minimo="max-sm:min-w-[38rem]">
+          <table className="tabela-folha">
+            <thead>
+              <tr>
+                <th>Serviço</th>
+                {detalhes && <th className="esq">Endereço</th>}
+                <th>Bairro</th>
+                <th>Categoria</th>
+                <th>Origem</th>
+                <th className="num">Registro</th>
+                <th className="num">Dias</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {r.antigos.map(({ servico, saida, dias }) => (
+                <tr key={servico.chave}>
+                  <td>
+                    <IdServico servico={servico} />
+                  </td>
+                  {detalhes && <td className="quebra">{detalhes.get(servico.chave)?.endereco ?? '—'}</td>}
+                  <td className="centro">{servico.bairro}</td>
+                  <td className="centro">{servico.categoria}</td>
+                  <td className="centro">{origemTexto(servico)}</td>
+                  <td className="num">{formatarDia(saida.dataSaida)}</td>
+                  <td className="num font-semibold text-atraso-texto">{numero(dias)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </Rolavel>
       </SecaoFolha>
 
     </div>

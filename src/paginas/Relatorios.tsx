@@ -4,9 +4,10 @@
 // (?relatorio=…&mes=…), dá para mandar o link. Valem os filtros de região, bairro, categoria e origem.
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
-import { ClipboardList, FileText, ListTodo, LogIn, Printer } from 'lucide-react'
+import { ClipboardList, FileText, Link2, ListTodo, LogIn, Printer, Share2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
+import { toast } from 'sonner'
 import { EstadoErro, EstadoRestrito, Esqueleto } from '@/componentes/estados/Estados'
 import { useInterface } from '@/componentes/layout/interface'
 import { Botao } from '@/componentes/ui/Botao'
@@ -18,7 +19,7 @@ import { useSessao } from '@/dados/sessao'
 import { useFiltros } from '@/filtros/useFiltros'
 import { formatarDia, rotuloMesLongo, type ChaveMes } from '@/lib/datas'
 import { numero } from '@/lib/formato'
-import { useHoje } from '@/lib/ganchos'
+import { useHoje, useMidia } from '@/lib/ganchos'
 import { RelatorioAbertosFolha } from './relatorios/Abertos'
 import { ListaCampoFolha } from './relatorios/Campo'
 import { CabecalhoFolha, Folha, useImpressaoClara } from './relatorios/Folha'
@@ -136,15 +137,59 @@ function PaginaRelatorios() {
   const comEndereco = aba !== 'mensal' && acesso === true ? (detalhes ?? null) : null
   const geradoLongo = `Gerado em ${agora.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}`
 
+  // compartilhar = o link desta tela (aba, mês e filtros vão na URL); quem abre precisa entrar com a conta
+  const celular = useMidia('(max-width: 767px)')
+  const podeCompartilhar = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
+  const tituloCompartilhar =
+    aba === 'mensal'
+      ? `Relatório ${mes === null ? 'histórico' : rotuloMesLongo(mes)} · ${escopo}`
+      : `${aba === 'abertos' ? 'Serviços em aberto' : 'Lista de campo'} · ${escopo}`
+  const compartilhar = async () => {
+    try {
+      await navigator.share({ title: tituloCompartilhar, text: `${tituloCompartilhar} — painel da DIP (entrar com a conta)`, url: window.location.href })
+    } catch {
+      /* a pessoa fechou a janela de compartilhar: nada a fazer */
+    }
+  }
+  const copiarLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      toast.success('Link copiado. Quem abrir precisa entrar com a conta da DIP.')
+    } catch {
+      toast.error('Não deu para copiar. Copie o endereço da barra do navegador.')
+    }
+  }
+
   return (
     <>
       <header className="mb-5 print:hidden">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-normal tracking-[-0.4px] text-ink">Relatórios</h1>
-          <Botao variante="primario" onClick={() => window.print()} disabled={!base}>
-            <Printer aria-hidden className="size-4" />
-            Imprimir ou salvar PDF
-          </Botao>
+          {/* celular: compartilhar o link (janela nativa: WhatsApp, e-mail…) é o principal, o PDF fica ao lado;
+              computador: imprimir/PDF é o principal, com "copiar link" ao lado */}
+          {celular && podeCompartilhar ? (
+            <div className="flex gap-2">
+              <Botao variante="secundario" onClick={() => window.print()} disabled={!base} aria-label="Imprimir ou salvar PDF">
+                <Printer aria-hidden className="size-4" />
+                PDF
+              </Botao>
+              <Botao variante="primario" onClick={compartilhar} disabled={!base}>
+                <Share2 aria-hidden className="size-4" />
+                Compartilhar
+              </Botao>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Botao variante="secundario" onClick={copiarLink} aria-label="Copiar o link deste relatório">
+                <Link2 aria-hidden className="size-4" />
+                Copiar link
+              </Botao>
+              <Botao variante="primario" onClick={() => window.print()} disabled={!base}>
+                <Printer aria-hidden className="size-4" />
+                Imprimir ou salvar PDF
+              </Botao>
+            </div>
+          )}
         </div>
         <ToggleGroup
           aria-label="Relatório"

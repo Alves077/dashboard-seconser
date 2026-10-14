@@ -9,7 +9,7 @@ import { PRAZO_DIAS } from '@/config'
 import { CATEGORIA_RISCO, FAIXAS } from '@/dados/regras'
 import { formatarDia, formatarDiaCurto, rotuloMes, rotuloMesLongo } from '@/lib/datas'
 import { decimal, numero, pct } from '@/lib/formato'
-import { BarraFaixas, IdServico, NumeroFolha, Observacoes, SecaoFolha } from './Folha'
+import { BarraFaixas, IdServico, NumeroFolha, Observacoes, Rolavel, SecaoFolha } from './Folha'
 
 // cores do antigo: ≤3 verde · 4–7 azul · 8–15 âmbar · >15 vermelho
 const COR_FAIXA = ['var(--c-ok)', 'var(--c-s1)', 'var(--c-andamento)', 'var(--c-atraso)']
@@ -154,35 +154,37 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
 
       {h && h.ultimos3.length > 0 && (
         <SecaoFolha titulo="Últimos meses" cartao>
-          <table className="tabela-folha">
-            <thead>
-              <tr>
-                <th>Mês</th>
-                <th className="num">Registrados</th>
-                <th className="num">Executados</th>
-                <th className="num">Abertos</th>
-                <th className="num">T. médio</th>
-                <th className="num">Fora do prazo</th>
-                <th className="num">Fila no fim</th>
-              </tr>
-            </thead>
-            <tbody>
-              {h.ultimos3.map((x) => (
-                <tr key={x.mes}>
-                  <td>
-                    {rotuloMes(x.mes)}
-                    {x.parcial && <span className="text-[10px] text-ink-3"> (em curso)</span>}
-                  </td>
-                  <td className="num">{numero(x.registrados)}</td>
-                  <td className="num">{numero(x.executados)}</td>
-                  <td className="num">{numero(x.abertos)}</td>
-                  <Media v={x.media} />
-                  <Fora v={x.pctFora} />
-                  <td className={clsx('num font-semibold', x.saldo > 0 ? 'text-atraso-texto' : 'text-ok-texto')}>{numero(x.filaFim)}</td>
+          <Rolavel>
+            <table className="tabela-folha">
+              <thead>
+                <tr>
+                  <th>Mês</th>
+                  <th className="num">Registrados</th>
+                  <th className="num">Executados</th>
+                  <th className="num">Abertos</th>
+                  <th className="num">T. médio</th>
+                  <th className="num">Fora do prazo</th>
+                  <th className="num">Fila no fim</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {h.ultimos3.map((x) => (
+                  <tr key={x.mes}>
+                    <td>
+                      {rotuloMes(x.mes)}
+                      {x.parcial && <span className="text-[10px] text-ink-3"> (em curso)</span>}
+                    </td>
+                    <td className="num">{numero(x.registrados)}</td>
+                    <td className="num">{numero(x.executados)}</td>
+                    <td className="num">{numero(x.abertos)}</td>
+                    <Media v={x.media} />
+                    <Fora v={x.pctFora} />
+                    <td className={clsx('num font-semibold', x.saldo > 0 ? 'text-atraso-texto' : 'text-ok-texto')}>{numero(x.filaFim)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Rolavel>
           <p className="mt-1.5 text-[10.5px] text-ink-3">
             Fila no fim do mês conta todos os pendentes naquela data, de qualquer mês de registro (vermelho: cresceu no mês; verde: diminuiu).
           </p>
@@ -219,72 +221,76 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
         </SecaoFolha>
       )}
 
-      <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2 print:grid-cols-2">
         <SecaoFolha titulo="Por categoria" colado cartao>
-          <table className="tabela-folha">
-            <thead>
-              <tr>
-                <th>Categoria</th>
-                <th className="num">Total</th>
-                <th className="num">%</th>
-                <th className="num">Abertos</th>
-                <th className="num">T. médio</th>
-              </tr>
-            </thead>
-            <tbody>
-              {r.categorias.map((c) => (
-                <tr key={c.nome}>
-                  <td>
-                    {c.nome === CATEGORIA_RISCO && <span aria-label="risco">⚡ </span>}
-                    {c.nome}
-                  </td>
-                  <td className="num">{numero(c.total)}</td>
-                  <td className="num">{pct(c.total, r.total)}</td>
-                  <Abertos n={c.abertos} />
-                  <Media v={c.media} />
-                </tr>
-              ))}
-              {r.cauda && (
+          <Rolavel minimo="max-sm:min-w-[26rem]">
+            <table className="tabela-folha">
+              <thead>
                 <tr>
-                  <td className="text-ink-2">Demais ({numero(r.cauda.n)} categorias)</td>
-                  <td className="num">{numero(r.cauda.total)}</td>
-                  <td className="num">{pct(r.cauda.total, r.total)}</td>
-                  <Abertos n={r.cauda.abertos} />
-                  <td className="num text-ink-3">—</td>
+                  <th>Categoria</th>
+                  <th className="num">Total</th>
+                  <th className="num">%</th>
+                  <th className="num">Abertos</th>
+                  <th className="num">T. médio</th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {r.categorias.map((c) => (
+                  <tr key={c.nome}>
+                    <td>
+                      {c.nome === CATEGORIA_RISCO && <span aria-label="risco">⚡ </span>}
+                      {c.nome}
+                    </td>
+                    <td className="num">{numero(c.total)}</td>
+                    <td className="num">{pct(c.total, r.total)}</td>
+                    <Abertos n={c.abertos} />
+                    <Media v={c.media} />
+                  </tr>
+                ))}
+                {r.cauda && (
+                  <tr>
+                    <td className="text-ink-2">Demais ({numero(r.cauda.n)} categorias)</td>
+                    <td className="num">{numero(r.cauda.total)}</td>
+                    <td className="num">{pct(r.cauda.total, r.total)}</td>
+                    <Abertos n={r.cauda.abertos} />
+                    <td className="num text-ink-3">—</td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </Rolavel>
         </SecaoFolha>
         <SecaoFolha titulo="Por região" colado cartao>
-          <table className="tabela-folha">
-            <thead>
-              <tr>
-                <th>Região</th>
-                <th className="num">Total</th>
-                <th className="num">%</th>
-                <th className="num">Abertos</th>
-                <th className="num">T. médio</th>
-                <th className="num">Fora</th>
-              </tr>
-            </thead>
-            <tbody>
-              {r.regioes.map((g) => (
-                <tr key={g.nome}>
-                  <td>{g.nome}</td>
-                  <td className="num">{numero(g.total)}</td>
-                  <td className="num">{pct(g.total, r.total)}</td>
-                  <Abertos n={g.abertos} />
-                  <Media v={g.media} />
-                  <Fora v={g.pctFora} />
+          <Rolavel>
+            <table className="tabela-folha">
+              <thead>
+                <tr>
+                  <th>Região</th>
+                  <th className="num">Total</th>
+                  <th className="num">%</th>
+                  <th className="num">Abertos</th>
+                  <th className="num">T. médio</th>
+                  <th className="num">Fora</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {r.regioes.map((g) => (
+                  <tr key={g.nome}>
+                    <td>{g.nome}</td>
+                    <td className="num">{numero(g.total)}</td>
+                    <td className="num">{pct(g.total, r.total)}</td>
+                    <Abertos n={g.abertos} />
+                    <Media v={g.media} />
+                    <Fora v={g.pctFora} />
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Rolavel>
         </SecaoFolha>
       </div>
 
-      <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+      <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2 print:grid-cols-2">
         <SecaoFolha titulo="Bairros · maior volume de pedidos" colado cartao>
           <TabelaBairros linhas={r.bairrosVolume} />
           <p className="mt-1.5 text-[10.5px] text-ink-3">Tempo médio considera apenas os serviços já concluídos.</p>
@@ -309,7 +315,7 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
       {h && h.serie.length > 1 && (
         <SecaoFolha titulo="Evolução mensal" cartao>
           {/* o antigo tinha dois eixos no mesmo quadro: aqui, dois gráficos lado a lado */}
-          <div className="grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2 print:grid-cols-2">
             <div>
               <p className="mb-1 text-[12px] font-medium text-ink">Tempo médio de execução · dias</p>
               <GraficoTempo
@@ -339,32 +345,34 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
 
       {h && h.maisAntigos.length > 0 && (
         <SecaoFolha titulo="Serviços mais antigos ainda em aberto" cartao>
-          <table className="tabela-folha">
-            <thead>
-              <tr>
-                <th>Serviço</th>
-                <th>Categoria</th>
-                <th>Bairro</th>
-                <th>Região</th>
-                <th className="num">Registrado em</th>
-                <th className="num">Dias em aberto</th>
-              </tr>
-            </thead>
-            <tbody>
-              {h.maisAntigos.map(({ servico, saida, dias }) => (
-                <tr key={servico.chave}>
-                  <td>
-                    <IdServico servico={servico} />
-                  </td>
-                  <td className="centro">{servico.categoria}</td>
-                  <td className="centro">{servico.bairro}</td>
-                  <td className="centro">{servico.regiao}</td>
-                  <td className="num">{formatarDia(saida.dataSaida)}</td>
-                  <td className="num font-semibold text-atraso-texto">{numero(dias)}</td>
+          <Rolavel minimo="max-sm:min-w-[34rem]">
+            <table className="tabela-folha">
+              <thead>
+                <tr>
+                  <th>Serviço</th>
+                  <th>Categoria</th>
+                  <th>Bairro</th>
+                  <th>Região</th>
+                  <th className="num">Registrado em</th>
+                  <th className="num">Dias em aberto</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {h.maisAntigos.map(({ servico, saida, dias }) => (
+                  <tr key={servico.chave}>
+                    <td>
+                      <IdServico servico={servico} />
+                    </td>
+                    <td className="centro">{servico.categoria}</td>
+                    <td className="centro">{servico.bairro}</td>
+                    <td className="centro">{servico.regiao}</td>
+                    <td className="num">{formatarDia(saida.dataSaida)}</td>
+                    <td className="num font-semibold text-atraso-texto">{numero(dias)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Rolavel>
           <p className="mt-1.5 text-[10.5px] text-ink-3">Dias em aberto contados até a data de geração do relatório.</p>
         </SecaoFolha>
       )}

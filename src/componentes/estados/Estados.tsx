@@ -91,11 +91,14 @@ export function EstadoVazio({
   titulo = 'Nenhum serviço com esses filtros',
   texto,
   aoLimpar,
+  rotuloAcao = 'Limpar filtros',
   altura,
 }: {
   titulo?: string
   texto?: ReactNode
   aoLimpar?: () => void
+  /** texto do botão (padrão "Limpar filtros"; ex.: "Ver a fila toda" no Mapa) */
+  rotuloAcao?: string
   altura?: string
 }) {
   return (
@@ -107,7 +110,7 @@ export function EstadoVazio({
       acao={
         aoLimpar && (
           <Botao variante="secundario" tamanho="compacto" onClick={aoLimpar}>
-            Limpar filtros
+            {rotuloAcao}
           </Botao>
         )
       }

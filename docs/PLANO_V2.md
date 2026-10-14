@@ -390,6 +390,42 @@ nas linhas dos demais, nota do "Em aberto agora" no perfil, selo "Indicação le
 557693, 557707, 557889. Depois o site conta 332 legislativas (= tag 3067). Fotos: círculo
 neutro enquanto chegam e esmaecer de 200 ms (antes "pulavam"); cartões do topo carregam com prioridade.
 
+**Filtros entre páginas (14/10, decisão do usuário):** continuam seguindo de uma página para outra (mesmo recorte em
+todas; link e "Ver no mapa" dependem disso). Para não esquecer filtro ligado, o **celular agora mostra as etiquetas**
+logo abaixo do botão "Filtros": uma linha só que rola para o lado (a barra é fixa; quebrando em linhas comeria a tela),
+"Limpar tudo" primeiro, cada etiqueta com ×. Antes só aparecia "Filtros (n)".
+
+**Ajustes de 14/10 (rodada do usuário):**
+- **Mapa respeita o período em todos os modos.** Abertos/Em atraso = em aberto hoje que SAÍRAM para a rua no período
+  (pela data de saída: em aberto não tem retorno); com "Todo o período", a fila inteira. Painel avisa "Só os que saíram
+  no período… A fila toda tem N · Ver a fila toda"; sem nenhum no período, o vazio diz isso (não "fila zerada") e o
+  botão leva à fila toda. Conferido: 30 dias = 506 (CSV). Os blocos "agora" (Panorama, Prazo, Vereadores) continuam fora
+  do período — são retrato de hoje e dizem isso na tela.
+- Créditos do mapa no escuro: o CSS do Leaflet (carregado depois) deixava o fundo branco com texto claro → regra com
+  `.leaflet-container.mapa-tema`.
+- Panorama, "Há quanto tempo esperam": cada faixa (barra e legenda) é tocável e mostra só ela na lista "Esperando…"
+  (recorte do bloco, não filtro do site; "× Todas as faixas"); as outras esmaecem. Legenda no celular 3 + 2 em colunas;
+  nota centralizada.
+- **"Onde estão"** (Panorama, bloco Agora): com uma faixa de espera escolhida, as regiões com quantos daquela faixa
+  (tocar abre os bairros da região, só ali; "← Regiões"); os bairros são só leitura (usuário, 14/10: filtrar dali
+  embaralhava os filtros e não precisa — `LinhaBarra` sem `aoTocar` vira linha comum, não botão). Com região já
+  filtrada, vai direto aos bairros. Computador: ao lado da lista; celular: acima. Responde "onde está a fila mais
+  velha" (pedido do usuário: não havia referência disso). Conferido: 31–90 dias = 541 (Oceânica 176, Norte 125,
+  Pendotiba 84, Praias 82, Leste 74; Leste → Rio do Ouro 33, Muriqui 27, Várzea das Moças 14).
+- Mini-linhas dos indicadores (Panorama e Prazo): os meses do período escolhido ganham faixa de fundo e pontos
+  (`mesesDoPeriodo`); sem marca em "todo o período" e no "Em atraso agora" (não depende do período). Evolução não
+  precisa (a linha já é o período).
+- Relatórios no celular: Lista de campo em cartões (nº com a Ficha, selo de dias, categoria, endereço, saída; retorno só
+  no papel — imprimindo pelo celular sai a tabela); tabelas largas do Mensal/Em aberto rolam de lado (`Rolavel`) em vez
+  de cortar; botões: celular = "Compartilhar" (janela nativa, link com aba/mês/filtros) + "PDF"; computador = "Imprimir
+  ou salvar PDF" + "Copiar link". Impressão conferida: em aberto Pendotiba 1 pág., mensal 2, campo 6 (iguais a antes).
+- Tabelas dos relatórios (2ª passada, 14/10): a 1ª versão da rolagem não rolava (item de grade não encolhe abaixo do
+  conteúdo → `max-sm:min-w-0` na seção e nos itens; largura mínima da `Rolavel` só no celular: `max-sm:min-w-[…]`).
+  Grades de 2 colunas na tela só a partir de `lg` (no tablet vazavam); no "Em aberto", tela = "por bairro" na largura
+  toda e categoria + origem lado a lado (em 2 colunas vazavam da folha — já acontecia antes); papel sem mudança.
+  Conferido por script em 390/418/700/900/1024/1440 (cada tabela cabe ou rola; nada vaza da folha; sem barra de
+  rolagem no computador) e impressão (em aberto região 1 pág., cidade 1, mensal 2, histórico 3, campo 6).
+
 ### 8.3 Espaços públicos (praças, parques, campos) — depende dos dados
 Hoje só **57** serviços têm `local` (o campo só é preenchido quando o serviço é *dentro* do lugar) e ele está na parte
 **restrita** (`servicos_detalhe`). No texto, "praça" aparece em ~510 serviços, "quadra" em ~570 (mas muitas são

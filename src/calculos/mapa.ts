@@ -10,8 +10,10 @@ import type { Dia } from '@/lib/datas'
 export type Mostrar = 'abertos' | 'atraso' | 'executados' | 'todos'
 
 export const OPCOES_MOSTRAR: { id: Mostrar; rotulo: string; usaPeriodo: boolean }[] = [
-  { id: 'abertos', rotulo: 'Abertos', usaPeriodo: false },
-  { id: 'atraso', rotulo: 'Em atraso', usaPeriodo: false },
+  // abertos/em atraso também respeitam o período (decisão de 14/10/2026): os em aberto hoje que SAÍRAM
+  // para a rua no período; com "Todo o período", a fila inteira. O painel avisa quantos a fila toda tem.
+  { id: 'abertos', rotulo: 'Abertos', usaPeriodo: true },
+  { id: 'atraso', rotulo: 'Em atraso', usaPeriodo: true },
   { id: 'executados', rotulo: 'Executados no período', usaPeriodo: true },
   { id: 'todos', rotulo: 'Todos do período', usaPeriodo: true },
 ]
@@ -65,6 +67,8 @@ function selecionar(servicos: Servico[], mostrar: Mostrar, i: Intervalo, f: Filt
     if (mostrar === 'abertos' || mostrar === 'atraso') {
       if (!emAberto(u)) continue
       if (mostrar === 'atraso' && situacao(u, hoje) !== 'atraso') continue
+      // em aberto não tem data de retorno: o período conta pela saída (a que está na rua agora)
+      if (!noIntervalo(u, i, 'saida')) continue
       r.push({ servico: s, saida: u })
     } else if (mostrar === 'executados') {
       // executado no período = a saída mais recente voltou dentro do período (pela data de retorno)
@@ -81,6 +85,11 @@ export function calcularMapa(base: Base, f: Filtros, mostrar: Mostrar, hoje: Dia
   const intervalo = intervaloDo(f.periodo, hoje)
   const servicos = [...new Set(filtrarLugar(base.saidas, f).map((s) => s.servico))]
   const escolhidos = selecionar(servicos, mostrar, intervalo, f, hoje)
+  // a fila inteira (sem o período), para o aviso "a fila toda tem N"
+  const filaToda =
+    mostrar === 'abertos' || mostrar === 'atraso'
+      ? selecionar(servicos, mostrar, { de: null, ate: null, parcial: true, rotulo: '' }, f, hoje).length
+      : null
 
   const pontos: Ponto[] = []
   let semCoordenada = 0
@@ -109,6 +118,7 @@ export function calcularMapa(base: Base, f: Filtros, mostrar: Mostrar, hoje: Dia
     intervalo,
     pontos,
     total: escolhidos.length,
+    filaToda,
     semCoordenada,
     porSituacao,
     risco: pontos.filter((p) => p.risco && p.situacao !== 'ok').length,

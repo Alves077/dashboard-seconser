@@ -16,6 +16,7 @@ export function Indicador({
   comparacao,
   serie,
   parcialNoFim,
+  destaque,
   descricaoSerie,
 }: {
   rotulo: string
@@ -30,6 +31,8 @@ export function Indicador({
   comparacao: string | null
   serie: (number | null)[]
   parcialNoFim: boolean
+  /** meses do período escolhido, marcados na mini-linha (ver MiniLinha) */
+  destaque?: boolean[]
   descricaoSerie: string
 }) {
   const tom =
@@ -54,7 +57,7 @@ export function Indicador({
           </>
         )}
       </p>
-      <MiniLinha valores={serie} parcialNoFim={parcialNoFim} descricao={descricaoSerie} className="mt-auto pt-3" />
+      <MiniLinha valores={serie} parcialNoFim={parcialNoFim} destaque={destaque} descricao={descricaoSerie} className="mt-auto pt-3" />
     </Card>
   )
 }

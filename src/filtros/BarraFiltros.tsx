@@ -1,5 +1,6 @@
 import { Drawer } from '@base-ui/react/drawer'
 import { Popover } from '@base-ui/react/popover'
+import { clsx } from 'clsx'
 import { CalendarRange, ChevronDown, SlidersHorizontal, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useLocation } from 'react-router'
@@ -112,8 +113,12 @@ function BotaoPeriodo() {
   )
 }
 
-/** Chips dos filtros ativos, cada um com × — o caminho de volta claro (DESIGN.md §8) */
-function FiltrosAtivos() {
+/**
+ * Chips dos filtros ativos, cada um com × — o caminho de volta claro (DESIGN.md §8).
+ * `linha`: celular — uma linha só que rola para o lado (a barra é fixa no topo; quebrando em várias
+ * linhas ela comeria a tela), com "Limpar tudo" primeiro para não ficar escondido no fim da rolagem.
+ */
+function FiltrosAtivos({ linha = false }: { linha?: boolean }) {
   const { filtros, mudar, limpar } = useFiltros()
   const chips: { texto: string; tirar: () => void }[] = []
   if (filtros.regiao) chips.push({ texto: `Região: ${filtros.regiao}`, tirar: () => mudar({ regiao: null }) })
@@ -123,25 +128,41 @@ function FiltrosAtivos() {
   // o 2º nível da origem não tem seletor (são dezenas de nomes): escolhe-se tocando nas listas; aqui só sai
   if (filtros.quem) chips.push({ texto: filtros.quem, tirar: () => mudar({ quem: null }) })
   if (!chips.length) return null
+  const limparTudo = contarAtivos(filtros) > 1 && (
+    <button
+      type="button"
+      onClick={limpar}
+      className={clsx(
+        'h-8 shrink-0 px-2 text-xs whitespace-nowrap underline-offset-2 hover:text-ink hover:underline',
+        linha ? 'font-medium text-acao' : 'text-ink-2',
+      )}
+    >
+      Limpar tudo
+    </button>
+  )
   return (
-    <div className="flex flex-wrap items-center gap-2">
+    <div
+      className={clsx(
+        'flex items-center gap-2',
+        linha
+          ? '-mx-4 overflow-x-auto overscroll-x-contain px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+          : 'flex-wrap',
+      )}
+    >
+      {linha && limparTudo}
       {chips.map((c) => (
         <button
           key={c.texto}
           type="button"
           onClick={c.tirar}
-          className="pressionavel inline-flex h-8 items-center gap-1.5 rounded-full bg-acao-suave pr-2 pl-3 text-xs font-medium text-acao-press"
+          className="pressionavel inline-flex h-8 max-w-[16rem] shrink-0 items-center gap-1.5 rounded-full bg-acao-suave pr-2 pl-3 text-xs font-medium whitespace-nowrap text-acao-press"
           aria-label={`Tirar filtro ${c.texto}`}
         >
-          {c.texto}
-          <X aria-hidden className="size-3.5" />
+          <span className="truncate">{c.texto}</span>
+          <X aria-hidden className="size-3.5 shrink-0" />
         </button>
       ))}
-      {contarAtivos(filtros) > 1 && (
-        <button type="button" onClick={limpar} className="h-8 px-2 text-xs text-ink-2 underline-offset-2 hover:text-ink hover:underline">
-          Limpar tudo
-        </button>
-      )}
+      {!linha && limparTudo}
     </div>
   )
 }
@@ -217,8 +238,9 @@ export function BarraFiltros() {
     <div className="barra-na-troca sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] z-20 border-b border-line bg-page/90 backdrop-blur-md print:hidden">
       <div className="mx-auto max-w-[1280px] px-4 py-3 sm:px-6">
         {/* celular */}
-        <div className="md:hidden">
+        <div className="flex flex-col gap-2 md:hidden">
           <GavetaFiltros />
+          <FiltrosAtivos linha />
         </div>
         {/* tablet e computador */}
         <div className="hidden flex-col gap-2 md:flex">

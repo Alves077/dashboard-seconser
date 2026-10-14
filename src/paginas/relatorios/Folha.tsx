@@ -28,6 +28,18 @@ export function useImpressaoClara() {
   }, [])
 }
 
+/**
+ * Tabela larga: no celular rola para o lado em vez de cortar colunas. A largura mínima (`minimo`, sempre
+ * com `max-sm:`) só vale no celular; no computador e no papel a tabela se ajusta como antes.
+ */
+export function Rolavel({ children, minimo = 'max-sm:min-w-[30rem]' }: { children: ReactNode; minimo?: string }) {
+  return (
+    <div className="overflow-x-auto overscroll-x-contain print:overflow-visible">
+      <div className={clsx(minimo, 'print:min-w-0')}>{children}</div>
+    </div>
+  )
+}
+
 export function Folha({ children }: { children: ReactNode }) {
   return <article className="folha mx-auto w-full max-w-[850px] rounded-xl border border-line bg-card px-5 py-6 text-ink shadow-1 sm:px-10 sm:py-9">{children}</article>
 }
@@ -67,7 +79,9 @@ export function SecaoFolha({
   cartao?: boolean
 }) {
   return (
-    <section className={clsx('secao-folha', !colado && 'mt-5 first:mt-0', className)}>
+    // celular: min-w-0 — dentro de uma grade, sem isso a tabela larga esticava a coluna e não rolava de lado.
+    // Do sm para cima e no papel fica como sempre foi (as colunas se ajustam ao conteúdo).
+    <section className={clsx('secao-folha max-sm:min-w-0', !colado && 'mt-5 first:mt-0', className)}>
       <h3 className="mb-2 text-[10px] font-semibold tracking-[0.08em] text-ink-3 uppercase">{titulo}</h3>
       {cartao ? <div className="cartao-folha">{children}</div> : children}
     </section>

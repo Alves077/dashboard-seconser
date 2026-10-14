@@ -358,11 +358,13 @@ html[data-transicao='quem-volta']::view-transition-new(quem-lista) {
 .mapa-tema .leaflet-bar a:hover {
   background: var(--c-page);
 }
-.mapa-tema .leaflet-control-attribution {
-  background: color-mix(in srgb, var(--c-card) 80%, transparent);
+/* .leaflet-container.mapa-tema: o CSS do Leaflet chega depois (junto com o mapa) e, com o mesmo peso,
+   deixava o fundo branco — no escuro o texto claro sumia no fundo claro */
+.leaflet-container.mapa-tema .leaflet-control-attribution {
+  background: color-mix(in srgb, var(--c-card) 85%, transparent);
   color: var(--c-ink-3);
 }
-.mapa-tema .leaflet-control-attribution a {
+.leaflet-container.mapa-tema .leaflet-control-attribution a {
   color: var(--c-ink-2);
 }
 .dica-mapa {

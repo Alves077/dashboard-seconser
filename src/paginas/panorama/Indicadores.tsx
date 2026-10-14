@@ -1,6 +1,7 @@
 // NO PERÍODO — 4 indicadores (2×2 no celular, 4 numa linha no computador), cada um com a
 // comparação com o período anterior e a tendência dos últimos 13 meses.
 import { Indicador } from '@/componentes/ui/Indicador'
+import { mesesDoPeriodo } from '@/filtros/filtros'
 import type { Panorama } from '@/calculos/panorama'
 import { decimal, enxuto, numero } from '@/lib/formato'
 import { rotuloMes } from '@/lib/datas'
@@ -10,6 +11,7 @@ const variacao = (a: number | null, b: number | null) => (a === null || b === nu
 export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; comparacao: string | null; porRetorno: boolean }) {
   const { atual, previo, serie } = p
   const parcial = serie.length > 0 && serie[serie.length - 1].parcial
+  const destaque = mesesDoPeriodo(serie.map((m) => m.mes), p.intervalo)
   const meses = serie.length ? `${rotuloMes(serie[0].mes)} a ${rotuloMes(serie[serie.length - 1].mes)}` : ''
   const desc = (o: string, f: (i: (typeof serie)[number]) => string) =>
     `${o} mês a mês, ${meses}: ${serie.map((m) => `${rotuloMes(m.mes)} ${f(m)}`).join('; ')}`
@@ -25,6 +27,7 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         comparacao={comparacao}
         serie={serie.map((m) => m.ind.saidas)}
         parcialNoFim={parcial}
+        destaque={destaque}
         descricaoSerie={desc('Saídas', (m) => numero(m.ind.saidas))}
       />
       <Indicador
@@ -39,6 +42,7 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         comparacao={comparacao}
         serie={serie.map((m) => m.ind.pctNoPrazo)}
         parcialNoFim={parcial}
+        destaque={destaque}
         descricaoSerie={desc('No prazo', (m) => (m.ind.pctNoPrazo === null ? 'sem dado' : `${decimal(m.ind.pctNoPrazo)}%`))}
       />
       <Indicador
@@ -51,6 +55,7 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         comparacao={comparacao}
         serie={serie.map((m) => m.ind.tempoMedio)}
         parcialNoFim={parcial}
+        destaque={destaque}
         descricaoSerie={desc('Tempo médio', (m) => (m.ind.tempoMedio === null ? 'sem dado' : `${decimal(m.ind.tempoMedio)} dias`))}
       />
       <Indicador
@@ -66,6 +71,7 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         comparacao={comparacao}
         serie={serie.map((m) => m.ind.reaberturas)}
         parcialNoFim={parcial}
+        destaque={destaque}
         descricaoSerie={desc('Reaberturas', (m) => numero(m.ind.reaberturas))}
       />
     </div>
