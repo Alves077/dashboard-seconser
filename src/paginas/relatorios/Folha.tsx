@@ -171,7 +171,7 @@ export function Observacoes({ valor, aoMudar }: { valor: string; aoMudar: (v: st
         onChange={(e) => aoMudar(e.target.value)}
         rows={3}
         placeholder="Notas do período para quem vai ler (ex.: chuva forte na semana de 22/09). Se ficar vazio, não sai na impressão."
-        className="w-full resize-y rounded-md border border-line-input bg-page px-3 py-2 text-[12.5px] text-ink placeholder:text-ink-3 focus:border-acao focus:outline-none print:hidden"
+        className="w-full resize-y rounded-md border border-line-input bg-page px-3 py-2 text-[12.5px] text-ink pointer-coarse:text-base placeholder:text-ink-3 focus:border-acao focus:outline-none print:hidden"
       />
       <p className="hidden text-[12px] leading-relaxed whitespace-pre-wrap text-ink print:block">{valor}</p>
     </section>

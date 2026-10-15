@@ -110,17 +110,29 @@ export function useDestino() {
 /**
  * Marca a direção da próxima troca de filtro (estilos.css: data-transicao). "entra" = foco num
  * recorte (desliza da direita); "volta" = de volta à visão geral. Some sozinha depois da troca.
- * "quem-entra"/"quem-volta": o mesmo, mas só dentro do card Quem pede (a página não desliza).
+ * "gaveta-entra"/"gaveta-volta": o mesmo, mas só dentro dos cards com vai-e-volta (lib/gaveta.ts; a página não desliza).
+ * `alvos`: os cards que trocam de nível (ex.: ['onde']). Só as listas deles deslizam; as outras listas com nome
+ * de transição na página ficam paradas nesta troca (antes, abrir uma região no "Onde estão" fazia a lista do
+ * "Quem pede", que não mudou, deslizar junto).
  *
  * A marca só sai quando a transição TERMINA (não num tempo fixo): a troca pode levar ~250 ms
  * calculando a página antes de a animação começar, e tirar a marca no meio fazia a lista antiga
  * reaparecer por um instante. Navegador sem :active-view-transition → tempo fixo folgado.
  */
-export function direcaoDaTroca(direcao: 'entra' | 'volta' | 'quem-entra' | 'quem-volta') {
+export function direcaoDaTroca(direcao: 'entra' | 'volta' | 'gaveta-entra' | 'gaveta-volta', alvos?: string[]) {
   const raiz = document.documentElement
   raiz.dataset.transicao = direcao
+  // listas que NÃO são alvo: classe "parada" só durante esta troca (sem as regras de deslizar)
+  const parados: HTMLElement[] = []
+  if (alvos)
+    for (const el of document.querySelectorAll<HTMLElement>('[data-gaveta-lista]'))
+      if (!alvos.includes(el.dataset.gavetaLista!)) {
+        el.style.setProperty('view-transition-class', 'gaveta-parada')
+        parados.push(el)
+      }
   const tirar = () => {
     if (raiz.dataset.transicao === direcao) delete raiz.dataset.transicao
+    for (const el of parados) el.style.setProperty('view-transition-class', 'gaveta-lista')
   }
   let temSeletor = true
   const ativa = () => {

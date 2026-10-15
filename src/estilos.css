@@ -177,6 +177,11 @@
     -webkit-user-select: none;
     user-select: none;
   }
+  nav a {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
 }
 
 @utility numeros {
@@ -253,63 +258,60 @@ html[data-transicao='volta']::view-transition-new(root) {
     transform: translateX(-24px);
   }
 }
-/* Card "Quem pede" (origem → regionais/vereadores): o card muda de altura suavemente e a lista
-   desliza — entrar numa origem vem da direita, voltar vem da esquerda. Só o card se move (a página
-   fica parada); outras trocas de filtro fazem só o crossfade de sempre. */
-.vt-quem-cartao {
-  view-transition-name: quem-cartao;
-}
-.vt-quem-lista {
-  view-transition-name: quem-lista;
-}
-::view-transition-group(quem-cartao),
-::view-transition-group(quem-lista) {
+/* Vai-e-volta dentro de um card (região → bairros, origem → nomes): o card ajusta a altura suavemente e a
+   lista desliza — entrar vem da direita, voltar vem da esquerda; a página fica parada. Cada card tem nomes
+   próprios (únicos na página, `gaveta-<card>`, ver lib/gaveta.ts) e a mesma classe de transição, então as
+   regras abaixo valem para todos: Quem pede, Em atraso agora, Faixas, Saldos, Onde estão, perfil do vereador.
+   Uma regra por seletor: navegador sem `view-transition-class` ignora só ela (e fica no crossfade de sempre). */
+::view-transition-group(*.gaveta-cartao) {
   animation-duration: 280ms;
   animation-timing-function: var(--ease-saida);
 }
-::view-transition-image-pair(quem-lista) {
+::view-transition-group(*.gaveta-lista) {
+  animation-duration: 280ms;
+  animation-timing-function: var(--ease-saida);
+}
+::view-transition-image-pair(*.gaveta-lista) {
   overflow: clip;
 }
-::view-transition-old(quem-cartao),
-::view-transition-new(quem-cartao),
-::view-transition-old(quem-lista),
-::view-transition-new(quem-lista) {
+::view-transition-old(*.gaveta-cartao),
+::view-transition-new(*.gaveta-cartao) {
   animation-duration: 200ms;
   animation-timing-function: var(--ease-saida);
 }
 /* Sem intervalo entre as duas (um "buraco" vazio no meio parecia erro de carregamento): a antiga
    some depressa enquanto a nova já vem entrando, as duas andando para o mesmo lado. */
-html[data-transicao='quem-entra']::view-transition-old(quem-lista) {
-  animation: 150ms var(--ease-saida) both quem-sai-esquerda;
+html[data-transicao='gaveta-entra']::view-transition-old(*.gaveta-lista) {
+  animation: 150ms var(--ease-saida) both gaveta-sai-esquerda;
 }
-html[data-transicao='quem-entra']::view-transition-new(quem-lista) {
-  animation: 240ms var(--ease-saida) both quem-entra-direita;
+html[data-transicao='gaveta-entra']::view-transition-new(*.gaveta-lista) {
+  animation: 240ms var(--ease-saida) both gaveta-entra-direita;
 }
-html[data-transicao='quem-volta']::view-transition-old(quem-lista) {
-  animation: 150ms var(--ease-saida) both quem-sai-direita;
+html[data-transicao='gaveta-volta']::view-transition-old(*.gaveta-lista) {
+  animation: 150ms var(--ease-saida) both gaveta-sai-direita;
 }
-html[data-transicao='quem-volta']::view-transition-new(quem-lista) {
-  animation: 240ms var(--ease-saida) both quem-entra-esquerda;
+html[data-transicao='gaveta-volta']::view-transition-new(*.gaveta-lista) {
+  animation: 240ms var(--ease-saida) both gaveta-entra-esquerda;
 }
-@keyframes quem-sai-esquerda {
+@keyframes gaveta-sai-esquerda {
   to {
     opacity: 0;
     transform: translateX(-16px);
   }
 }
-@keyframes quem-entra-direita {
+@keyframes gaveta-entra-direita {
   from {
     opacity: 0;
     transform: translateX(16px);
   }
 }
-@keyframes quem-sai-direita {
+@keyframes gaveta-sai-direita {
   to {
     opacity: 0;
     transform: translateX(16px);
   }
 }
-@keyframes quem-entra-esquerda {
+@keyframes gaveta-entra-esquerda {
   from {
     opacity: 0;
     transform: translateX(-16px);
@@ -319,13 +321,15 @@ html[data-transicao='quem-volta']::view-transition-new(quem-lista) {
   ::view-transition-old(root),
   ::view-transition-new(root),
   html[data-transicao]::view-transition-old(root),
-  html[data-transicao]::view-transition-new(root),
-  ::view-transition-group(quem-cartao),
-  ::view-transition-group(quem-lista),
-  ::view-transition-old(quem-cartao),
-  ::view-transition-new(quem-cartao),
-  ::view-transition-old(quem-lista),
-  ::view-transition-new(quem-lista) {
+  html[data-transicao]::view-transition-new(root) {
+    animation: none;
+  }
+  ::view-transition-group(*.gaveta-cartao),
+  ::view-transition-group(*.gaveta-lista),
+  ::view-transition-old(*.gaveta-cartao),
+  ::view-transition-new(*.gaveta-cartao),
+  ::view-transition-old(*.gaveta-lista),
+  ::view-transition-new(*.gaveta-lista) {
     animation: none;
   }
 }
@@ -369,8 +373,14 @@ html[data-transicao='quem-volta']::view-transition-new(quem-lista) {
   color: var(--c-ink);
   border-bottom-color: var(--c-line);
 }
-.mapa-tema .leaflet-bar a:hover {
-  background: var(--c-page);
+/* hover só com mouse: no toque o navegador "prende" o :hover depois do toque (mobile-native) */
+@media (hover: hover) and (pointer: fine) {
+  .mapa-tema .leaflet-bar a:hover {
+    background: var(--c-page);
+  }
+  .lista-ponto-item:hover {
+    background: var(--c-acao-suave);
+  }
 }
 /* .leaflet-container.mapa-tema: o CSS do Leaflet chega depois (junto com o mapa) e, com o mesmo peso,
    deixava o fundo branco — no escuro o texto claro sumia no fundo claro */
@@ -464,7 +474,6 @@ html[data-transicao='quem-volta']::view-transition-new(quem-lista) {
   border-left: 3px solid transparent;
   cursor: pointer;
 }
-.lista-ponto-item:hover,
 .lista-ponto-item:focus-visible {
   background: var(--c-acao-suave);
 }

@@ -15,6 +15,7 @@ import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { compararTexto, decimal, numero, pct, pctCurto } from '@/lib/formato'
 import { direcaoDaTroca } from '@/lib/ganchos'
+import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
 
 /** Linha clicável com barra: rótulo · barra · valor · complemento (também usada no Prazo) */
 export function LinhaBarra({
@@ -349,9 +350,9 @@ export function Origens({
   const { data: base } = useBase()
   const vereadores = useMemo(() => new Map((base?.vereadores ?? []).map((v) => [v.nome, v])), [base])
   const comFoto = filtros.origem === 'Vereador'
-  // entrar numa origem desliza a lista da direita; voltar, da esquerda (estilos.css, .vt-quem-*)
+  // entrar numa origem desliza a lista da direita; voltar, da esquerda (lib/gaveta.ts)
   const escolherOrigem = (nome: string | null) => {
-    direcaoDaTroca(nome ? 'quem-entra' : 'quem-volta')
+    direcaoDaTroca(nome ? 'gaveta-entra' : 'gaveta-volta', ['quem'])
     mudar({ origem: nome })
   }
   // "← Origens" com qualquer origem escolhida, abra ela uma lista de nomes ou não (Cidadão, Ouvidoria…)
@@ -439,9 +440,11 @@ export function Origens({
   }
 
   return (
-    <Card aria-labelledby="titulo-origens" className={clsx('vt-quem-cartao flex flex-col', className)}>
+    <Card aria-labelledby="titulo-origens" className={clsx('flex flex-col', className)} style={gavetaCartao('quem')}>
       <CabecalhoCard id="titulo-origens" titulo={titulo} subtitulo={subtitulo} acao={voltar} />
-      <div className="vt-quem-lista flex flex-1 flex-col px-3 pt-2 pb-3">{corpo}</div>
+      <div className="flex flex-1 flex-col px-3 pt-2 pb-3" {...gavetaLista('quem')}>
+        {corpo}
+      </div>
     </Card>
   )
 }

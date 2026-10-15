@@ -269,12 +269,13 @@ export function Ficha() {
   return (
     <Drawer.Root open={chave !== null} onOpenChange={(v) => !v && fechar()} swipeDirection={lateral ? 'right' : 'down'}>
       <Drawer.Portal>
-        <Drawer.Backdrop className="fixed inset-0 z-40 bg-black/25 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-300 ease-gaveta data-ending-style:opacity-0 data-starting-style:opacity-0 print:hidden" />
+        <Drawer.Backdrop className="fixed inset-0 z-40 bg-black/25 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-300 ease-gaveta data-ending-style:duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0 print:hidden" />
         <Drawer.Viewport className={clsx('fixed inset-0 z-50 flex', lateral ? 'justify-end' : 'items-end')}>
           <Drawer.Popup
             aria-label="Ficha do serviço"
             className={clsx(
-              'overflow-y-auto overscroll-contain bg-card shadow-2 transition-transform duration-300 ease-gaveta',
+              // entra em 300 ms, sai em 200 ms: fechar é a pessoa dispensando — tem que ser mais rápido que abrir
+              'overflow-y-auto overscroll-contain bg-card shadow-2 transition-transform duration-300 ease-gaveta data-ending-style:duration-200',
               'motion-reduce:transition-opacity motion-reduce:data-ending-style:opacity-0 motion-reduce:data-starting-style:opacity-0',
               lateral
                 ? 'h-full w-[min(max(560px,40vw),100vw)] border-l border-line pt-[env(safe-area-inset-top,0px)] [transform:translateX(var(--drawer-swipe-movement-x))] data-ending-style:[transform:translateX(100%)] data-starting-style:[transform:translateX(100%)]'

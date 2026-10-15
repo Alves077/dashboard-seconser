@@ -20,7 +20,7 @@ só com a chave pública (a que qualquer visitante tem, embutida no site); inspe
 | GraphQL / Storage | GraphQL desligado; nenhum bucket |
 | Segredos no site publicado (`dist`) e no repositório | **nenhum**: só a chave *publishable* (feita para ser pública); nenhum `.env`, CSV ou planilha no git |
 | XSS (HTML montado com dado) | só no mapa (dicas e lista do ponto): categoria e bairro escapados; o resto é número |
-| Navegador | não grava dado restrito (só tema, mapa detalhado e as observações digitadas no relatório) |
+| Navegador | não grava dado restrito. Guarda: tema, mapa detalhado, observações digitadas no relatório e (desde 14/10) uma cópia da **parte pública** no IndexedDB, para abrir rápido — a mesma que qualquer visitante baixa |
 | Sair da conta | **corrigido**: o restrito (detalhes, fotos) agora sai da memória na hora (`SIGNED_OUT`, também se sair em outra aba ou a sessão expirar) |
 | Servidor de desenvolvimento | só escuta no próprio computador; `dados-locais` não sai da pasta (`../`, `%2e`, `%5C`, `%00` testados); `@fs` e `.env*` bloqueados (403); não vai para o site publicado |
 

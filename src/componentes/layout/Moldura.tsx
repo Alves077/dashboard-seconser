@@ -1,6 +1,6 @@
 import { clsx } from 'clsx'
 import { Suspense, useEffect } from 'react'
-import { Outlet, useLocation } from 'react-router'
+import { Outlet, useLocation, useNavigationType } from 'react-router'
 import { Toaster } from 'sonner'
 import { PaletaBusca } from '@/busca/PaletaBusca'
 import { EsqueletoPagina } from '@/componentes/estados/Estados'
@@ -15,7 +15,15 @@ import { NavInferior } from './NavInferior'
 export function Moldura() {
   const { tema } = useTema()
   const { pathname } = useLocation()
+  const tipoNavegacao = useNavigationType()
   useEffect(preCarregarPaginas, [])
+  // página nova começa no topo (antes abria no meio, na altura em que a anterior estava). Só quando muda a
+  // PÁGINA: filtro e Ficha mudam só a parte depois do "?" e não mexem na rolagem; no voltar/avançar do
+  // navegador (POP) quem decide é o navegador
+  useEffect(() => {
+    if (tipoNavegacao !== 'POP') window.scrollTo({ top: 0, left: 0, behavior: 'instant' })
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só a troca de página dispara
+  }, [pathname])
   return (
     <>
       <a

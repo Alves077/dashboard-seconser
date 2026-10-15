@@ -4,6 +4,7 @@
 //   supabase → projeto dip-iluminacao; restrito só logado e na lista de acessos (RLS)
 import { FONTE } from '@/config'
 import { supabase } from '@/lib/supabase'
+import { gravarCache, lerCache } from './cacheLocal'
 import { chaveServico, lerBairro, lerCategoria, lerDetalhe, lerVereador, montarBase } from './montar'
 import type { Base, Detalhe, Foto, LinhaVw } from './tipos'
 
@@ -132,6 +133,18 @@ const COLUNAS_VW =
   'id_colab,type,categoria,categoria_revisada,bairro,regiao,data_saida,data_retorno,reaberto,' +
   'resolvido_por_led,lat,lng,origem,origem_detalhe,vereador_id,vereador'
 
+/** Cópia da parte pública guardada no navegador, marcada com a carga de que veio */
+interface CopiaPublica {
+  sincId: number | null
+  fim: string | null
+  vw: Record<string, unknown>[]
+  ver: Record<string, unknown>[]
+  cat: Record<string, unknown>[]
+  bai: Record<string, unknown>[]
+}
+// muda a chave quando mudam as colunas lidas: a cópia antiga (de outro formato) deixa de valer sozinha
+const CHAVE_CACHE = `publico:${COLUNAS_VW}`
+
 const semPermissao = (e: unknown) =>
   typeof e === 'object' && e !== null && 'code' in e && (e as { code: string }).code === '42501'
 
@@ -139,24 +152,34 @@ function fonteSupabase(): Fonte {
   return {
     tipo: 'supabase',
     async carregarBase() {
-      const [vw, ver, cat, bai, sinc] = await Promise.all([
+      // 1 pedido pequeno: qual a última carga? Se a cópia guardada no navegador é dela, abre na hora (cacheLocal.ts)
+      const sinc = await supabase
+        .from('sincronizacoes')
+        .select('id,terminada_em')
+        .eq('status', 'ok')
+        .order('terminada_em', { ascending: false })
+        .limit(1)
+      const ultima = sinc.data?.[0] as { id: number; terminada_em: string } | undefined
+      const montar = (c: CopiaPublica) =>
+        montarBase(
+          c.vw as unknown as LinhaVw[],
+          { vereadores: c.ver.map(lerVereador), categorias: c.cat.map(lerCategoria), bairros: c.bai.map(lerBairro) },
+          c.fim ? new Date(c.fim) : null,
+        )
+
+      const guardada = await lerCache<CopiaPublica>(CHAVE_CACHE)
+      if (guardada && ultima && guardada.sincId === ultima.id) return montar(guardada)
+
+      const [vw, ver, cat, bai] = await Promise.all([
         lerTudo('vw_servicos', COLUNAS_VW, ['id_colab', 'type', 'data_saida']),
         lerTudo('vereadores', 'id,nome,foto_url', ['id']),
         lerTudo('categorias_revisadas', 'id,nome,descricao', ['id']),
         lerTudo('bairros', 'id,nome,regiao', ['id']),
-        supabase
-          .from('sincronizacoes')
-          .select('terminada_em')
-          .eq('status', 'ok')
-          .order('terminada_em', { ascending: false })
-          .limit(1),
       ])
-      const fim = sinc.data?.[0]?.terminada_em as string | undefined
-      return montarBase(
-        vw as unknown as LinhaVw[],
-        { vereadores: ver.map(lerVereador), categorias: cat.map(lerCategoria), bairros: bai.map(lerBairro) },
-        fim ? new Date(fim) : null,
-      )
+      const copia: CopiaPublica = { sincId: ultima?.id ?? null, fim: ultima?.terminada_em ?? null, vw, ver, cat, bai }
+      // sem saber a carga (falhou o pedido pequeno), não guarda: não teria como saber se a cópia está velha
+      if (ultima) void gravarCache(CHAVE_CACHE, copia)
+      return montar(copia)
     },
     async carregarDetalhes() {
       try {

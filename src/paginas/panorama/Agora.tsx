@@ -12,6 +12,7 @@ import { formatarDia, type Dia } from '@/lib/datas'
 import { corRegiao } from '@/lib/cores'
 import { compararTexto, dias, numero, pct, plural } from '@/lib/formato'
 import { direcaoDaTroca, useFicha } from '@/lib/ganchos'
+import { gavetaCartao, gavetaLista, trocarComTransicao } from '@/lib/gaveta'
 import { LinhaBarra } from './Quebras'
 
 const COR_ESPERA = ['bg-o1', 'bg-o2', 'bg-o3', 'bg-o4', 'bg-o5']
@@ -114,7 +115,7 @@ function OndeEstao({ itens, rotuloFaixa }: { itens: ItemFila[]; rotuloFaixa: str
   const visiveis = regiao && !todos ? contagem.slice(0, 8) : contagem
   const max = Math.max(1, ...visiveis.map((l) => l.n))
   return (
-    <div className="px-5 pt-3 pb-4">
+    <div className="px-5 pt-3 pb-4" style={gavetaCartao('onde')}>
       <div className="flex flex-wrap items-center justify-between gap-x-3">
         <h3 className="text-[13px] font-medium text-ink">
           Onde estão{regiao ? ` · ${regiao}` : ''}{' '}
@@ -123,10 +124,12 @@ function OndeEstao({ itens, rotuloFaixa }: { itens: ItemFila[]; rotuloFaixa: str
         {regiaoLocal && !filtros.regiao && (
           <button
             type="button"
-            onClick={() => {
-              setRegiaoLocal(null)
-              setTodos(false)
-            }}
+            onClick={() =>
+              trocarComTransicao('gaveta-volta', ['onde'], () => {
+                setRegiaoLocal(null)
+                setTodos(false)
+              })
+            }
             className="pressionavel -mr-2 flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-acao hover:bg-realce"
           >
             <ArrowLeft aria-hidden className="size-3.5" />
@@ -137,7 +140,7 @@ function OndeEstao({ itens, rotuloFaixa }: { itens: ItemFila[]; rotuloFaixa: str
       <p className="mt-0.5 mb-2 text-xs text-ink-3">
         {regiao ? 'Bairros da região com mais pedidos nesta faixa.' : 'Toque numa região para ver os bairros.'}
       </p>
-      <ol>
+      <ol {...gavetaLista('onde')}>
         {visiveis.map((l) => (
           <LinhaBarra
             key={l.nome}
@@ -147,7 +150,7 @@ function OndeEstao({ itens, rotuloFaixa }: { itens: ItemFila[]; rotuloFaixa: str
             maximo={max}
             complemento={pct(l.n, total)}
             ativo={false}
-            aoTocar={regiao ? undefined : () => setRegiaoLocal(l.nome)}
+            aoTocar={regiao ? undefined : () => trocarComTransicao('gaveta-entra', ['onde'], () => setRegiaoLocal(l.nome))}
             compacta
           />
         ))}

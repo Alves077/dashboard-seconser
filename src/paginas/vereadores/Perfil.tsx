@@ -19,7 +19,8 @@ import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { chaveMes, formatarDia, rotuloMes, rotuloMesLongo } from '@/lib/datas'
 import { decimal, dias, enxuto, numero, pct, plural } from '@/lib/formato'
-import { useDestino, useFicha, useHoje } from '@/lib/ganchos'
+import { direcaoDaTroca, useDestino, useFicha, useHoje } from '@/lib/ganchos'
+import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
 import { LinhaBarra } from '@/paginas/panorama/Quebras'
 
 /** Escala só com inteiros (contagem de pedidos: "0,5 pedido" não existe) */
@@ -66,12 +67,17 @@ function Lugares({ p }: { p: PerfilVereador }) {
         linhas={p.regioes}
         total={p.pedidos}
         ativo={null}
-        aoTocar={(r) => mudar({ regiao: r })}
+        aoTocar={(r) => {
+          direcaoDaTroca('gaveta-entra', ['lugares'])
+          mudar({ regiao: r })
+        }}
+        gaveta="lugares"
         ponto={corRegiao}
       />
     )
   return (
     <Contagem
+      gaveta="lugares"
       titulo={`Bairros · ${filtros.regiao}`}
       subtitulo="Pedidos do período. Toque para filtrar."
       linhas={p.bairros}
@@ -81,7 +87,10 @@ function Lugares({ p }: { p: PerfilVereador }) {
       acao={
         <button
           type="button"
-          onClick={() => mudar({ regiao: null })}
+          onClick={() => {
+            direcaoDaTroca('gaveta-volta', ['lugares'])
+            mudar({ regiao: null })
+          }}
           className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-realce"
         >
           <ArrowLeft aria-hidden className="size-3.5" />
@@ -102,6 +111,7 @@ function Contagem({
   aoTocar,
   acao,
   ponto,
+  gaveta,
 }: {
   titulo: string
   subtitulo?: string
@@ -112,14 +122,16 @@ function Contagem({
   acao?: ReactNode
   /** pontinho de cor antes do nome (ex.: cor da região) */
   ponto?: (nome: string) => string
+  /** card com vai-e-volta (região → bairros): nome da transição (lib/gaveta.ts) */
+  gaveta?: string
 }) {
   const [todos, setTodos] = useState(false)
   const visiveis = todos ? linhas : linhas.slice(0, 8)
   const max = Math.max(1, ...visiveis.map((l) => l.n))
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col" style={gaveta ? gavetaCartao(gaveta) : undefined}>
       <CabecalhoCard titulo={titulo} subtitulo={subtitulo} acao={acao} />
-      <div className="flex flex-1 flex-col px-3 pt-2 pb-3">
+      <div className="flex flex-1 flex-col px-3 pt-2 pb-3" {...(gaveta ? gavetaLista(gaveta) : {})}>
         {linhas.length === 0 ? (
           <EstadoVazio titulo="Nada no período" texto="Nenhum pedido com esses filtros neste período." altura="min-h-32" />
         ) : (

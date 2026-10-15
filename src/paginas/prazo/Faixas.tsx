@@ -10,6 +10,8 @@ import { FAIXAS_EXEC, type LinhaFaixas } from '@/calculos/prazo'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { compararTexto, decimal, numero } from '@/lib/formato'
+import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
+import { direcaoDaTroca } from '@/lib/ganchos'
 
 /** Bairro com menos executados que isto vai para o grupo "poucos casos", com quantidades em vez de % */
 const MINIMO_BAIRRO = 10
@@ -47,8 +49,12 @@ export function Faixas({ linhas, nivelBairro }: { linhas: LinhaFaixas[]; nivelBa
   const total = nivelBairro && linhas.length > 1 ? somar(`Toda a região ${filtros.regiao}`, linhas) : null
 
   const ativo = (nome: string) => (nivelBairro ? filtros.bairro === nome : filtros.regiao === nome)
-  const alternar = (nome: string) =>
-    nivelBairro ? mudar({ bairro: filtros.bairro === nome ? null : nome }) : mudar({ regiao: filtros.regiao === nome ? null : nome })
+  // região → bairros desliza a lista (lib/gaveta.ts); escolher um bairro dentro do nível, não
+  const alternar = (nome: string) => {
+    if (nivelBairro) return mudar({ bairro: filtros.bairro === nome ? null : nome })
+    direcaoDaTroca(filtros.regiao === nome ? 'gaveta-volta' : 'gaveta-entra', ['atraso', 'faixas'])
+    mudar({ regiao: filtros.regiao === nome ? null : nome })
+  }
 
   const linha = (l: LinhaFaixas, tipo: Tipo) => {
     const sel = tipo !== 'total' && ativo(l.nome)
@@ -116,7 +122,7 @@ export function Faixas({ linhas, nivelBairro }: { linhas: LinhaFaixas[]; nivelBa
   }
 
   return (
-    <Card aria-labelledby="titulo-faixas" className="flex flex-col overflow-hidden">
+    <Card aria-labelledby="titulo-faixas" className="flex flex-col overflow-hidden" style={gavetaCartao('faixas')}>
       <CabecalhoCard
         id="titulo-faixas"
         titulo={nivelBairro ? `Quanto tempo levou · ${filtros.regiao}` : 'Quanto tempo levou, por região'}
@@ -125,7 +131,10 @@ export function Faixas({ linhas, nivelBairro }: { linhas: LinhaFaixas[]; nivelBa
           nivelBairro && (
             <button
               type="button"
-              onClick={() => mudar({ regiao: null })}
+              onClick={() => {
+                direcaoDaTroca('gaveta-volta', ['atraso', 'faixas'])
+                mudar({ regiao: null })
+              }}
               className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-realce"
             >
               <ArrowLeft aria-hidden className="size-3.5" />
@@ -137,7 +146,7 @@ export function Faixas({ linhas, nivelBairro }: { linhas: LinhaFaixas[]; nivelBa
       {linhas.length === 0 ? (
         <EstadoVazio titulo="Nenhum executado no período" altura="min-h-40" />
       ) : (
-        <div className="mt-2 flex flex-1 flex-col px-3 pb-3">
+        <div className="mt-2 flex flex-1 flex-col px-3 pb-3" {...gavetaLista('faixas')}>
           <table className="w-full table-fixed border-separate border-spacing-x-0 border-spacing-y-[2px] text-[13px]">
             <caption className="sr-only">
               {nivelBairro ? 'Bairros' : 'Regiões'}: parte dos executados em cada faixa de dias até a execução

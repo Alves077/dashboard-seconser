@@ -9,6 +9,8 @@ import type { LinhaAtraso } from '@/calculos/prazo'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { compararTexto, numero, pctCurto } from '@/lib/formato'
+import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
+import { direcaoDaTroca } from '@/lib/ganchos'
 
 export function AtrasoAgora({ linhas, nivelBairro }: { linhas: LinhaAtraso[]; nivelBairro: boolean }) {
   const { filtros, mudar } = useFiltros()
@@ -21,11 +23,15 @@ export function AtrasoAgora({ linhas, nivelBairro }: { linhas: LinhaAtraso[]; ni
   const total = linhas.reduce((s, l) => s + l.atraso, 0)
 
   const ativo = (nome: string) => (nivelBairro ? filtros.bairro === nome : filtros.regiao === nome)
-  const alternar = (nome: string) =>
-    nivelBairro ? mudar({ bairro: filtros.bairro === nome ? null : nome }) : mudar({ regiao: filtros.regiao === nome ? null : nome })
+  // região → bairros desliza a lista (lib/gaveta.ts); escolher um bairro dentro do nível, não
+  const alternar = (nome: string) => {
+    if (nivelBairro) return mudar({ bairro: filtros.bairro === nome ? null : nome })
+    direcaoDaTroca(filtros.regiao === nome ? 'gaveta-volta' : 'gaveta-entra', ['atraso', 'faixas'])
+    mudar({ regiao: filtros.regiao === nome ? null : nome })
+  }
 
   return (
-    <Card aria-labelledby="titulo-atraso" className="flex flex-col">
+    <Card aria-labelledby="titulo-atraso" className="flex flex-col" style={gavetaCartao('atraso')}>
       <CabecalhoCard
         id="titulo-atraso"
         titulo={nivelBairro ? `Em atraso agora · ${filtros.regiao}` : 'Em atraso agora, por região'}
@@ -34,7 +40,10 @@ export function AtrasoAgora({ linhas, nivelBairro }: { linhas: LinhaAtraso[]; ni
           nivelBairro && (
             <button
               type="button"
-              onClick={() => mudar({ regiao: null })}
+              onClick={() => {
+                direcaoDaTroca('gaveta-volta', ['atraso', 'faixas'])
+                mudar({ regiao: null })
+              }}
               className="pressionavel flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-medium text-acao hover:bg-realce"
             >
               <ArrowLeft aria-hidden className="size-3.5" />
@@ -43,7 +52,7 @@ export function AtrasoAgora({ linhas, nivelBairro }: { linhas: LinhaAtraso[]; ni
           )
         }
       />
-      <div className="flex flex-1 flex-col px-3 pt-2 pb-3">
+      <div className="flex flex-1 flex-col px-3 pt-2 pb-3" {...gavetaLista('atraso')}>
         {visiveis.length === 0 ? (
           <EstadoVazio titulo="Nenhum serviço em atraso" texto="Toda a fila de hoje está dentro dos 5 dias." altura="min-h-40" />
         ) : (

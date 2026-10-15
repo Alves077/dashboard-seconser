@@ -443,6 +443,29 @@ prazo entre os executados" deixava de fora os atrasados. Agora (`indicadores(sai
 - **Relatório Mensal não muda** (fiel ao site antigo). Conferido contra o CSV: jun/26 19,4 d · 21,5%; jul 9,9 · 49,3%;
   ago 12,3 · 28,4%; set 10,8 · 13,2%; abr 4,9 · 74,7%.
 
+**Revisão com as skills do Emil Kowalski (14/10; `emil-design-eng` + `mobile-native`):** a base já estava de acordo
+(sem `transition: all`, sem `ease-in`, nada > 300 ms em UI, nada de `scale(0)`, curvas próprias, `:active` com
+`scale(0.97)`, popovers com `--transform-origin`, busca por teclado sem animação, `touch-action: manipulation`,
+`tap-highlight` desligado, 16 px nos campos, `dvh`, `viewport-fit=cover` + `safe-area`, `theme-color` pelo tema
+escolhido, `prefers-reduced-motion`). Corrigido: Observações do relatório em 12,5 px (zoom no iPhone) → 16 px no toque;
+`:hover` cru do mapa (botões +/− e lista do ponto) preso no toque → só com mouse; Ficha saía na mesma velocidade que
+entrava → entra 300 ms, sai 200 ms; links do menu sem seleção/menu de "abrir link" no toque longo. Falta confirmar no
+celular de verdade (zoom, hover preso e toque longo não aparecem na emulação). `review-animations` só roda chamado
+pelo usuário (`/review-animations`).
+
+**Fluidez (14/10):**
+- **Rolagem:** página nova abre no topo (antes abria na altura da anterior: fim do Panorama → Prazo a 2.466 px).
+  Filtro e Ficha (só o "?" muda) não mexem; voltar/avançar do navegador fica com o navegador (`Moldura.tsx`).
+- **Cache da parte pública no navegador** (`dados/cacheLocal.ts`, IndexedDB): ao abrir, 1 pedido pequeno pergunta a
+  última carga (`sincronizacoes`); se é a mesma da cópia guardada, usa a cópia. Medido no build de produção: 1ª visita
+  4,1 s (igual); visitas seguintes **2,3 s / 22 pedidos → 0,45 s / 1 pedido**. Carga nova → baixa tudo e regrava
+  (testado marcando a cópia como antiga). Chave inclui as colunas lidas (mudou a lista → cópia velha não vale).
+  O restrito nunca é guardado.
+- **Mesmo deslizar em todos os vai-e-volta** (`lib/gaveta.ts`, regras por `view-transition-class` em estilos.css):
+  Quem pede, Em atraso agora + Faixas (Prazo, deslizam juntos), Saldos (Evolução), Onde estão (estado local —
+  `trocarComTransicao`) e regiões do perfil do vereador. Só desliza a lista que trocou de nível (`alvos`); as outras
+  da página ficam no esmaecer. Navegador sem `view-transition-class` fica no esmaecer de sempre.
+
 ### 8.3 Espaços públicos (praças, parques, campos) — depende dos dados
 Hoje só **57** serviços têm `local` (o campo só é preenchido quando o serviço é *dentro* do lugar) e ele está na parte
 **restrita** (`servicos_detalhe`). No texto, "praça" aparece em ~510 serviços, "quadra" em ~570 (mas muitas são
