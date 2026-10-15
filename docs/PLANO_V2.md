@@ -466,7 +466,12 @@ pelo usuário (`/review-animations`).
   `trocarComTransicao`) e regiões do perfil do vereador. Só desliza a lista que trocou de nível (`alvos`); as outras
   da página ficam no esmaecer. Navegador sem `view-transition-class` fica no esmaecer de sempre.
 
-### 8.3 Espaços públicos (praças, parques, campos) — depende dos dados
+### 8.3 Espaços públicos (praças, parques, campos) — dado PRONTO desde 14/10
+**14/10:** o trabalho subiu `tipo_local` (praça | parque | campo/quadra | praia/orla | escadaria | ciclovia/pista |
+outro; só quando o serviço é DENTRO do lugar), `local` (nome) e `logradouro_norm` (rua padrão, sem número; agrupar com
+o bairro) na camada pública (`servicos`, `vw_servicos`). 532 serviços em 133 lugares; 16.920 com rua normalizada. Falta
+o site: incluir as colunas em `COLUNAS_VW` e no tipo `Servico`; recorte por tipo de lugar + camada no mapa; busca por
+rua e repetição na mesma rua. (Texto abaixo = plano original, antes do dado.)
 Hoje só **57** serviços têm `local` (o campo só é preenchido quando o serviço é *dentro* do lugar) e ele está na parte
 **restrita** (`servicos_detalhe`). No texto, "praça" aparece em ~510 serviços, "quadra" em ~570 (mas muitas são
 "lote/quadra"), "praia" em ~230 (inclui nomes de rua). Para virar recorte no site: **no trabalho**, classificar o tipo de
