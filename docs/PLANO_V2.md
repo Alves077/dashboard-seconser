@@ -669,3 +669,5 @@ total); período e "hoje" separados; o detalhe e as porcentagens ficam nos cart�
 Workflow `.github/workflows/publicar.yml` (push na `v2`) com etapas `teste` (antigo na raiz + v2 em `/teste/`) →
 `troca` (v2 na raiz + antigo em `/legado/` com aviso) → `final`. Testado localmente nas três montagens. Passo a passo,
 checklist do celular e desligamento do legado: `docs/PUBLICACAO.md`.
+**No ar em teste (17/10):** `…/dashboard-seconser/teste/`; testado pelo usuário num Samsung A25. Ajuste depois do
+teste: chave tripla do Panorama no celular vira 3 colunas iguais (texto em 2 linhas, alvo de 44 px; pílula a partir de sm).

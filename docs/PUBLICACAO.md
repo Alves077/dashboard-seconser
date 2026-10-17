@@ -1,5 +1,9 @@
 # Publicação da v2 (plano decidido em 17/10/2026)
 
+> **Estado (17/10, noite):** etapa `teste` no ar — `…/dashboard-seconser/teste/` = v2, raiz = site antigo. Pages já
+> em GitHub Actions e `v2` liberado no environment. Usuário testou no celular (Samsung A25): ok; pediu compartilhar
+> o relatório como PDF (hoje o botão PDF abre o "salvar" do Android e Compartilhar manda só o link).
+
 Endereço: `https://alves077.github.io/dashboard-seconser/` (GitHub Pages). Quem publica é o workflow
 `.github/workflows/publicar.yml`, a cada push no ramo `v2`. A linha `ETAPA:` do workflow decide o que vai ao ar.
 
