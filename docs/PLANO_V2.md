@@ -643,3 +643,15 @@ Aplicados: movimento reduzido vira esmaecer de 160 ms (antes troca seca; sem des
 voo do mapa 0,6 → 0,4 s (`DURACAO_VOO`); barra de espera só com opacidade no hover (sem `filter`); botão com `ease`
 nas cores — e o pressionar (0,97) voltou a animar: a lista de cores do `Botao` tirava o transform da transição do
 `pressionavel`; painel de período em 150 ms como as outras listas.
+
+## Frases de abertura (17/10/2026)
+Regra: todo número diz de qual total é parte; período e "hoje" não se misturam sem dizer.
+- Panorama: "Hoje há 812 na fila — 721 deles em atraso…" e "saíram 650: 323 já executados e 327 em aberto. Dentro
+  do prazo de 5 dias: 64 de 559 (11,4%) — os 323 executados mais os 236 em aberto que já venceram" (antes "64
+  (11,4%)" logo depois de 650 fazia ler 9,8%).
+- Prazo: "64 foram executados em até 5 dias: 11,4% dos 559 que já têm resultado (…). Os outros 91 ainda estão dentro
+  do prazo" (antes "64 de 559 foram executados" — 559 não são executados).
+- Evolução: "entraram na fila 650 (saídas para a rua) e foram executados 809, contando os que tinham entrado antes".
+- Vereadores: "saíram para a rua 30 pedidos de vereador…; na fila de hoje, de qualquer data, há 58" (antes
+  "chegaram" — conta pela saída — e "Hoje 71 estão em aberto" logo depois de 30).
+- Singular/plural em todos os casos de 1; porcentagem sem ",0" (100%).

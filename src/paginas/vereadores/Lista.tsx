@@ -23,24 +23,32 @@ function Resumo({ d, periodo }: { d: DadosVereadores; periodo: Periodo }) {
         {d.emAberto > 0 && (
           <>
             {' '}
-            Hoje há <B>{plural(d.emAberto, 'pedido', 'pedidos')}</B> de vereador em aberto, de antes.
+            Na fila de hoje há <B>{plural(d.emAberto, 'pedido', 'pedidos')}</B> de vereador, de períodos anteriores.
           </>
         )}
       </p>
     )
   return (
     <p className="text-[15px] leading-relaxed text-ink-2">
-      {quando}, chegaram <B>{plural(d.pedidos, 'pedido', 'pedidos')}</B> de vereador
+      {/* revista 17/10/2026: "chegaram" contava pela saída para a rua, e "Hoje 71 estão em aberto" vinha logo depois
+          de "30 pedidos" — 71 de 30? São os de qualquer data; dito. */}
+      {quando}, {d.pedidos === 1 ? 'saiu' : 'saíram'} para a rua <B>{plural(d.pedidos, 'pedido', 'pedidos')}</B> de vereador
       {d.vereadoresComPedido > 0 && <> ({plural(d.vereadoresComPedido, 'vereador', 'vereadores')} com nome identificado)</>}
-      {d.pedidosTodos > 0 && <>, {pct(d.pedidos, d.pedidosTodos)} de todos os pedidos</>}. Hoje{' '}
+      {d.pedidosTodos > 0 && <> — {pct(d.pedidos, d.pedidosTodos)} de tudo o que saiu</>}.{' '}
       {d.emAberto === 0 ? (
-        'nenhum está em aberto'
+        'Nenhum pedido de vereador na fila de hoje'
       ) : (
         <>
-          <B>{numero(d.emAberto)}</B> {d.emAberto === 1 ? 'está' : 'estão'} em aberto
+          Na fila de hoje, de qualquer data, há <B>{plural(d.emAberto, 'pedido', 'pedidos')}</B> de vereador
           {d.indicacoesAbertas > 0 && (
             <>
-              , <B>{numero(d.indicacoesAbertas)}</B> {d.indicacoesAbertas === 1 ? 'deles é indicação legislativa' : 'deles indicações legislativas'}
+              {d.emAberto === 1 ? (
+                <>, e é indicação legislativa</>
+              ) : (
+                <>
+                  , <B>{numero(d.indicacoesAbertas)}</B> {d.indicacoesAbertas === 1 ? 'deles é indicação legislativa' : 'deles indicações legislativas'}
+                </>
+              )}
             </>
           )}
         </>

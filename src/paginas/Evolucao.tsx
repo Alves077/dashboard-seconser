@@ -21,23 +21,27 @@ import { Saldos } from './evolucao/Saldos'
 const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
 const POR = { dia: 'por dia', semana: 'em blocos de 7 dias', mes: 'por mês' } as const
 
+// Frase de abertura (revista 17/10/2026): "entraram" é o mesmo número que o Panorama chama de "saíram para a
+// rua" (dito junto), e os executados contam também quem tinha saído antes do período — dito, para ninguém ler
+// "809 executados dos 650 que entraram".
 function Resumo({ e, periodo }: { e: Dados; periodo: Periodo }) {
   const { total } = e
   const quando = fraseQuando(periodo, e.periodo, e.de)
   const inicio = total.filaInicio
   return (
     <p className="text-[15px] leading-relaxed text-ink-2">
-      {quando}, entraram <B>{numero(total.entraram)}</B> e foram executados <B>{numero(total.executados)}</B>
+      {quando}, entraram na fila <B>{numero(total.entraram)}</B> (saídas para a rua) e foram executados <B>{numero(total.executados)}</B>
+      {inicio !== null && total.executados > 0 && ', contando os que tinham entrado antes'}
       {inicio === null ? (
         <>
-          ; ficaram <B>{numero(total.filaFim)}</B> em aberto.
+          ; seguem em aberto <B>{numero(total.filaFim)}</B>.
         </>
       ) : total.filaFim === inicio ? (
         <>: a fila ficou igual, em {numero(total.filaFim)}.</>
       ) : (
         <>
-          : a fila {total.filaFim > inicio ? 'cresceu' : 'diminuiu'} <B>{numero(Math.abs(total.filaFim - inicio))}</B> (de {numero(inicio)} para{' '}
-          {numero(total.filaFim)}).
+          : a fila {total.filaFim > inicio ? 'cresceu' : 'diminuiu'} <B>{numero(Math.abs(total.filaFim - inicio))}</B>, de {numero(inicio)} para{' '}
+          {numero(total.filaFim)}.
         </>
       )}
     </p>

@@ -8,7 +8,8 @@ import { useBase } from '@/dados/consultas'
 import type { Periodo } from '@/filtros/filtros'
 import { fraseQuando, rotuloComparacao } from '@/filtros/frases'
 import { useFiltros } from '@/filtros/useFiltros'
-import { decimal, numero } from '@/lib/formato'
+import { PRAZO_DIAS } from '@/config'
+import { decimal, numero, pctCurto, plural } from '@/lib/formato'
 import { useHoje } from '@/lib/ganchos'
 import { Agora } from './panorama/Agora'
 import { Indicadores } from './panorama/Indicadores'
@@ -18,15 +19,19 @@ import { Bairros, Categorias, Origens, Regioes, SeletorMedida, type Medida } fro
 const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
 
 /** Uma frase que diz o essencial antes dos números (para quem só vai ler o topo) */
+// Frase de abertura (revista 17/10/2026): todo número diz de qual total é parte. Antes "saíram 650; 64 (11,4%)
+// no prazo" fazia ler 64/650 = 9,8% — o 11,4% é sobre os 559 que já têm resultado (executados + em aberto vencidos).
 function Resumo({ d, porRetorno, periodo }: { d: Dados; porRetorno: boolean; periodo: Periodo }) {
   const { agora, atual, intervalo, primeiraSaida } = d
   const quando = fraseQuando(periodo, intervalo, primeiraSaida)
+  const avaliados = atual.executadas + atual.vencidas
   return (
     <p className="text-[15px] leading-relaxed text-ink-2">
-      Hoje há <B>{numero(agora.total)} {agora.total === 1 ? 'serviço' : 'serviços'} na fila</B>
+      Hoje há <B>{plural(agora.total, 'serviço', 'serviços')} na fila</B>
       {agora.total > 0 && (
         <>
-          , {numero(agora.atraso)} em atraso{agora.risco > 0 && <> e {numero(agora.risco)} com risco elétrico</>}
+          {' '}— {numero(agora.atraso)} {agora.total === 1 ? '' : 'deles '}em atraso
+          {agora.risco > 0 && <> e {numero(agora.risco)} com risco elétrico</>}
         </>
       )}
       .{' '}
@@ -37,7 +42,7 @@ function Resumo({ d, porRetorno, periodo }: { d: Dados; porRetorno: boolean; per
           {quando}, foram executados <B>{numero(atual.saidas)}</B>
           {atual.pctNoPrazo !== null && (
             <>
-              ; desses, <B>{numero(atual.noPrazo)}</B> ({decimal(atual.pctNoPrazo)}%) dentro do prazo
+              ; <B>{numero(atual.noPrazo)}</B> ({decimal(atual.pctNoPrazo)}%) {atual.saidas === 1 ? '' : 'deles '}em até {PRAZO_DIAS} dias da saída
             </>
           )}
           .
@@ -45,16 +50,29 @@ function Resumo({ d, porRetorno, periodo }: { d: Dados; porRetorno: boolean; per
       ) : (
         <>
           {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua
-          {atual.pctNoPrazo !== null && (
+          {atual.abertas === 0 ? (
+            <>, todos já executados</>
+          ) : atual.executadas === 0 ? (
+            <>, todos ainda em aberto</>
+          ) : (
             <>
-              ; <B>{numero(atual.noPrazo)}</B> ({decimal(atual.pctNoPrazo)}%) foram executados dentro do prazo
-              {atual.vencidas > 0 &&
-                (atual.vencidas === 1
-                  ? ', contando também o que ainda está em aberto e já passou dos 5 dias'
-                  : `, contando também os ${numero(atual.vencidas)} ainda em aberto que já passaram dos 5 dias`)}
+              : {plural(atual.executadas, 'já executado', 'já executados')} e {numero(atual.abertas)} em aberto
             </>
           )}
-          .
+          .{' '}
+          {atual.pctNoPrazo === null ? (
+            <>Ainda não dá para medir o prazo: todos estão dentro dos {PRAZO_DIAS} dias.</>
+          ) : atual.vencidas === 0 ? (
+            <>
+              Dentro do prazo de {PRAZO_DIAS} dias: <B>{numero(atual.noPrazo)}</B> de {plural(avaliados, 'executado', 'executados')} (
+              <B>{pctCurto(atual.noPrazo, avaliados)}</B>).
+            </>
+          ) : (
+            <>
+              Dentro do prazo de {PRAZO_DIAS} dias: <B>{numero(atual.noPrazo)}</B> de {numero(avaliados)} (<B>{pctCurto(atual.noPrazo, avaliados)}</B>) —{' '}
+              {atual.executadas === 1 ? 'o 1 executado' : `os ${numero(atual.executadas)} executados`} mais {atual.vencidas === 1 ? 'o 1 em aberto que já venceu' : `os ${numero(atual.vencidas)} em aberto que já venceram`}.
+            </>
+          )}
         </>
       )}
     </p>

@@ -10,7 +10,7 @@ import { useBase } from '@/dados/consultas'
 import type { Periodo } from '@/filtros/filtros'
 import { fraseQuando, rotuloComparacao } from '@/filtros/frases'
 import { useFiltros } from '@/filtros/useFiltros'
-import { decimal, numero, pctCurto } from '@/lib/formato'
+import { numero, pctCurto, plural } from '@/lib/formato'
 import { useHoje } from '@/lib/ganchos'
 import { AtrasoAgora } from './prazo/AtrasoAgora'
 import { Distribuicao } from './prazo/Distribuicao'
@@ -21,25 +21,51 @@ import { Retrabalho } from './prazo/Retrabalho'
 const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
 
 /** O essencial numa frase, antes dos gráficos */
+// Frase de abertura (revista 17/10/2026): "64 de 559 foram executados" fazia pensar que 559 foram executados;
+// 559 são os que já têm resultado (executados + em aberto que já venceram). Agora cada número diz de onde vem.
 function Resumo({ d, periodo }: { d: Dados; periodo: Periodo }) {
   const { atual, distribuicao: dist, intervalo, primeiraSaida } = d
+  const { filtros } = useFiltros()
+  const porRetorno = filtros.contarPor === 'retorno'
   const quando = fraseQuando(periodo, intervalo, primeiraSaida)
-  if (dist.total === 0) return <p className="text-[15px] leading-relaxed text-ink-2">{quando}, nenhum serviço executado com esses filtros.</p>
-  const longos = dist.mais30
-  return (
-    <p className="text-[15px] leading-relaxed text-ink-2">
-      {quando}, <B>{numero(atual.noPrazo)}</B> de {numero(atual.executadas + atual.vencidas)} (<B>{decimal(atual.pctNoPrazo)}%</B>) foram executados dentro
-      dos {PRAZO_DIAS} dias.
-      {atual.vencidas > 0 &&
-        (atual.vencidas === 1
-          ? ' O que ainda está em aberto e já passou do prazo conta como fora.'
-          : ` Os ${numero(atual.vencidas)} ainda em aberto que já passaram do prazo contam como fora.`)}
-      {longos > 0 && (
+  const p = (filhos: ReactNode) => <p className="text-[15px] leading-relaxed text-ink-2">{filhos}</p>
+  const longos = dist.mais30 > 0 && (
+    <>
+      {' '}{dist.total === 1 ? 'Do 1 executado' : `Dos ${numero(dist.total)} executados`}, <B>{numero(dist.mais30)}</B> ({pctCurto(dist.mais30, dist.total)}) levaram mais de 30 dias.
+    </>
+  )
+  if (porRetorno) {
+    if (dist.total === 0) return p(<>{quando}, nenhum serviço executado com esses filtros.</>)
+    if (dist.total === 1)
+      return p(<>{quando}, foi executado 1 serviço, {atual.noPrazo === 1 ? 'dentro' : 'fora'} do prazo de {PRAZO_DIAS} dias.</>)
+    return p(
+      <>
+        {quando}, {dist.total === 1 ? 'foi executado' : 'foram executados'} <B>{numero(dist.total)}</B> e <B>{numero(atual.noPrazo)}</B> ({pctCurto(atual.noPrazo, dist.total)}) {dist.total === 1 ? '' : 'deles '}em até{' '}
+        {PRAZO_DIAS} dias da saída.{longos}
+      </>,
+    )
+  }
+  if (atual.saidas === 0) return p(<>{quando}, nenhuma saída para a rua com esses filtros.</>)
+  const avaliados = atual.executadas + atual.vencidas
+  const noPrazoAinda = atual.abertas - atual.vencidas
+  if (avaliados === 0)
+    return p(
+      <>
+        {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua e todos ainda estão dentro dos {PRAZO_DIAS} dias: ainda não dá para medir o prazo.
+      </>,
+    )
+  return p(
+    <>
+      {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua e <B>{numero(atual.noPrazo)}</B> {atual.noPrazo === 1 ? 'foi executado' : 'foram executados'} em até{' '}
+      {PRAZO_DIAS} dias: <B>{pctCurto(atual.noPrazo, avaliados)}</B> {avaliados === 1 ? 'do 1 que já tem resultado' : `dos ${numero(avaliados)} que já têm resultado`}
+      {atual.vencidas > 0 ? (
         <>
-          {' '}Dos executados, <B>{numero(longos)}</B> ({pctCurto(longos, dist.total)}) passaram de 30 dias.
+          {' '}({plural(atual.executadas, 'executado', 'executados')} e {numero(atual.vencidas)} em aberto que já {atual.vencidas === 1 ? 'venceu' : 'venceram'})
         </>
-      )}
-    </p>
+      ) : null}
+      .{noPrazoAinda > 0 && <> {noPrazoAinda === 1 ? 'O outro ainda está' : `Os outros ${numero(noPrazoAinda)} ainda estão`} dentro do prazo.</>}
+      {longos}
+    </>,
   )
 }
 
