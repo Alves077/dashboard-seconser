@@ -212,11 +212,17 @@ function complementoDe(l: LinhaQuebra, m: Medida): ReactNode {
 }
 
 /** contexto na linha pequena embaixo do nome (curta: no bairro ela divide a linha com a região) */
-function apoioDe(l: LinhaQuebra, m: Medida, porRetorno: boolean): string | undefined {
-  if (m === 'fila') return l.saidas > 0 ? `${numero(l.saidas)} ${porRetorno ? 'executados ' : ''}no período` : undefined
+// Regra (usuário, 17/10/2026): o número pequeno embaixo do nome tem que ser PARTE do número grande, ou dizer com
+// todas as letras que é o total de onde ele saiu. "445 no período" embaixo de "513 na fila" parecia 445 dos 513 —
+// e eram as saídas do período, outro universo. O mesmo com "17 na fila agora" embaixo de "59 saídas".
+function apoioDe(l: LinhaQuebra, m: Medida): string | undefined {
+  // na fila: quantos desses saíram no período (toda saída do período ainda aberta está na fila de hoje)
+  if (m === 'fila')
+    return l.abertosPeriodo > 0 ? `${numero(l.abertosPeriodo)} ${l.abertosPeriodo === 1 ? 'deles saiu' : 'deles saíram'} no período` : undefined
+  // em aberto do período: o total de onde eles vêm, dito como tal
   if (m === 'abertosPeriodo') return `de ${numero(l.saidas)} que saíram no período`
-  // a parte do total já se vê no comprimento da barra; aqui só a fila de hoje
-  return l.fila > 0 ? `${numero(l.fila)} na fila agora` : undefined
+  // saíram no período: a parte em aberto já está ao lado do número (âmbar); nada embaixo
+  return undefined
 }
 
 /** parte âmbar da barra (só na medida "no período") */
@@ -283,13 +289,7 @@ export function Categorias({ linhas, medida }: { linhas: LinhaQuebra[]; medida: 
   const max = Math.max(1, ...demais.map(valor))
   const unidade = medida === 'fila' ? 'da fila' : medida === 'abertosPeriodo' ? 'dos em aberto' : porRetorno ? 'dos executados' : 'das saídas'
   // na dominante a parte do total já vem ao lado do número: embaixo só o contexto que falta
-  const apoioDomina = !domina
-    ? undefined
-    : medida === 'periodo'
-      ? domina.fila > 0
-        ? `${numero(domina.fila)} na fila agora`
-        : undefined
-      : apoioDe(domina, medida, porRetorno)
+  const apoioDomina = domina ? apoioDe(domina, medida) : undefined
   const destaqueDomina = domina ? complementoDe(domina, medida) : undefined
   const alternar = (nome: string) => mudar({ categoria: filtros.categoria === nome ? null : nome })
   const linha = (l: LinhaQuebra) => (
@@ -300,7 +300,7 @@ export function Categorias({ linhas, medida }: { linhas: LinhaQuebra[]; medida: 
       maximo={max}
       complemento={complementoDe(l, medida)}
       parteAberta={parteDe(l, medida)}
-      apoio={apoioDe(l, medida, porRetorno)}
+      apoio={apoioDe(l, medida)}
       ativo={filtros.categoria === l.nome}
       aoTocar={() => alternar(l.nome)}
       corBarra={l.nome === CATEGORIA_RISCO ? 'bg-risco' : 'bg-s1'}
@@ -405,7 +405,7 @@ export function Bairros({
                 <LinhaBarra
                   key={l.nome}
                   rotulo={l.nome}
-                  apoio={juntar(regiaoDe(l.nome), apoioDe(l, medida, porRetorno))}
+                  apoio={juntar(regiaoDe(l.nome), apoioDe(l, medida))}
                   pontoApoio={corRegiao(regiaoDe(l.nome))}
                   valor={valor(l)}
                   maximo={max}
@@ -509,7 +509,7 @@ export function Origens({
               maximo={max}
               complemento={complementoDe(l, medida)}
               parteAberta={parteDe(l, medida)}
-              apoio={apoioDe(l, medida, porRetorno)}
+              apoio={apoioDe(l, medida)}
               ativo={filtros.origem === l.nome}
               aoTocar={() => escolherOrigem(filtros.origem === l.nome ? null : l.nome)}
               compacta
@@ -543,7 +543,7 @@ export function Origens({
               <LinhaBarra
                 key={l.nome}
                 rotulo={l.nome}
-                apoio={apoioDe(l, medida, porRetorno)}
+                apoio={apoioDe(l, medida)}
                 valor={valor(l)}
                 maximo={max}
                 complemento={complementoDe(l, medida)}

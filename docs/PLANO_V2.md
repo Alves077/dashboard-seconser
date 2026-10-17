@@ -569,3 +569,6 @@ abertas (Base UI as monta fora das regiões da página, em portal — limitaçã
 - Já estava certo: foco visível em todo controle, ordem lógica, gavetas e janelas prendem o foco, fecham com Esc e
   devolvem o foco; `lang="pt-BR"`, um h1 por página, tabelas com legenda, gráficos com tabela escondida, movimento
   reduzido respeitado.
+- **Linha pequena das listas (17/10, pedido do usuário):** tem que ser PARTE do número grande ou dizer de onde ele
+  vem. "Na fila agora": "222 deles saíram no período" (antes "445 no período", que parecia 445 dos 513). "Saíram no
+  período": nada embaixo (a parte em aberto já está ao lado, em âmbar). "Em aberto do período": "de 445 que saíram".
