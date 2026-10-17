@@ -13,6 +13,9 @@ export function useBase() {
     queryFn: () => fonte.carregarBase(),
     staleTime: MEIA_HORA,
     gcTime: Infinity,
+    // 1 tentativa a mais (antes 3: ~8 s de esqueleto parado antes do erro); o cabeçalho diz "Tentando de novo…"
+    retry: 1,
+    retryDelay: 1500,
   })
 }
 
@@ -35,7 +38,7 @@ export function useDetalhes() {
     queryFn: () => fonte.carregarDetalhes(),
     enabled: habilitado,
     staleTime: MEIA_HORA,
-    retry: (n, e) => !(e instanceof SemAcesso) && n < 2,
+    retry: (n, e) => !(e instanceof SemAcesso) && n < 1,
   })
   const acesso: boolean | undefined = !habilitado
     ? false
@@ -44,7 +47,10 @@ export function useDetalhes() {
       : q.error instanceof SemAcesso
         ? false
         : undefined
-  return { ...q, acesso }
+  // falhou por outro motivo (rede, tempo esgotado): não se sabe se tem acesso — quem usa mostra o erro com
+  // "tentar de novo", em vez de ficar carregando para sempre
+  const erroRestrito = habilitado && q.isError && !(q.error instanceof SemAcesso)
+  return { ...q, acesso, erroRestrito }
 }
 
 export function useFotos(chave: string | null, acesso: boolean | undefined) {

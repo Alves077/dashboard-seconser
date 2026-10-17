@@ -69,6 +69,8 @@ export interface Base {
   bairros: Bairro[]
   /** fim da última carga (Supabase) ou data do arquivo (CSV local) */
   atualizadoEm: Date | null
+  /** saídas/retornos com data no futuro (erro de digitação) que ficaram de fora — "123456 (saída 2062-10-12)" */
+  datasImpossiveis: string[]
 }
 
 /** Parte restrita (logado com acesso) */

@@ -83,6 +83,23 @@ function Carregando() {
             </div>
           </div>
         </div>
+        {/* "Esperando há mais tempo" (5 linhas + mostrar mais): sem isto, tudo abaixo pulava ~400 px ao carregar */}
+        <div className="-mx-5 mt-5 -mb-5 border-t border-line">
+          <Esqueleto className="mx-5 my-3.5 h-3.5 w-40" />
+          {Array.from({ length: 5 }, (_, i) => (
+            <div key={i} className="flex min-h-14 items-center gap-4 border-t border-line px-5 py-2.5">
+              <Esqueleto className="h-4 w-14" />
+              <div className="flex-1">
+                <Esqueleto className="h-3.5 w-44" />
+                <Esqueleto className="mt-1.5 h-3 w-60 max-w-full" />
+              </div>
+              <Esqueleto className="h-5 w-16 rounded-full" />
+            </div>
+          ))}
+          <div className="border-t border-line py-3.5">
+            <Esqueleto className="mx-auto h-3.5 w-36" />
+          </div>
+        </div>
       </Card>
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {Array.from({ length: 4 }, (_, i) => (

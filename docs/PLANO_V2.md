@@ -532,3 +532,20 @@ Corrigido (decisões do usuário seguindo as recomendações):
   1 erro de digitação (2 em palavras longas) — "amral peixoto", "ernani amaral", "peixoto" acham "Av. Ernani do
   Amaral Peixoto". Índice por palavra única (vocabulário real ~3.700 palavras) e resultado por termo guardado: poucos ms
   por tecla. Número só (nº do serviço) continua pelo começo do número.
+
+## Datas impossíveis e estados de erro (17/10/2026, 3ª rodada)
+Cenários novos no seletor de dev: **Lento** (4 s), **Erro** (sem rede), **Erro restrito** (tempo esgotado nos
+detalhes, sem rede nas fotos); o **Pior caso** ganhou saída em 2062, saída daqui a 3 dias, retorno no futuro e saída
+em 2016. Dado real (Supabase, carga de 16/10): nenhuma data impossível; menor saída 09/07/2025.
+- `montar.ts`: saída no futuro fica de fora; retorno no futuro vira "ainda não voltou" (`base.datasImpossiveis`).
+  Antes: "−13.144 dias" na lista de campo, histórico do Mensal até out/62, "Em outubro de 2062" no seletor.
+  O status dos dados (cabeçalho) lista os registros que ficaram de fora. Saída antiga (2016) só a sincronização
+  pode barrar — pendência do trabalho (SESSION_CHECKPOINT do projeto de dados).
+- Parte restrita com erro (rede/tempo esgotado) ≠ sem acesso (`useDetalhes().erroRestrito`): Ficha e Relatórios
+  mostram o erro com "Tentar de novo" (antes: carregando para sempre e a aba sumia do menu).
+- Ficha aberta por link com a base fora do ar mostra o erro (antes: "Serviço não encontrado").
+- Mensagens de erro em português (`motivoDoErro` em Estados.tsx: sem conexão / banco demorou / sessão expirou); o
+  texto técnico vai para o console.
+- Base: 1 tentativa a mais (antes 3, ~8 s de esqueleto) e "Tentando de novo…" no cabeçalho; base fora do ar = selo
+  vermelho "Sem dados".
+- Esqueleto do Panorama com as 5 linhas de "Esperando há mais tempo" (antes a página pulava ~400 px ao carregar).

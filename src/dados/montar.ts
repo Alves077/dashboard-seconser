@@ -1,5 +1,5 @@
 import { compararTexto } from '@/lib/formato'
-import { diaDeIso } from '@/lib/datas'
+import { diaDeIso, hoje } from '@/lib/datas'
 import type { Base, Bairro, CategoriaRevisada, LinhaVw, Saida, Servico, Tipo, Vereador } from './tipos'
 
 const txt = (v: unknown): string | null => {
@@ -33,12 +33,26 @@ export function montarBase(
 ): Base {
   const porChave = new Map<string, Servico>()
   const saidas: Saida[] = []
+  // Data no futuro é erro de digitação na planilha (ano trocado: 2062) que a sincronização não barra — ela só
+  // recusa retorno antes da saída. Saída no futuro fica de fora; retorno no futuro vira "ainda não voltou".
+  // Sem isso: "−13.144 dias" na lista de campo e o histórico esticado até 2062. Avisado no status dos dados.
+  const limite = hoje()
+  const datasImpossiveis: string[] = []
 
   for (const l of linhas) {
     const idColab = Number(l.id_colab)
     const type = (txt(l.type) ?? 'post') as Tipo
     const dataSaida = diaDeIso(l.data_saida)
     if (!Number.isFinite(idColab) || dataSaida === null) continue
+    if (dataSaida > limite) {
+      datasImpossiveis.push(`${idColab} (saída ${String(l.data_saida).slice(0, 10)})`)
+      continue
+    }
+    let dataRetorno = diaDeIso(l.data_retorno)
+    if (dataRetorno !== null && dataRetorno > limite) {
+      datasImpossiveis.push(`${idColab} (retorno ${String(l.data_retorno).slice(0, 10)})`)
+      dataRetorno = null
+    }
     const chave = chaveServico(idColab, type)
 
     let servico = porChave.get(chave)
@@ -65,7 +79,7 @@ export function montarBase(
     const saida: Saida = {
       servico,
       dataSaida,
-      dataRetorno: diaDeIso(l.data_retorno),
+      dataRetorno,
       reaberto: bool(l.reaberto),
       ordem: 0,
     }
@@ -93,6 +107,7 @@ export function montarBase(
     categorias: [...ref.categorias].sort((a, b) => a.id - b.id),
     bairros: [...ref.bairros, ...extras.values()].sort((a, b) => compararTexto(a.nome, b.nome)),
     atualizadoEm,
+    datasImpossiveis,
   }
 }
 

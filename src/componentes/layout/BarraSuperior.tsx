@@ -1,7 +1,7 @@
 import { Menu } from '@base-ui/react/menu'
 import { Popover } from '@base-ui/react/popover'
 import { clsx } from 'clsx'
-import { Database, History, LogIn, Moon, RefreshCw, Search, Sun, UserRound } from 'lucide-react'
+import { CloudOff, Database, History, LogIn, Moon, RefreshCw, Search, Sun, UserRound } from 'lucide-react'
 import { useState } from 'react'
 import { DIAS_PARA_DESATUALIZADO } from '@/config'
 import { NavLink } from 'react-router'
@@ -14,10 +14,13 @@ import { usePaginas } from './usePaginas'
 
 /**
  * Status dos dados num botão só (data · fonte · atualizar), para o cabeçalho ter espaço para crescer.
- * Fechado: a data, ou o selo âmbar "há N dias" quando a última carga passou de 2 dias.
+ * Fechado: a data, o selo âmbar "há N dias" quando a última carga passou de 2 dias, ou o vermelho "Sem dados"
+ * quando a base não carregou. Aberto: detalhes, datas impossíveis que ficaram de fora e "buscar de novo".
  */
 function StatusDados() {
-  const { data, isFetching } = useBase()
+  const { data, isFetching, error, failureCount } = useBase()
+  const semDados = !data && !!error && !isFetching
+  const impossiveis = data?.datasImpossiveis ?? []
   const { modo } = useSessao()
   const recarregar = useRecarregar()
   const [agora] = useState(() => Date.now())
@@ -30,21 +33,36 @@ function StatusDados() {
   return (
     <Popover.Root>
       <Popover.Trigger
-        aria-label={em ? `Dados de ${curto}${velho ? `, há ${dias} dias` : ''}. Ver detalhes e atualizar` : 'Status dos dados'}
+        aria-label={
+          semDados
+            ? 'Não foi possível carregar os dados. Ver detalhes e tentar de novo'
+            : em
+              ? `Dados de ${curto}${velho ? `, há ${dias} dias` : ''}. Ver detalhes e atualizar`
+              : 'Status dos dados'
+        }
         className={clsx(
           'pressionavel inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap',
-          velho ? 'bg-andamento/15 text-andamento-texto hover:bg-andamento/25' : 'text-ink-2 hover:bg-realce-forte hover:text-ink',
+          semDados
+            ? 'bg-atraso/12 text-atraso-texto hover:bg-atraso/20'
+            : velho
+              ? 'bg-andamento/15 text-andamento-texto hover:bg-andamento/25'
+              : 'text-ink-2 hover:bg-realce-forte hover:text-ink',
         )}
       >
         {isFetching ? (
           <RefreshCw aria-hidden className="size-3.5 animate-spin motion-reduce:animate-none" />
+        ) : semDados ? (
+          <CloudOff aria-hidden className="size-3.5" />
         ) : velho ? (
           <History aria-hidden className="size-3.5" />
         ) : (
           <Database aria-hidden className="size-3.5" />
         )}
         {isFetching ? (
-          <span className="hidden sm:inline">Atualizando…</span>
+          // a 1ª tentativa falhou e o site tenta mais uma vez: dito, para a espera não parecer travada
+          <span className="hidden sm:inline">{failureCount > 0 ? 'Tentando de novo…' : 'Atualizando…'}</span>
+        ) : semDados ? (
+          <span className="hidden sm:inline">Sem dados</span>
         ) : velho ? (
           // abaixo de 360 px só o ícone âmbar (o texto empurrava o cabeçalho para fora da tela; o aviso
           // continua no aria-label e ao tocar)
@@ -60,6 +78,11 @@ function StatusDados() {
         <Popover.Positioner sideOffset={8} align="end" className="z-50">
           <Popover.Popup className="w-72 origin-(--transform-origin) rounded-xl border border-line bg-card p-4 shadow-2 transition-[opacity,scale] duration-150 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
             <Popover.Title className="text-[13px] font-medium text-ink">Dados do painel</Popover.Title>
+            {semDados && (
+              <p className="mt-2 rounded-md bg-atraso/10 px-2.5 py-2 text-[13px] text-atraso-texto">
+                Não foi possível carregar os dados agora. Confira a internet e busque de novo.
+              </p>
+            )}
             <dl className="mt-3 flex flex-col gap-2.5 text-[13px]">
               <div>
                 <dt className="text-xs text-ink-3">Última atualização</dt>
@@ -74,6 +97,19 @@ function StatusDados() {
                   {modo === 'local' ? 'Retrato local do banco (desenvolvimento) — parte restrita liberada' : 'Banco da DIP, sincronizado uma vez por dia'}
                 </dd>
               </div>
+              {impossiveis.length > 0 && (
+                <div>
+                  <dt className="text-xs text-ink-3">Datas impossíveis</dt>
+                  <dd className="text-andamento-texto">
+                    {impossiveis.length === 1
+                      ? '1 registro com data no futuro ficou de fora'
+                      : `${impossiveis.length} registros com data no futuro ficaram de fora`}{' '}
+                    dos números (erro de digitação na planilha):{' '}
+                    <span className="numeros">{impossiveis.slice(0, 5).join(', ')}</span>
+                    {impossiveis.length > 5 && ` e mais ${impossiveis.length - 5}`}.
+                  </dd>
+                </div>
+              )}
             </dl>
             <Botao variante="secundario" tamanho="compacto" onClick={recarregar} disabled={isFetching} className="mt-4 w-full">
               <RefreshCw aria-hidden className={clsx('size-4', isFetching && 'animate-spin motion-reduce:animate-none')} />

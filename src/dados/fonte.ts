@@ -219,14 +219,34 @@ function fonteSupabase(): Fonte {
 
 function fonteCenario(cenario: string): Fonte {
   const dados = import('@/dev/cenarios').then((m) => m.gerarCenario(cenario as Cenario, hoje()))
+  const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms))
+  // as mensagens que o navegador e o Supabase dão de verdade, para ver como o site as mostra
+  const semRede = () => new TypeError('Failed to fetch')
   return {
     tipo: 'csv',
     async carregarBase() {
+      if (cenario === 'erro') {
+        await esperar(600)
+        throw semRede()
+      }
+      if (cenario === 'lento') await esperar(4000)
       const d = await dados
       return montarBase(d.linhas, { vereadores: d.vereadores, categorias: d.categorias, bairros: d.bairros }, d.atualizadoEm)
     },
-    carregarDetalhes: async () => (await dados).detalhes,
-    carregarFotos: async (chave) => (await dados).fotos.get(chave) ?? [],
+    async carregarDetalhes() {
+      if (cenario === 'erro-restrito') {
+        await esperar(600)
+        throw Object.assign(new Error('canceling statement due to statement timeout'), { code: '57014' })
+      }
+      return (await dados).detalhes
+    },
+    async carregarFotos(chave) {
+      if (cenario === 'erro-restrito') {
+        await esperar(600)
+        throw semRede()
+      }
+      return (await dados).fotos.get(chave) ?? []
+    },
   }
 }
 

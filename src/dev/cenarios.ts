@@ -6,18 +6,24 @@
 //   vazio  → nenhum serviço
 //   um     → 3 serviços: 1 executado, 1 em atendimento, 1 em atraso (toda contagem em 1)
 //   enorme → 8 anos, ~95 mil saídas (desempenho)
+//   lento  → o pior caso, mas a base demora 4 s (esqueleto × página pronta: a tela pula?)
+//   erro   → a base falha como sem rede ("Failed to fetch")
+//   erro-restrito → a base abre, mas descrição/endereço e fotos falham (Ficha, Relatórios, busca)
 // Valores tirados do dado real quando existem (bairros, categorias, vereadores com foto), o resto
 // plausível: nada aqui é dado real de pedido.
 import { diaDe, isoDe, partes, type Dia } from '@/lib/datas'
 import type { Bairro, CategoriaRevisada, Detalhe, Foto, LinhaVw, Vereador } from '@/dados/tipos'
 
-export type Cenario = 'pior' | 'vazio' | 'um' | 'enorme'
+export type Cenario = 'pior' | 'vazio' | 'um' | 'enorme' | 'lento' | 'erro' | 'erro-restrito'
 export const CENARIOS: { id: Cenario | null; rotulo: string }[] = [
   { id: null, rotulo: 'Dados reais' },
   { id: 'pior', rotulo: 'Pior caso' },
   { id: 'vazio', rotulo: 'Vazio' },
   { id: 'um', rotulo: 'Um' },
   { id: 'enorme', rotulo: 'Enorme' },
+  { id: 'lento', rotulo: 'Lento' },
+  { id: 'erro', rotulo: 'Erro' },
+  { id: 'erro-restrito', rotulo: 'Erro restrito' },
 ]
 
 export interface DadosCenario {
@@ -161,6 +167,7 @@ const DESCRICAO_LONGA =
   'o poste 5 acende de dia e apaga de noite (fotocélula?); o poste 6 pisca. **Atenção equipe: cão bravo no portão.**'
 
 export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
+  if (cenario === 'lento' || cenario === 'erro' || cenario === 'erro-restrito') cenario = 'pior'
   const s = sorteador(cenario === 'enorme' ? 77 : 1284)
   const bairros: Bairro[] = REGIOES_BAIRROS.map(([nome, regiao], i) => ({ id: i + 1, nome, regiao }))
   const categorias: CategoriaRevisada[] = CATEGORIAS.map(([nome, descricao], i) => ({ id: i + 1, nome, descricao }))
@@ -240,6 +247,12 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
     // 60 pedidos no mesmo ponto (mesmo pino de condomínio)
     for (let i = 0; i < 60; i++)
       novo({ saidas: [[hoje - s.int(1, 200), s.r() < 0.6 ? null : hoje - 1]], bairro: 'Itaipu', regiao: 'Oceânica', lat: -22.9601, lng: -43.0455 })
+    // datas impossíveis que a sincronização deixa passar (ela só recusa retorno antes da saída): erro de
+    // digitação na planilha — ano trocado (2062, 2016), dia errado (saída daqui a 3 dias), retorno no futuro
+    novo({ saidas: [[diaDe(2062, 9, 12), null]], bairro: 'Icaraí', regiao: 'Praias da Baía', categoria: 'Poste' })
+    novo({ saidas: [[hoje + 3, null]], bairro: 'Fonseca', regiao: 'Norte' })
+    novo({ saidas: [[hoje - 20, hoje + 5]], bairro: 'Centro', regiao: 'Praias da Baía' })
+    novo({ saidas: [[diaDe(2016, 9, 2), null]], bairro: 'Barreto', regiao: 'Norte', categoria: 'Lâmpada apagada' })
     // vereador com 1 pedido só (e executado), vereador com muitos em aberto, nomes longos
     novo({ saidas: [[hoje - 25, hoje - 20]], origem: 'Vereador', origemDetalhe: 'Ofício', vereador: VEREADORES[6] })
     for (let i = 0; i < 40; i++)

@@ -2,7 +2,7 @@
 // nem desalinhar a grade (DESIGN.md §7).
 import { clsx } from 'clsx'
 import { CloudOff, Lock, SearchX } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
 import { Botao } from '@/componentes/ui/Botao'
 import { Card } from '@/componentes/ui/Card'
 
@@ -118,27 +118,40 @@ export function EstadoVazio({
   )
 }
 
+/**
+ * O motivo em palavras de quem usa: o texto técnico ("Failed to fetch", "statement timeout") não diz nada a
+ * ninguém da DIP — ele vai para o console, para quem for investigar.
+ */
+function motivoDoErro(erro: unknown): string {
+  const msg = erro instanceof Error ? erro.message : String(erro ?? '')
+  const codigo = typeof erro === 'object' && erro !== null && 'code' in erro ? String((erro as { code: unknown }).code) : ''
+  if (/failed to fetch|networkerror|load failed|network request failed/i.test(msg))
+    return 'Sem conexão com o servidor. Confira a internet e tente de novo.'
+  if (codigo === '57014' || /timeout|timed out/i.test(msg)) return 'O banco de dados demorou demais para responder. Tente de novo em instantes.'
+  if (/jwt|token|auth/i.test(msg)) return 'Sua sessão expirou. Entre de novo.'
+  return 'Pode ser a conexão ou o serviço de dados fora do ar.'
+}
+
 export function EstadoErro({
   erro,
   aoTentar,
   altura,
+  titulo = 'Não foi possível carregar os dados',
 }: {
   erro: unknown
   aoTentar?: () => void
   altura?: string
+  titulo?: string
 }) {
-  const detalhe = erro instanceof Error ? erro.message : null
+  useEffect(() => {
+    if (erro) console.error(erro)
+  }, [erro])
   return (
     <Moldura
       tom="erro"
       icone={<CloudOff className="size-5" aria-hidden />}
-      titulo="Não foi possível carregar os dados"
-      texto={
-        <>
-          Pode ser a conexão ou o serviço de dados fora do ar.
-          {detalhe && <span className="mt-1 block text-xs text-ink-3">({detalhe})</span>}
-        </>
-      }
+      titulo={titulo}
+      texto={motivoDoErro(erro)}
       altura={altura}
       acao={
         aoTentar && (

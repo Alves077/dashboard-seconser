@@ -7,6 +7,7 @@ import { PAGINAS } from './paginas'
  * Quem abre o link direto cai na tela de "entrar" da própria página.
  */
 export function usePaginas() {
-  const { acesso } = useDetalhes()
-  return PAGINAS.filter((p) => !p.restrita || acesso === true)
+  const { acesso, erroRestrito } = useDetalhes()
+  // falhou ao conferir (rede): a página fica no menu e mostra o erro com "tentar de novo"
+  return PAGINAS.filter((p) => !p.restrita || acesso === true || erroRestrito)
 }

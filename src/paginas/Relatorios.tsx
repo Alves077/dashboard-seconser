@@ -81,14 +81,16 @@ function useObservacao(chave: string) {
  */
 export function Relatorios() {
   const { modo, usuario } = useSessao()
-  const { acesso } = useDetalhes()
+  const { acesso, erroRestrito, error: erroDetalhes, refetch: tentarDetalhes } = useDetalhes()
   const { setLoginAberto } = useInterface()
   if (acesso === true) return <PaginaRelatorios />
   return (
     <>
       <h1 className="mb-5 text-2xl font-normal tracking-[-0.4px] text-ink">Relatórios</h1>
       <Card>
-        {acesso === undefined ? (
+        {erroRestrito ? (
+          <EstadoErro erro={erroDetalhes} aoTentar={() => tentarDetalhes()} altura="min-h-72" titulo="Não foi possível abrir os relatórios" />
+        ) : acesso === undefined ? (
           <div aria-busy="true" className="flex min-h-72 flex-col items-center justify-center gap-3">
             <Esqueleto className="size-10 rounded-full" />
             <Esqueleto className="h-4 w-56" />

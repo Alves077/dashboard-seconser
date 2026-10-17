@@ -5,7 +5,7 @@ import { clsx } from 'clsx'
 import { FileText, ImageOff, Images, Lightbulb, Lock, MapPin, X } from 'lucide-react'
 import { lazy, Suspense, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
-import { EstadoVazio, Esqueleto } from '@/componentes/estados/Estados'
+import { EstadoErro, EstadoVazio, Esqueleto } from '@/componentes/estados/Estados'
 import { useInterface } from '@/componentes/layout/interface'
 import { Botao } from '@/componentes/ui/Botao'
 import { SeloRisco, SeloSituacao } from '@/componentes/ui/SeloSituacao'
@@ -154,8 +154,15 @@ const ITENS_RESTRITOS = [
 /** Descrição, endereço e fotos — só para quem tem acesso */
 function ParteRestrita({ servico }: { servico: Servico }) {
   const { modo, usuario } = useSessao()
-  const { data, acesso } = useDetalhes()
+  const { data, acesso, erroRestrito, error: erroDetalhes, refetch: tentarDetalhes } = useDetalhes()
   const { setLoginAberto } = useInterface()
+
+  if (erroRestrito)
+    return (
+      <Bloco titulo="Descrição, endereço e fotos">
+        <EstadoErro erro={erroDetalhes} aoTentar={() => tentarDetalhes()} altura="min-h-40" titulo="Não foi possível carregar esta parte" />
+      </Bloco>
+    )
 
   if (acesso === undefined)
     return (
@@ -291,7 +298,7 @@ function Conteudo({ servico }: { servico: Servico }) {
 
 export function Ficha() {
   const { chave, fechar } = useFicha()
-  const { data: base, isLoading } = useBase()
+  const { data: base, isLoading, error: erroBase, refetch: tentarBase } = useBase()
   const lateral = useMidia('(min-width: 768px)')
   const servico = chave ? base?.porChave.get(chave) : undefined
 
@@ -328,6 +335,12 @@ export function Ficha() {
                   <Esqueleto className="h-7 w-52" />
                   <Esqueleto className="h-6 w-36 rounded-full" />
                   <Esqueleto className="mt-4 h-24 w-full" />
+                </div>
+              ) : erroBase && !base ? (
+                // os dados não carregaram: não é que o serviço não exista
+                <div className="p-5 pt-12">
+                  <Drawer.Title className="sr-only">Não foi possível carregar o serviço</Drawer.Title>
+                  <EstadoErro erro={erroBase} aoTentar={() => tentarBase()} altura="min-h-64" />
                 </div>
               ) : (
                 <>
