@@ -622,3 +622,16 @@ Proposta (sem página nova: o menu do celular já tem 6 itens):
 - **17/10:** escolhas de dentro de uma página (Relatórios: aba, só em atraso, época da saída, mês de referência;
   Mapa: o que mostrar) não vão mais junto ao trocar de página (`useDestino`, `SO_DA_PAGINA`); os filtros do site
   continuam indo. O mês do Relatório Mensal passou de `?mes=` para `?referencia=` (`mes` é do filtro de período).
+
+## Acabamento do pior caso (17/10/2026)
+- 320 px e zoom 200% em todas as páginas: rolagem lateral só em dois lugares, corrigidos — chave "Executados/Saíram
+  no período" do Prazo (abaixo de 360 px some "no período") e tabelas de bairros do Mensal (rolam dentro do cartão).
+- **Mapa com muitos pontos**: grupos de pinos agora desenhados no canvas (antes cada grupo era um elemento da página:
+  ~2 mil em "todos do período"); o número só aparece nos grupos à vista quando são até 250 (aproximou, aparece); sem
+  número, o grupo é um círculo de 7 px. Uma dica só, compartilhada. Dado real (17 mil pontos): zoom de 3,5 s de
+  travamentos somados (maior 279 ms) para ~0,9 s (maior 133 ms); arrastar sem travar. No Enorme (80 mil) ainda pesa
+  (~2,5 s para abrir) — fora do volume real por anos.
+- Dica do pino quebra linha (máx. 260 px): bairro longo abria uma dica da largura do mapa.
+- Impressão no pior caso: Mensal 2 páginas, histórico 3, Em aberto 3 (dado real: 2), Lista de campo 27 (323
+  abertos). O seletor de cenários de dev saía no papel — corrigido.
+- Tema escuro: axe sem violações em todas as páginas.

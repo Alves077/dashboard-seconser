@@ -207,7 +207,9 @@ export function Distribuicao({ p }: { p: Prazo }) {
                 value={o.v}
                 className="pressionavel h-full rounded-full px-3 text-xs whitespace-nowrap text-ink-2 data-pressed:bg-card data-pressed:font-medium data-pressed:text-ink data-pressed:shadow-1"
               >
-                {o.t}
+                {/* abaixo de 360 px os dois rótulos inteiros não cabem: "no período" some (o texto ao lado explica) */}
+                {o.t.replace(' no período', '')}
+                <span className="max-[359px]:hidden"> no período</span>
               </Toggle>
             ))}
           </ToggleGroup>

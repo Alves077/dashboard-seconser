@@ -30,7 +30,8 @@ export function AlternadorDados() {
         font: '12px system-ui, sans-serif',
         whiteSpace: 'nowrap',
       }}
-      className="lg:bottom-3! print:hidden"
+      // print:hidden! — o display do style inline ganhava da classe e o seletor saía no papel
+      className="lg:bottom-3! print:hidden!"
     >
       {CENARIOS.map((c) => {
         const ativo = (c.id ?? null) === (CENARIO ?? null)

@@ -45,29 +45,32 @@ function Versus({ atual, antes, mes, unidade, subirBom }: { atual: number | null
 }
 
 function TabelaBairros({ linhas }: { linhas: GrupoMensal[] }) {
+  // em 320 px a tabela passava 15 px da tela: rola dentro do cartão, como as outras tabelas da folha
   return (
-    <table className="tabela-folha">
-      <thead>
-        <tr>
-          <th>Bairro</th>
-          <th className="num">Total</th>
-          <th className="num">Abertos</th>
-          <th className="num">T. médio</th>
-          <th className="num">Fora</th>
-        </tr>
-      </thead>
-      <tbody>
-        {linhas.map((b) => (
-          <tr key={b.nome}>
-            <td>{b.nome}</td>
-            <td className="num">{numero(b.total)}</td>
-            <Abertos n={b.abertos} />
-            <Media v={b.media} />
-            <Fora v={b.pctFora} />
+    <Rolavel minimo="max-sm:min-w-[19rem]">
+      <table className="tabela-folha">
+        <thead>
+          <tr>
+            <th>Bairro</th>
+            <th className="num">Total</th>
+            <th className="num">Abertos</th>
+            <th className="num">T. médio</th>
+            <th className="num">Fora</th>
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {linhas.map((b) => (
+            <tr key={b.nome}>
+              <td>{b.nome}</td>
+              <td className="num">{numero(b.total)}</td>
+              <Abertos n={b.abertos} />
+              <Media v={b.media} />
+              <Fora v={b.pctFora} />
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Rolavel>
   )
 }
 

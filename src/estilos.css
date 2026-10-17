@@ -399,6 +399,10 @@ html[data-transicao='gaveta-volta']::view-transition-new(*.gaveta-lista) {
   border-radius: 8px;
   box-shadow: var(--sombra-2);
   padding: 6px 8px;
+  /* o Leaflet não quebra linha: bairro do Colab de 50 letras abria uma dica da largura do mapa */
+  white-space: normal;
+  width: max-content;
+  max-width: 260px;
 }
 .leaflet-tooltip-top.dica-mapa::before {
   border-top-color: var(--c-card);

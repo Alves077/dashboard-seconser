@@ -147,6 +147,42 @@ function listaDoPonto(g: Ponto[], aoEscolher: (c: string) => void, fechar: () =>
   return raiz
 }
 
+/** Quantos números (elementos da página) de grupo cabem à vista sem pesar no zoom */
+const MAX_NUMEROS = 250
+
+/** Diâmetro do grupo: 24 px é o mínimo de alvo de toque (WCAG 2.5.8) */
+const tamanhoGrupo = (g: Ponto[]) => (g.length >= 10 ? 28 : 26)
+
+function dicaGrupo(g: Ponto[]) {
+  const atrasos = g.filter((x) => x.situacao === 'atraso').length
+  return `<strong>${g.length} serviços neste ponto</strong><br>${escapar(g[0].servico.bairro)}${atrasos ? ` · ${atrasos} em atraso` : ''}<br><span class="dica-mapa-acao">Toque para escolher</span>`
+}
+
+/** O número em cima do grupo (elemento da página; o toque abre a lista do ponto) */
+function marcadorGrupo(g: Ponto[], aoTocar: () => void): L.Marker {
+  const tam = tamanhoGrupo(g)
+  const sit = piorSituacao(g)
+  const riscoAberto = g.some((x) => x.risco && x.situacao !== 'ok')
+  const m = L.marker([g[0].lat, g[0].lng], {
+    icon: L.divIcon({
+      className: '',
+      html: `<span class="pino-grupo sit-${sit}${riscoAberto ? ' com-risco' : ''}" style="width:${tam}px;height:${tam}px">${g.length}</span>`,
+      iconSize: [tam, tam],
+      iconAnchor: [tam / 2, tam / 2],
+    }),
+    // fora do Tab: os pinos soltos (canvas) não são alcançáveis; quem usa teclado tem a lista do painel ao lado
+    keyboard: false,
+    title: `${g.length} serviços neste ponto`,
+    riseOnHover: true,
+  })
+  m.bindTooltip(dicaGrupo(g), { direction: 'top', offset: [0, -tam / 2], className: 'dica-mapa' })
+  m.on('click', () => {
+    m.closeTooltip()
+    aoTocar()
+  })
+  return m
+}
+
 function Pinos({
   pontos,
   selecionado,
@@ -178,11 +214,17 @@ function Pinos({
   }, [map])
 
   // pinos (refaz quando os pontos ou o tema mudam — as cores vêm das variáveis do tema)
+  // Desempenho (17/10/2026): com "todos do período" em "todo o período" (17 mil pontos, ~2 mil lugares com vários)
+  // cada grupo era um elemento da página e cada zoom travava ~0,6 s. Agora tudo é desenhado no canvas — o grupo
+  // é um círculo maior — e o número em cima (elemento da página) só aparece nos grupos À VISTA quando são até
+  // MAX_NUMEROS (aproximou o zoom, os números aparecem). Uma dica só, compartilhada, no lugar de uma por ponto.
   useEffect(() => {
     const cor: Record<Situacao, string> = { ok: cssVar('--c-ok'), andamento: cssVar('--c-andamento'), atraso: cssVar('--c-atraso') }
     const corRisco = cssVar('--c-risco')
     const borda = cssVar('--c-card')
-    const grupo = L.layerGroup()
+    const desenhados = L.featureGroup()
+    const numeros = L.layerGroup()
+    const doPino = new WeakMap<L.Layer, Ponto[]>()
 
     const porLugar = new Map<string, Ponto[]>()
     for (const p of pontos) {
@@ -192,57 +234,76 @@ function Pinos({
       else porLugar.set(k, [p])
     }
     const lugares = [...porLugar.values()].sort((a, b) => ORDEM[piorSituacao(a)] - ORDEM[piorSituacao(b)])
+    const grupos: { g: Ponto[]; circulo: L.CircleMarker; marcador?: L.Marker }[] = []
+
+    const abrirLista = (g: Ponto[]) => {
+      const tam = tamanhoGrupo(g)
+      L.popup({ className: 'popup-mapa', maxWidth: 320, minWidth: 240, offset: [0, -tam / 2], autoPanPadding: [24, 24] })
+        .setLatLng([g[0].lat, g[0].lng])
+        .setContent(listaDoPonto(g, aoEscolher, () => map.closePopup()))
+        .openOn(map)
+    }
 
     for (const g of lugares) {
       const p = g[0]
       const sit = piorSituacao(g)
       const riscoAberto = g.some((x) => x.risco && x.situacao !== 'ok')
-      if (g.length === 1) {
-        L.circleMarker([p.lat, p.lng], {
-          renderer,
-          radius: riscoAberto ? 7 : 5,
-          color: riscoAberto ? corRisco : borda,
-          weight: riscoAberto ? 2.5 : 1,
-          fillColor: cor[sit],
-          fillOpacity: 0.92,
-        })
-          .bindTooltip(rotuloPino(p), { direction: 'top', offset: [0, -6], className: 'dica-mapa' })
-          .on('click', () => aoEscolher(p.servico.chave))
-          .addTo(grupo)
-        continue
-      }
-      // vários no mesmo lugar: pino com o número
-      const tam = g.length >= 10 ? 28 : 26 // 24 px é o mínimo de alvo de toque (WCAG 2.5.8)
-      const atrasos = g.filter((x) => x.situacao === 'atraso').length
-      const marcador = L.marker([p.lat, p.lng], {
-        icon: L.divIcon({
-          className: '',
-          html: `<span class="pino-grupo sit-${sit}${riscoAberto ? ' com-risco' : ''}" style="width:${tam}px;height:${tam}px">${g.length}</span>`,
-          iconSize: [tam, tam],
-          iconAnchor: [tam / 2, tam / 2],
-        }),
-        // fora do Tab: os pinos soltos (desenhados no canvas) já não são alcançáveis; quem usa teclado tem a lista
-        // do painel ao lado (antes: uma parada de Tab por grupo, chamada "2", "3"…)
-        keyboard: false,
-        title: `${g.length} serviços neste ponto`,
-        riseOnHover: true,
-      })
-        .bindTooltip(
-          `<strong>${g.length} serviços neste ponto</strong><br>${escapar(p.servico.bairro)}${atrasos ? ` · ${atrasos} em atraso` : ''}<br><span class="dica-mapa-acao">Toque para escolher</span>`,
-          { direction: 'top', offset: [0, -tam / 2], className: 'dica-mapa' },
-        )
-        .addTo(grupo)
-      marcador.on('click', () => {
-        marcador.closeTooltip()
-        L.popup({ className: 'popup-mapa', maxWidth: 320, minWidth: 240, offset: [0, -tam / 2], autoPanPadding: [24, 24] })
-          .setLatLng([p.lat, p.lng])
-          .setContent(listaDoPonto(g, aoEscolher, () => map.closePopup()))
-          .openOn(map)
-      })
+      const sozinho = g.length === 1
+      const circulo = L.circleMarker([p.lat, p.lng], {
+        renderer,
+        radius: sozinho ? (riscoAberto ? 7 : 5) : tamanhoGrupo(g) / 2,
+        color: riscoAberto ? corRisco : borda,
+        weight: sozinho ? (riscoAberto ? 2.5 : 1) : riscoAberto ? 2.5 : 2,
+        fillColor: cor[sit],
+        fillOpacity: 0.92,
+      }).addTo(desenhados)
+      doPino.set(circulo, g)
+      if (!sozinho) grupos.push({ g, circulo })
     }
-    grupo.addTo(map)
+
+    // uma dica e um toque para todos os desenhados (antes: uma dica por ponto — 80 mil no cenário Enorme)
+    const dica = L.tooltip({ direction: 'top', className: 'dica-mapa' })
+    desenhados.on('mouseover', (e) => {
+      const g = doPino.get(e.layer)
+      if (!g) return
+      dica.options.offset = [0, -(g.length > 1 ? tamanhoGrupo(g) / 2 : 6)]
+      dica.setLatLng([g[0].lat, g[0].lng]).setContent(g.length > 1 ? dicaGrupo(g) : rotuloPino(g[0]))
+      map.openTooltip(dica)
+    })
+    desenhados.on('mouseout', () => map.closeTooltip(dica))
+    desenhados.on('click', (e) => {
+      const g = doPino.get(e.layer)
+      if (!g) return
+      map.closeTooltip(dica)
+      if (g.length > 1) abrirLista(g)
+      else aoEscolher(g[0].servico.chave)
+    })
+
+    // número em cima dos grupos à vista, quando cabem (senão fica só o círculo desenhado)
+    const atualizarNumeros = () => {
+      const area = map.getBounds().pad(0.1)
+      const aVista = grupos.filter(({ g }) => area.contains([g[0].lat, g[0].lng]))
+      const comNumero = aVista.length <= MAX_NUMEROS
+      const mostrar = new Set(comNumero ? aVista : [])
+      for (const item of grupos) {
+        // sem número em cima, o grupo é só um pouco maior que o pino sozinho (com 26 px, a cidade inteira virava borrão)
+        item.circulo.setRadius(comNumero ? tamanhoGrupo(item.g) / 2 : 7)
+        if (mostrar.has(item)) {
+          if (!item.marcador) item.marcador = marcadorGrupo(item.g, () => abrirLista(item.g))
+          if (!numeros.hasLayer(item.marcador)) numeros.addLayer(item.marcador)
+        } else if (item.marcador && numeros.hasLayer(item.marcador)) numeros.removeLayer(item.marcador)
+      }
+    }
+
+    desenhados.addTo(map)
+    numeros.addTo(map)
+    atualizarNumeros()
+    map.on('moveend', atualizarNumeros)
     return () => {
-      grupo.remove()
+      map.off('moveend', atualizarNumeros)
+      map.closeTooltip(dica)
+      desenhados.remove()
+      numeros.remove()
     }
   }, [map, pontos, renderer, tema, aoEscolher])
 
