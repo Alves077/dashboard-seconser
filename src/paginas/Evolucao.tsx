@@ -21,27 +21,22 @@ import { Saldos } from './evolucao/Saldos'
 const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
 const POR = { dia: 'por dia', semana: 'em blocos de 7 dias', mes: 'por mês' } as const
 
-// Frase de abertura (revista 17/10/2026): "entraram" é o mesmo número que o Panorama chama de "saíram para a
-// rua" (dito junto), e os executados contam também quem tinha saído antes do período — dito, para ninguém ler
-// "809 executados dos 650 que entraram".
+// Frase de abertura, curta (17/10/2026): quantos entraram, quantos foram executados e a fila antes → depois.
+// "Entraram" = saídas para a rua (o mesmo número do Panorama); executados contam quem tinha entrado antes.
 function Resumo({ e, periodo }: { e: Dados; periodo: Periodo }) {
   const { total } = e
   const quando = fraseQuando(periodo, e.periodo, e.de)
   const inicio = total.filaInicio
   return (
     <p className="text-[15px] leading-relaxed text-ink-2">
-      {quando}, entraram na fila <B>{numero(total.entraram)}</B> (saídas para a rua) e foram executados <B>{numero(total.executados)}</B>
-      {inicio !== null && total.executados > 0 && ', contando os que tinham entrado antes'}
+      {quando}, <B>{numero(total.entraram)}</B> entraram na fila e <B>{numero(total.executados)}</B> foram executados
       {inicio === null ? (
-        <>
-          ; seguem em aberto <B>{numero(total.filaFim)}</B>.
-        </>
+        <>; seguem em aberto {numero(total.filaFim)}.</>
       ) : total.filaFim === inicio ? (
-        <>: a fila ficou igual, em {numero(total.filaFim)}.</>
+        <>: a fila ficou em {numero(total.filaFim)}.</>
       ) : (
         <>
-          : a fila {total.filaFim > inicio ? 'cresceu' : 'diminuiu'} <B>{numero(Math.abs(total.filaFim - inicio))}</B>, de {numero(inicio)} para{' '}
-          {numero(total.filaFim)}.
+          : a fila {total.filaFim > inicio ? 'subiu' : 'caiu'} de {numero(inicio)} para <B>{numero(total.filaFim)}</B>.
         </>
       )}
     </p>

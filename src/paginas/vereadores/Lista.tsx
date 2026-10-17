@@ -10,7 +10,7 @@ import { Card, CabecalhoCard } from '@/componentes/ui/Card'
 import type { DadosVereadores, LinhaVereador } from '@/calculos/vereadores'
 import type { Periodo } from '@/filtros/filtros'
 import { fraseQuando } from '@/filtros/frases'
-import { numero, pct, plural } from '@/lib/formato'
+import { numero, plural } from '@/lib/formato'
 
 const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
 
@@ -23,37 +23,29 @@ function Resumo({ d, periodo }: { d: DadosVereadores; periodo: Periodo }) {
         {d.emAberto > 0 && (
           <>
             {' '}
-            Na fila de hoje há <B>{plural(d.emAberto, 'pedido', 'pedidos')}</B> de vereador, de períodos anteriores.
+            Na fila de hoje há <B>{plural(d.emAberto, 'pedido', 'pedidos')}</B> de vereador, de antes.
           </>
         )}
       </p>
     )
   return (
     <p className="text-[15px] leading-relaxed text-ink-2">
-      {/* revista 17/10/2026: "chegaram" contava pela saída para a rua, e "Hoje 71 estão em aberto" vinha logo depois
-          de "30 pedidos" — 71 de 30? São os de qualquer data; dito. */}
-      {quando}, {d.pedidos === 1 ? 'saiu' : 'saíram'} para a rua <B>{plural(d.pedidos, 'pedido', 'pedidos')}</B> de vereador
-      {d.vereadoresComPedido > 0 && <> ({plural(d.vereadoresComPedido, 'vereador', 'vereadores')} com nome identificado)</>}
-      {d.pedidosTodos > 0 && <> — {pct(d.pedidos, d.pedidosTodos)} de tudo o que saiu</>}.{' '}
+      {/* curta (17/10/2026): o período e a fila de hoje separados — "71 em aberto" logo depois de "30 pedidos" parecia
+          71 de 30. Quantos vereadores e a parte do total ficam nos cartões e na lista. */}
+      {quando}, {d.pedidos === 1 ? 'saiu' : 'saíram'} <B>{plural(d.pedidos, 'pedido', 'pedidos')}</B> de vereador para a rua.{' '}
       {d.emAberto === 0 ? (
-        'Nenhum pedido de vereador na fila de hoje'
+        'Nenhum na fila de hoje.'
       ) : (
         <>
-          Na fila de hoje, de qualquer data, há <B>{plural(d.emAberto, 'pedido', 'pedidos')}</B> de vereador
+          Na fila de hoje há <B>{numero(d.emAberto)}</B>
           {d.indicacoesAbertas > 0 && (
             <>
-              {d.emAberto === 1 ? (
-                <>, e é indicação legislativa</>
-              ) : (
-                <>
-                  , <B>{numero(d.indicacoesAbertas)}</B> {d.indicacoesAbertas === 1 ? 'deles é indicação legislativa' : 'deles indicações legislativas'}
-                </>
-              )}
+              , {d.emAberto === 1 ? 'e é' : `${numero(d.indicacoesAbertas)} ${d.indicacoesAbertas === 1 ? 'deles é' : 'deles'}`} {d.indicacoesAbertas === 1 ? 'indicação legislativa' : 'indicações legislativas'}
             </>
           )}
+          .
         </>
       )}
-      .
     </p>
   )
 }

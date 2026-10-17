@@ -3,7 +3,8 @@
 import { Indicador } from '@/componentes/ui/Indicador'
 import { desdeProvisorio } from '@/componentes/graficos/MiniLinha'
 import { mesesDoPeriodo } from '@/filtros/filtros'
-import type { Panorama } from '@/calculos/panorama'
+import type { Indicadores as CalcIndicadores, Panorama } from '@/calculos/panorama'
+import { partesDoPrazo } from './FrasePrazo'
 import { decimal, enxuto, numero, pctCurto } from '@/lib/formato'
 import { rotuloMes } from '@/lib/datas'
 
@@ -11,11 +12,17 @@ import { rotuloMes } from '@/lib/datas'
 const provisorio = (i: { abertas: number; saidas: number; provisorio: boolean }) =>
   i.provisorio ? ` · provisório: ${pctCurto(i.abertas, i.saidas)} ainda em aberto` : ''
 
-/** No prazo: N de (executados + em aberto já vencidos) */
-export const notaNoPrazo = (i: { noPrazo: number; executadas: number; vencidas: number }) =>
-  i.vencidas > 0
-    ? `${numero(i.noPrazo)} de ${numero(i.executadas + i.vencidas)} (${numero(i.vencidas)} em aberto já fora do prazo)`
-    : `${numero(i.noPrazo)} de ${numero(i.executadas)} executadas em até 5 dias`
+/** No prazo: as mesmas partes da frase de abertura ("64 a tempo · 495 fora · 91 ainda no prazo") — sem o 559 */
+export const notaNoPrazo = (i: CalcIndicadores) => {
+  const p = partesDoPrazo(i)
+  return [
+    `${numero(p.noPrazo)} ${p.noPrazo === 1 ? 'executado' : 'executados'} no prazo`,
+    `${numero(p.fora)} ${p.fora === 1 ? 'passou' : 'passaram'} do prazo`,
+    p.aindaNoPrazo > 0 && `${numero(p.aindaNoPrazo)} ainda no prazo`,
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
 
 const variacao = (a: number | null, b: number | null) => (a === null || b === null || b === 0 ? null : ((a - b) / b) * 100)
 

@@ -644,14 +644,13 @@ voo do mapa 0,6 → 0,4 s (`DURACAO_VOO`); barra de espera só com opacidade no 
 nas cores — e o pressionar (0,97) voltou a animar: a lista de cores do `Botao` tirava o transform da transição do
 `pressionavel`; painel de período em 150 ms como as outras listas.
 
-## Frases de abertura (17/10/2026)
-Regra: todo número diz de qual total é parte; período e "hoje" não se misturam sem dizer.
-- Panorama: "Hoje há 812 na fila — 721 deles em atraso…" e "saíram 650: 323 já executados e 327 em aberto. Dentro
-  do prazo de 5 dias: 64 de 559 (11,4%) — os 323 executados mais os 236 em aberto que já venceram" (antes "64
-  (11,4%)" logo depois de 650 fazia ler 9,8%).
-- Prazo: "64 foram executados em até 5 dias: 11,4% dos 559 que já têm resultado (…). Os outros 91 ainda estão dentro
-  do prazo" (antes "64 de 559 foram executados" — 559 não são executados).
-- Evolução: "entraram na fila 650 (saídas para a rua) e foram executados 809, contando os que tinham entrado antes".
-- Vereadores: "saíram para a rua 30 pedidos de vereador…; na fila de hoje, de qualquer data, há 58" (antes
-  "chegaram" — conta pela saída — e "Hoje 71 estão em aberto" logo depois de 30).
-- Singular/plural em todos os casos de 1; porcentagem sem ",0" (100%).
+## Frases de abertura (17/10/2026, revistas com o usuário)
+Regras: curtas (no celular, 2–4 linhas); todo número é parte de um total que aparece na frase (as partes somam o
+total); período e "hoje" separados; o detalhe e as porcentagens ficam nos cartões.
+- Panorama: "Hoje há 812 serviços na fila, 721 em atraso. Nos últimos 30 dias, saíram 650 para a rua: 64 foram
+  executados no prazo, 495 passaram do prazo e 91 ainda estão no prazo." (pelo retorno: "foram executados 809: 85
+  dentro do prazo e 724 com atraso"). Cada parte com o verbo (usuário: "64 no prazo — 64 o quê?").
+- Prazo: a mesma frase do período (`panorama/FrasePrazo.tsx`). Cartão "No prazo": "64 executados no prazo · 495 passaram
+  do prazo · 91 ainda no prazo" (antes "64 de 559 (236 em aberto já fora do prazo)" — o 559 não aparecia em lugar nenhum).
+- Evolução: "650 entraram na fila e 809 foram executados: a fila caiu de 971 para 812."
+- Vereadores: "saíram 30 pedidos de vereador para a rua. Na fila de hoje há 58, 30 deles indicações legislativas."

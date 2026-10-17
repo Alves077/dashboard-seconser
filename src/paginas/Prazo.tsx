@@ -1,16 +1,15 @@
 // Prazo — "Estamos atendendo bem?". Indicadores (no prazo, tempo médio, em atraso agora, precisou
 // voltar), quantos dias levou (histograma), atraso de agora e tempo por região lado a lado, e o
 // retrabalho. Prazo e dias só existem para quem VOLTOU; o atraso de agora é a fila de hoje.
-import { useMemo, type ReactNode } from 'react'
+import { useMemo } from 'react'
 import { EstadoErro, Esqueleto } from '@/componentes/estados/Estados'
 import { Card } from '@/componentes/ui/Card'
 import { calcularPrazo, type Prazo as Dados } from '@/calculos/prazo'
-import { PRAZO_DIAS } from '@/config'
 import { useBase } from '@/dados/consultas'
 import type { Periodo } from '@/filtros/filtros'
 import { fraseQuando, rotuloComparacao } from '@/filtros/frases'
 import { useFiltros } from '@/filtros/useFiltros'
-import { numero, pctCurto, plural } from '@/lib/formato'
+import { FrasePrazoRetorno, FrasePrazoSaidas } from './panorama/FrasePrazo'
 import { useHoje } from '@/lib/ganchos'
 import { AtrasoAgora } from './prazo/AtrasoAgora'
 import { Distribuicao } from './prazo/Distribuicao'
@@ -18,54 +17,24 @@ import { Faixas } from './prazo/Faixas'
 import { Indicadores } from './prazo/Indicadores'
 import { Retrabalho } from './prazo/Retrabalho'
 
-const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
 
 /** O essencial numa frase, antes dos gráficos */
-// Frase de abertura (revista 17/10/2026): "64 de 559 foram executados" fazia pensar que 559 foram executados;
-// 559 são os que já têm resultado (executados + em aberto que já venceram). Agora cada número diz de onde vem.
+// Frase de abertura: a mesma do Panorama (panorama/FrasePrazo.tsx), curta
 function Resumo({ d, periodo }: { d: Dados; periodo: Periodo }) {
-  const { atual, distribuicao: dist, intervalo, primeiraSaida } = d
+  const { atual, intervalo, primeiraSaida } = d
   const { filtros } = useFiltros()
   const porRetorno = filtros.contarPor === 'retorno'
   const quando = fraseQuando(periodo, intervalo, primeiraSaida)
-  const p = (filhos: ReactNode) => <p className="text-[15px] leading-relaxed text-ink-2">{filhos}</p>
-  const longos = dist.mais30 > 0 && (
-    <>
-      {' '}{dist.total === 1 ? 'Do 1 executado' : `Dos ${numero(dist.total)} executados`}, <B>{numero(dist.mais30)}</B> ({pctCurto(dist.mais30, dist.total)}) levaram mais de 30 dias.
-    </>
-  )
-  if (porRetorno) {
-    if (dist.total === 0) return p(<>{quando}, nenhum serviço executado com esses filtros.</>)
-    if (dist.total === 1)
-      return p(<>{quando}, foi executado 1 serviço, {atual.noPrazo === 1 ? 'dentro' : 'fora'} do prazo de {PRAZO_DIAS} dias.</>)
-    return p(
-      <>
-        {quando}, {dist.total === 1 ? 'foi executado' : 'foram executados'} <B>{numero(dist.total)}</B> e <B>{numero(atual.noPrazo)}</B> ({pctCurto(atual.noPrazo, dist.total)}) {dist.total === 1 ? '' : 'deles '}em até{' '}
-        {PRAZO_DIAS} dias da saída.{longos}
-      </>,
-    )
-  }
-  if (atual.saidas === 0) return p(<>{quando}, nenhuma saída para a rua com esses filtros.</>)
-  const avaliados = atual.executadas + atual.vencidas
-  const noPrazoAinda = atual.abertas - atual.vencidas
-  if (avaliados === 0)
-    return p(
-      <>
-        {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua e todos ainda estão dentro dos {PRAZO_DIAS} dias: ainda não dá para medir o prazo.
-      </>,
-    )
-  return p(
-    <>
-      {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua e <B>{numero(atual.noPrazo)}</B> {atual.noPrazo === 1 ? 'foi executado' : 'foram executados'} em até{' '}
-      {PRAZO_DIAS} dias: <B>{pctCurto(atual.noPrazo, avaliados)}</B> {avaliados === 1 ? 'do 1 que já tem resultado' : `dos ${numero(avaliados)} que já têm resultado`}
-      {atual.vencidas > 0 ? (
-        <>
-          {' '}({plural(atual.executadas, 'executado', 'executados')} e {numero(atual.vencidas)} em aberto que já {atual.vencidas === 1 ? 'venceu' : 'venceram'})
-        </>
-      ) : null}
-      .{noPrazoAinda > 0 && <> {noPrazoAinda === 1 ? 'O outro ainda está' : `Os outros ${numero(noPrazoAinda)} ainda estão`} dentro do prazo.</>}
-      {longos}
-    </>,
+  return (
+    <p className="text-[15px] leading-relaxed text-ink-2">
+      {atual.saidas === 0 ? (
+        <>{quando}, {porRetorno ? 'nenhum serviço executado' : 'nenhuma saída para a rua'} com esses filtros.</>
+      ) : porRetorno ? (
+        <FrasePrazoRetorno i={atual} quando={quando} />
+      ) : (
+        <FrasePrazoSaidas i={atual} quando={quando} />
+      )}
+    </p>
   )
 }
 
@@ -142,7 +111,7 @@ export function Prazo() {
                 No período · {d.intervalo.rotulo}
               </h2>
               <span className="text-xs text-ink-3">
-                {porRetorno ? 'executados no período' : 'entre os que saíram no período (em aberto já vencido conta como fora do prazo)'}
+                {porRetorno ? 'executados no período' : 'entre os que saíram no período; os que ainda estão dentro dos 5 dias não entram na conta'}
                 {d.intervalo.parcial && d.intervalo.de !== null && ' · em curso, números ainda mudam'}
               </span>
             </div>

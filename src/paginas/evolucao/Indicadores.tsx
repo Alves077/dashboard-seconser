@@ -56,7 +56,7 @@ export function Indicadores({ e, comparacao }: { e: Evolucao; comparacao: string
         rotulo="No prazo"
         valor={decimal(total.pctNoPrazo)}
         sufixo={total.pctNoPrazo === null ? undefined : '%'}
-        nota={porSaida ? `dos que saíram, em até ${PRAZO_DIAS} dias (em aberto vencido conta fora)` : `dos executados, em até ${PRAZO_DIAS} dias`}
+        nota={porSaida ? `dos que saíram, em até ${PRAZO_DIAS} dias (sem contar os ainda dentro do prazo)` : `dos executados, em até ${PRAZO_DIAS} dias`}
         delta={total.pctNoPrazo === null || anterior?.pctNoPrazo == null ? null : total.pctNoPrazo - anterior.pctNoPrazo}
         unidadeDelta="p.p."
         deltaBom="subir"

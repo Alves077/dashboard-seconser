@@ -8,8 +8,8 @@ import { useBase } from '@/dados/consultas'
 import type { Periodo } from '@/filtros/filtros'
 import { fraseQuando, rotuloComparacao } from '@/filtros/frases'
 import { useFiltros } from '@/filtros/useFiltros'
-import { PRAZO_DIAS } from '@/config'
-import { decimal, numero, pctCurto, plural } from '@/lib/formato'
+import { numero, plural } from '@/lib/formato'
+import { FrasePrazoRetorno, FrasePrazoSaidas } from './panorama/FrasePrazo'
 import { useHoje } from '@/lib/ganchos'
 import { Agora } from './panorama/Agora'
 import { Indicadores } from './panorama/Indicadores'
@@ -19,61 +19,20 @@ import { Bairros, Categorias, Origens, Regioes, SeletorMedida, type Medida } fro
 const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
 
 /** Uma frase que diz o essencial antes dos números (para quem só vai ler o topo) */
-// Frase de abertura (revista 17/10/2026): todo número diz de qual total é parte. Antes "saíram 650; 64 (11,4%)
-// no prazo" fazia ler 64/650 = 9,8% — o 11,4% é sobre os 559 que já têm resultado (executados + em aberto vencidos).
+// Frase de abertura: a fila de hoje, depois o período com as partes que somam o total (panorama/FrasePrazo.tsx)
 function Resumo({ d, porRetorno, periodo }: { d: Dados; porRetorno: boolean; periodo: Periodo }) {
   const { agora, atual, intervalo, primeiraSaida } = d
   const quando = fraseQuando(periodo, intervalo, primeiraSaida)
-  const avaliados = atual.executadas + atual.vencidas
   return (
     <p className="text-[15px] leading-relaxed text-ink-2">
       Hoje há <B>{plural(agora.total, 'serviço', 'serviços')} na fila</B>
-      {agora.total > 0 && (
-        <>
-          {' '}— {numero(agora.atraso)} {agora.total === 1 ? '' : 'deles '}em atraso
-          {agora.risco > 0 && <> e {numero(agora.risco)} com risco elétrico</>}
-        </>
-      )}
-      .{' '}
+      {agora.atraso > 0 && <>, {numero(agora.atraso)} em atraso</>}.{' '}
       {atual.saidas === 0 ? (
         <>{quando}, nada com esses filtros.</>
       ) : porRetorno ? (
-        <>
-          {quando}, foram executados <B>{numero(atual.saidas)}</B>
-          {atual.pctNoPrazo !== null && (
-            <>
-              ; <B>{numero(atual.noPrazo)}</B> ({decimal(atual.pctNoPrazo)}%) {atual.saidas === 1 ? '' : 'deles '}em até {PRAZO_DIAS} dias da saída
-            </>
-          )}
-          .
-        </>
+        <FrasePrazoRetorno i={atual} quando={quando} />
       ) : (
-        <>
-          {quando}, saíram <B>{numero(atual.saidas)}</B> para a rua
-          {atual.abertas === 0 ? (
-            <>, todos já executados</>
-          ) : atual.executadas === 0 ? (
-            <>, todos ainda em aberto</>
-          ) : (
-            <>
-              : {plural(atual.executadas, 'já executado', 'já executados')} e {numero(atual.abertas)} em aberto
-            </>
-          )}
-          .{' '}
-          {atual.pctNoPrazo === null ? (
-            <>Ainda não dá para medir o prazo: todos estão dentro dos {PRAZO_DIAS} dias.</>
-          ) : atual.vencidas === 0 ? (
-            <>
-              Dentro do prazo de {PRAZO_DIAS} dias: <B>{numero(atual.noPrazo)}</B> de {plural(avaliados, 'executado', 'executados')} (
-              <B>{pctCurto(atual.noPrazo, avaliados)}</B>).
-            </>
-          ) : (
-            <>
-              Dentro do prazo de {PRAZO_DIAS} dias: <B>{numero(atual.noPrazo)}</B> de {numero(avaliados)} (<B>{pctCurto(atual.noPrazo, avaliados)}</B>) —{' '}
-              {atual.executadas === 1 ? 'o 1 executado' : `os ${numero(atual.executadas)} executados`} mais {atual.vencidas === 1 ? 'o 1 em aberto que já venceu' : `os ${numero(atual.vencidas)} em aberto que já venceram`}.
-            </>
-          )}
-        </>
+        <FrasePrazoSaidas i={atual} quando={quando} />
       )}
     </p>
   )
