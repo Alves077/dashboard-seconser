@@ -16,11 +16,11 @@ export const gavetaLista = (nome: string) => ({
 
 /**
  * Troca de nível que NÃO passa pela URL (estado do próprio componente, ex.: "Onde estão"): sem navegação o
- * React Router não dispara a transição — dispara aqui. Sem View Transitions ou com movimento reduzido: troca direta.
+ * React Router não dispara a transição — dispara aqui. Sem View Transitions: troca direta. Com movimento reduzido
+ * a transição acontece, mas só como esmaecer (estilos.css).
  */
 export function trocarComTransicao(direcao: 'gaveta-entra' | 'gaveta-volta', alvos: string[], trocar: () => void) {
-  const reduzir = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-  if (!document.startViewTransition || reduzir) {
+  if (!document.startViewTransition) {
     trocar()
     return
   }

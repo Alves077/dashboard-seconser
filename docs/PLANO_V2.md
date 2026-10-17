@@ -635,3 +635,11 @@ Proposta (sem página nova: o menu do celular já tem 6 itens):
 - Impressão no pior caso: Mensal 2 páginas, histórico 3, Em aberto 3 (dado real: 2), Lista de campo 27 (323
   abertos). O seletor de cenários de dev saía no papel — corrigido.
 - Tema escuro: axe sem violações em todas as páginas.
+
+## Revisão de animações (review-animations, 17/10/2026)
+Aprovado com ajustes (nada de ease-in, scale(0) ou transition: all; busca sem animação; origem dos popovers certa).
+Aplicados: movimento reduzido vira esmaecer de 160 ms (antes troca seca; sem deslizar nem card mudando de altura;
+`trocarComTransicao` não pula mais a transição); gaveta de filtros sai em 200 ms (entra em 300, como a Ficha);
+voo do mapa 0,6 → 0,4 s (`DURACAO_VOO`); barra de espera só com opacidade no hover (sem `filter`); botão com `ease`
+nas cores — e o pressionar (0,97) voltou a animar: a lista de cores do `Botao` tirava o transform da transição do
+`pressionavel`; painel de período em 150 ms como as outras listas.

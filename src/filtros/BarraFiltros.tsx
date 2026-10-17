@@ -116,7 +116,7 @@ function BotaoPeriodo() {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner sideOffset={8} align="start" className="z-40">
-          <Popover.Popup className="max-h-(--available-height) w-[min(560px,calc(100vw-2rem))] origin-(--transform-origin) overflow-y-auto overscroll-contain rounded-xl border border-line bg-card p-4 shadow-2 transition-[opacity,scale] duration-200 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
+          <Popover.Popup className="max-h-(--available-height) w-[min(560px,calc(100vw-2rem))] origin-(--transform-origin) overflow-y-auto overscroll-contain rounded-xl border border-line bg-card p-4 shadow-2 transition-[opacity,scale] duration-150 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
             <Popover.Title className="sr-only">Período</Popover.Title>
             <PainelPeriodo aoEscolher={() => setAberto(false)} />
           </Popover.Popup>
@@ -214,9 +214,9 @@ function GavetaFiltros() {
         <span className="min-w-0 truncate text-xs text-ink-2">{resumo}</span>
       </div>
       <Drawer.Portal>
-        <Drawer.Backdrop className="fixed inset-0 z-40 bg-black/30 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-300 ease-gaveta data-ending-style:opacity-0 data-starting-style:opacity-0" />
+        <Drawer.Backdrop className="fixed inset-0 z-40 bg-black/30 opacity-[calc(1-var(--drawer-swipe-progress))] transition-opacity duration-300 ease-gaveta data-ending-style:duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
         <Drawer.Viewport className="fixed inset-0 z-40 flex items-end">
-          <Drawer.Popup className="max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-card pb-[env(safe-area-inset-bottom,0px)] shadow-2 [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-300 ease-gaveta data-ending-style:[transform:translateY(100%)] data-starting-style:[transform:translateY(100%)] motion-reduce:transition-opacity motion-reduce:data-ending-style:opacity-0 motion-reduce:data-starting-style:opacity-0">
+          <Drawer.Popup className="max-h-[92dvh] w-full overflow-y-auto overscroll-contain rounded-t-2xl bg-card pb-[env(safe-area-inset-bottom,0px)] shadow-2 [transform:translateY(var(--drawer-swipe-movement-y))] transition-transform duration-300 ease-gaveta data-ending-style:duration-200 data-ending-style:[transform:translateY(100%)] data-starting-style:[transform:translateY(100%)] motion-reduce:transition-opacity motion-reduce:data-ending-style:opacity-0 motion-reduce:data-starting-style:opacity-0">
             <div aria-hidden className="mx-auto mt-2 h-1 w-10 rounded-full bg-line" />
             <Drawer.Content className="flex flex-col gap-5 p-4">
               <div className="flex items-center justify-between">

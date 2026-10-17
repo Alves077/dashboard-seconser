@@ -52,7 +52,7 @@ function BarraEspera({
               onClick={() => alternar(i)}
               title={`${FAIXAS_ESPERA[i].rotulo}: ${numero(n)} (${pct(n, total)}) — toque para ver só estes`}
               className={clsx(
-                'h-full cursor-pointer transition-[opacity,filter] duration-150 ease-out hover:brightness-110',
+                'h-full cursor-pointer transition-opacity duration-150 ease-out hover:opacity-85',
                 COR_ESPERA[i],
                 apagada(i) && 'opacity-30',
               )}

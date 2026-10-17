@@ -41,7 +41,7 @@ function voarPara(map: L.Map, latlng: L.LatLngExpression, zoom: number, desconta
     alvo = map.unproject(map.project(alvo, zoom).add([coberto / 2, 0]), zoom)
   }
   if (!animar || semMovimento()) map.setView(alvo, zoom, { animate: false })
-  else map.flyTo(alvo, zoom, { duration: 0.6 })
+  else map.flyTo(alvo, zoom, { duration: DURACAO_VOO })
 }
 
 /** Mapa estreito (celular): o enquadramento automático mostra o miolo, não o todo */
@@ -104,17 +104,20 @@ function enquadrar(map: L.Map, pontos: Ponto[], animar: boolean, miolo = false):
     const cabe = map.getBoundsZoom(nucleo, false, L.point(16, 16))
     const zoom = Math.min(17, Math.max(map.getMinZoom(), Math.round(cabe)))
     const centro = centroComMaisPinos(map, pontos, nucleo, zoom)
-    if (mover) map.flyTo(centro, zoom, { duration: 0.6 })
+    if (mover) map.flyTo(centro, zoom, { duration: DURACAO_VOO })
     else map.setView(centro, zoom, { animate: false })
     return true
   }
   // margem pequena + zoom fracionado (zoomSnap 0.25): enquadra mais perto que o zoom inteiro
   const opcoes = { padding: [16, 16] as [number, number], maxZoom: 17 }
-  if (mover) map.flyToBounds(limites, { ...opcoes, duration: 0.6 })
+  if (mover) map.flyToBounds(limites, { ...opcoes, duration: DURACAO_VOO })
   // sem animate:false o Leaflet ainda anima o zoom
   else map.fitBounds(limites, { ...opcoes, animate: false })
   return true
 }
+
+/** Voo do mapa: mostra para onde foi (por isso passa dos 300 ms), mas acontece a cada filtro — 0,6 s fazia esperar */
+const DURACAO_VOO = 0.4
 
 const quando = (p: Ponto) => (p.situacao === 'ok' ? `executado em ${p.dias} d` : `${p.dias} d em aberto`)
 

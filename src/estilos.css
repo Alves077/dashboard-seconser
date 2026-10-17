@@ -317,20 +317,32 @@ html[data-transicao='gaveta-volta']::view-transition-new(*.gaveta-lista) {
     transform: translateX(-16px);
   }
 }
+/* Movimento reduzido: mais suave, não zero (review-animations, 17/10/2026). Sai o deslizar e o card que muda
+   de altura; fica um esmaecer de 160 ms — sem ele os números trocavam de uma vez, sem pista de que algo mudou. */
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-old(root),
-  ::view-transition-new(root),
   html[data-transicao]::view-transition-old(root),
-  html[data-transicao]::view-transition-new(root) {
-    animation: none;
+  html[data-transicao]::view-transition-old(*.gaveta-lista) {
+    animation: 160ms var(--ease-saida) both desvanece-sai;
+  }
+  ::view-transition-new(root),
+  html[data-transicao]::view-transition-new(root),
+  html[data-transicao]::view-transition-new(*.gaveta-lista) {
+    animation: 160ms var(--ease-saida) both desvanece-entra;
   }
   ::view-transition-group(*.gaveta-cartao),
-  ::view-transition-group(*.gaveta-lista),
-  ::view-transition-old(*.gaveta-cartao),
-  ::view-transition-new(*.gaveta-cartao),
-  ::view-transition-old(*.gaveta-lista),
-  ::view-transition-new(*.gaveta-lista) {
+  ::view-transition-group(*.gaveta-lista) {
     animation: none;
+  }
+}
+@keyframes desvanece-sai {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes desvanece-entra {
+  from {
+    opacity: 0;
   }
 }
 
