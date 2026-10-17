@@ -1,0 +1,100 @@
+# Publica o site no GitHub Pages (Settings → Pages → Source: GitHub Actions).
+# Roda a cada push no ramo v2 (ou à mão, em Actions → Publicar site → Run workflow).
+#
+# ETAPA (mudar a linha abaixo e dar push — plano em docs/PUBLICACAO.md):
+#   teste → site antigo na raiz (do ramo main, como hoje) + v2 em /dashboard-seconser/teste/
+#   troca → v2 na raiz + site antigo em /dashboard-seconser/legado/ com aviso de que sai do ar em FIM_LEGADO
+#           (o código do antigo vem da marca "site-antigo", criada antes da troca)
+#   final → só a v2 (depois de desligar o Apps Script do site antigo)
+name: Publicar site
+
+on:
+  push:
+    branches: [v2]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# uma publicação por vez; a mais nova cancela a que estava na fila
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+env:
+  ETAPA: teste
+  FIM_LEGADO: '' # ex.: '15/11/2026' — data em que o site antigo sai do ar (etapa troca)
+
+jobs:
+  montar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Código da v2
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Gerar a v2
+        run: |
+          if [ "$ETAPA" = teste ]; then BASE=/dashboard-seconser/teste/; else BASE=/dashboard-seconser/; fi
+          npx tsc -b
+          npx vite build --base="$BASE"
+
+      - name: Código do site antigo
+        if: env.ETAPA != 'final'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.ETAPA == 'teste' && 'main' || 'site-antigo' }}
+          path: antigo
+
+      - name: Montar o site
+        run: |
+          mkdir -p _site
+          rm -rf antigo/.git antigo/.github
+          case "$ETAPA" in
+            teste)
+              cp -r antigo/. _site/
+              mkdir -p _site/teste
+              cp -r dist/. _site/teste/
+              # endereço de teste fora dos buscadores
+              sed -i 's#<head>#<head><meta name="robots" content="noindex" />#' _site/teste/index.html
+              ;;
+            troca)
+              cp -r dist/. _site/
+              mkdir -p _site/legado
+              cp -r antigo/. _site/legado/
+              # aviso em todas as páginas do site antigo
+              AVISO="<div style=\"position:sticky;top:0;z-index:9999;padding:10px 16px;background:#fff4d6;color:#5c4100;font:14px/1.4 system-ui,sans-serif;text-align:center;border-bottom:1px solid #f0d38a\">Esta é a versão antiga do painel e sai do ar em ${FIM_LEGADO}. <a href=\"/dashboard-seconser/\" style=\"color:#533afd;font-weight:600\">Abrir o painel novo</a></div>"
+              find _site/legado -name '*.html' -print0 | xargs -0 sed -i -E "0,/<body[^>]*>/s##&${AVISO//#/\\#}#"
+              sed -i 's#<head>#<head><meta name="robots" content="noindex" />#' _site/legado/*.html
+              ;;
+            final)
+              cp -r dist/. _site/
+              ;;
+            *)
+              echo "ETAPA desconhecida: $ETAPA" && exit 1
+              ;;
+          esac
+          touch _site/.nojekyll
+          echo "Conteúdo publicado:" && find _site -maxdepth 2 -name 'index.html'
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  publicar:
+    needs: montar
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

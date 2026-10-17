@@ -664,3 +664,8 @@ total); período e "hoje" separados; o detalhe e as porcentagens ficam nos cart�
   nessa montagem (`useEntradaSuave`): trocar de página com o dado em memória não anima.
 - Descartados: busca (teclado), "Mostrar mais" crescendo (atrasa a leitura), números contando, troca de tema com
   efeito, expansões do painel de período.
+
+## Publicação (17/10/2026)
+Workflow `.github/workflows/publicar.yml` (push na `v2`) com etapas `teste` (antigo na raiz + v2 em `/teste/`) →
+`troca` (v2 na raiz + antigo em `/legado/` com aviso) → `final`. Testado localmente nas três montagens. Passo a passo,
+checklist do celular e desligamento do legado: `docs/PUBLICACAO.md`.
