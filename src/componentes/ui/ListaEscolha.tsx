@@ -26,6 +26,7 @@ export function ListaEscolha({
   opcoes,
   aoMudar,
   className,
+  legenda,
 }: {
   rotulo: string
   valor: string | null
@@ -33,6 +34,8 @@ export function ListaEscolha({
   opcoes: OpcaoLista[]
   aoMudar: (v: string | null) => void
   className?: string
+  /** o que o número de cada opção conta ("Saídas · Últimos 30 dias"): sem isso o 39 do Leste parecia "em aberto" */
+  legenda?: string
 }) {
   const itens = [{ value: TODAS, label: vazio }, ...opcoes.map((o) => ({ value: o.valor, label: o.texto }))]
   const grupos = [...new Set(opcoes.map((o) => o.grupo ?? ''))]
@@ -78,6 +81,12 @@ export function ListaEscolha({
       <Select.Portal>
         <Select.Positioner sideOffset={6} alignItemWithTrigger={false} align="start" className="z-50 outline-none">
           <Select.Popup className="min-w-[max(var(--anchor-width),15rem)] origin-(--transform-origin) rounded-xl border border-line bg-card p-1 shadow-2 transition-[opacity,scale] duration-150 ease-saida outline-none data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
+            {legenda && (
+              <p className="flex items-center justify-between gap-3 border-b border-line px-2 pt-1.5 pb-2 text-[11px] text-ink-3">
+                <span>Nº ao lado de cada opção</span>
+                <span className="font-medium text-ink-2">{legenda}</span>
+              </p>
+            )}
             <Select.List className="max-h-[min(22rem,var(--available-height))] scroll-py-2 overflow-y-auto overscroll-contain pr-1">
               <Select.Item
                 value={TODAS}

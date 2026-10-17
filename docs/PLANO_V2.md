@@ -572,3 +572,53 @@ abertas (Base UI as monta fora das regiões da página, em portal — limitaçã
 - **Linha pequena das listas (17/10, pedido do usuário):** tem que ser PARTE do número grande ou dizer de onde ele
   vem. "Na fila agora": "222 deles saíram no período" (antes "445 no período", que parecia 445 dos 513). "Saíram no
   período": nada embaixo (a parte em aberto já está ao lado, em âmbar). "Em aberto do período": "de 445 que saíram".
+
+## 8.5 Espaços públicos e ruas — plano (17/10/2026, a decidir com o usuário)
+Dado (Supabase, carga 16/10; colunas públicas em `vw_servicos`):
+- `tipo_local`/`local`: 536 serviços. Praça 284 (83 lugares; 89 sem nome), praia/orla 108 (15 — Orla de Piratininga 34,
+  Calçadão de Camboinhas 25), escadaria 79 (72 sem nome), campo/quadra 32, ciclovia/pista 17, parque 12, outro 4.
+  Em aberto hoje: 25. Nos últimos 30 dias: 14 (12 meses: 412) → pouco para um cartão próprio no Panorama.
+- `logradouro_norm`: 17.072 serviços, 53 sem rua. 2.424 ruas×bairro (1.944 nomes); 992 com 5+ pedidos, 174 com 20+;
+  maior: Av. Almirante Tamandaré/Piratininga 210. Em aberto: 75 ruas com 3+, máx. 10 (Rua Américo Rebello/Cubango,
+  Alameda São Boaventura/Fonseca). Últimos 30 dias: 62 ruas com 3+ pedidos. Nomes genéricos ("Rua A" em 11 bairros) →
+  rua é SEMPRE rua+bairro.
+
+Proposta (sem página nova: o menu do celular já tem 6 itens):
+1. **Rua como filtro do site** (`?rua=` junto com o bairro, como bairro dentro da região). Entradas:
+   - **Busca**: grupo "Ruas" ("Estrada Francisco da Cruz Nunes · Itaipu — 159 pedidos, 7 em aberto"), público
+     (nome de rua não é dado pessoal; o número da casa continua só com login) → aplica o filtro.
+   - **Bairros no Panorama**: com um bairro escolhido, o cartão vira **Ruas do bairro** (mesma gaveta de região →
+     bairros e origem → quem), na medida escolhida (saíram / em aberto do período / fila).
+   - **Ficha**: "Nesta rua: 12 pedidos nos últimos 12 meses, 3 em aberto agora — Ver todos" (aplica o filtro).
+   Com o filtro, todas as páginas mostram só a rua (Mapa enquadra os pinos dela; Relatórios saem por rua).
+2. **Lista de campo por rua**: dentro de cada bairro, agrupar por rua (subtítulo da rua, mais antigos primeiro) — a
+   equipe resolve a rua de uma vez.
+3. **Espaços públicos como filtro** ("Tipo de lugar" → nome do lugar, como origem → quem), na gaveta/"mais filtros".
+4. **Camada no Mapa**: chave "Espaços públicos" — um marcador por lugar (ícone do tipo, nº de pedidos/abertos);
+   tocar filtra o lugar. Lugar sem nome ("praça sem nome") entra no filtro por tipo, não na camada.
+5. (Opcional) **Repetição na mesma rua**: definir antes. Ex.: "pedido novo em até 30 dias depois de outro executado
+   na mesma rua+bairro" → lista "Ruas onde o problema volta" no Prazo, ao lado de "Precisou voltar à rua".
+- **Feito (17/10, versão enxuta combinada com o usuário):** sem filtro de rua na barra nem camada/filtro de espaço
+  público (pouco dado: 14 em 30 dias). O site lê `tipo_local`, `local` e `logradouro_norm` (`Servico.rua`,
+  `tipoLocal`, `local`; a cópia do navegador se renova sozinha porque a chave muda com as colunas).
+  - **Ficha**: em "Onde", a rua (pública, sem número) e o espaço público ("Praça César Tinoco (praça)"); bloco
+    **Perto daqui**: outros em aberto a até 300 m (qualquer rua; distância e rua de cada um; abre a ficha) e quantos
+    pedidos esse raio teve em 12 meses. Sem pino, cai para "Nesta rua" (mesma rua+bairro).
+  - **Lista de campo**: dentro do bairro, **grupos de pedidos próximos** — o mais antigo ainda sem grupo puxa os que
+    estão a até 300 m dele (`lib/geo.ts`, `calculos/relatorios.ts`); nome = rua mais comum ("… e arredores"); sem
+    pino, junta pela rua. Pela distância e não pelo nome da rua (usuário, 17/10): avenida/estrada longa tem o mesmo
+    nome a quilômetros — no dado real, 19 das 151 ruas com 2+ abertos no mesmo bairro têm pedidos a mais de 600 m.
+    Com o dado real: 812 abertos → 297 grupos; 695 (86%) em grupos de 2+; maior: 17 (Estrada/Travessa dos Ourives,
+    Muriqui). Espaço público junto do endereço.
+  - **Relatórios com época da saída**: o cabeçalho diz "Dos 39 que saíram para a rua nos últimos 30 dias, 12 seguem
+    em aberto" (antes, Leste/30 dias mostrava 12 e o Panorama 39 — os dois certos, sem dizer a relação); o seletor
+    virou "Em aberto que saíram para a rua".
+  - Ficou para depois: grupo "Ruas" na busca (com etiqueta de filtro, sem campo na barra), "Ruas do bairro" no
+    Panorama, métrica de repetição.
+- **17/10 (depois):** o número de cada opção dos filtros são as saídas no período (igual ao contador à direita) e a
+  lista agora diz isso no topo ("Saídas · Últimos 30 dias"). Na Ficha, vizinho de outro bairro/região diz qual (o
+  raio não respeita divisa; a Lista de campo agrupa só dentro do bairro). Lista de campo: células centradas na
+  vertical (só a linha do retorno embaixo) e bairro com mais destaque (14 px, fio à esquerda).
+- **17/10:** escolhas de dentro de uma página (Relatórios: aba, só em atraso, época da saída, mês de referência;
+  Mapa: o que mostrar) não vão mais junto ao trocar de página (`useDestino`, `SO_DA_PAGINA`); os filtros do site
+  continuam indo. O mês do Relatório Mensal passou de `?mes=` para `?referencia=` (`mes` é do filtro de período).

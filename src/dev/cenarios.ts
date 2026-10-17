@@ -109,6 +109,16 @@ const RUAS = [
   'Avenida Central Ewerton Xavier', 'Rua Coronel Moreira César', 'Alameda São Boaventura',
 ]
 
+/** espaços públicos (alguns sem nome, como no dado real: 89 praças e 72 escadarias sem nome) */
+const ESPACOS: { tipoLocal: string; local: string | null }[] = [
+  { tipoLocal: 'praça', local: 'Praça César Tinoco' },
+  { tipoLocal: 'praça', local: null },
+  { tipoLocal: 'praia/orla', local: 'Orla da Praia de Piratininga' },
+  { tipoLocal: 'escadaria', local: null },
+  { tipoLocal: 'campo/quadra', local: 'Quadra da Comporta' },
+  { tipoLocal: 'parque', local: 'Parque Natural Municipal da Cidade de Niterói — Mirante do Morro do Morcego' },
+]
+
 // ── Gerador ───────────────────────────────────────────────────────────────────
 
 /** sorteio com semente: o mesmo cenário dá sempre os mesmos números (dá para comparar antes/depois) */
@@ -143,6 +153,9 @@ interface Pedido {
   origem: string
   origemDetalhe: string | null
   vereador: Vereador | null
+  rua: string | null
+  tipoLocal: string | null
+  local: string | null
   /** [saída, retorno|null] em ordem */
   saidas: [Dia, Dia | null][]
 }
@@ -192,6 +205,9 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
       origem: o.origem,
       origemDetalhe: s.um(o.detalhes),
       vereador: o.origem === 'Vereador' ? (s.r() < 0.15 ? null : s.um(VEREADORES.slice(0, 7))) : null,
+      // poucas ruas por bairro, para a mesma rua repetir (lista de campo por rua, "nesta rua" na ficha)
+      rua: s.r() < 0.01 ? null : s.um(RUAS.slice(0, 6)),
+      ...(s.r() < 0.03 ? s.um(ESPACOS) : { tipoLocal: null, local: null }),
       ...p,
     }
     pedidos.push(ped)
@@ -269,7 +285,7 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
   // ── restrito: endereço, descrição, local; fotos ─────────────────────────────
   pedidos.forEach((p, i) => {
     const chave = `${p.id}-${p.type}`
-    const rua = s.um(RUAS)
+    const rua = p.rua ?? s.um(RUAS)
     const n = s.int(1, 4000)
     const longo = i % 97 === 0
     detalhes.set(chave, {
@@ -316,6 +332,9 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
         origem_detalhe: p.origemDetalhe,
         vereador_id: p.vereador?.id ?? null,
         vereador: p.vereador?.nome ?? null,
+        tipo_local: p.tipoLocal,
+        local: p.local,
+        logradouro_norm: p.rua,
       }),
     )
 

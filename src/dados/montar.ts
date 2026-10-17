@@ -72,6 +72,10 @@ export function montarBase(
         vereadorId: num(l.vereador_id),
         vereador: txt(l.vereador),
         led: bool(l.resolvido_por_led),
+        rua: txt(l.logradouro_norm),
+        tipoLocal: txt(l.tipo_local),
+        // no retrato CSV, "local" é o campo restrito antigo: só vale como espaço público junto com o tipo
+        local: txt(l.tipo_local) ? txt(l.local) : null,
         saidas: [],
       }
       porChave.set(chave, servico)

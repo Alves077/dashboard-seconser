@@ -11,7 +11,7 @@ import { useBase } from '@/dados/consultas'
 import { SEM_REGIAO } from '@/dados/montar'
 import { compararTexto, numero } from '@/lib/formato'
 import { useHoje } from '@/lib/ganchos'
-import { aplicarFiltros, contarAtivos, contarOpcoes, type Dimensao } from './filtros'
+import { aplicarFiltros, contarAtivos, contarOpcoes, intervaloDo, type Dimensao } from './filtros'
 import { PainelPeriodo } from './PainelPeriodo'
 import { useFiltros } from './useFiltros'
 import { useResumoPeriodo } from './useResumoPeriodo'
@@ -52,6 +52,16 @@ function useOpcoes() {
 }
 
 /** <select> do sistema (gaveta do celular): sem contagem no texto, zero desabilitado */
+/**
+ * O número de cada opção são SAÍDAS no período (o mesmo do contador "650 saídas" à direita), não a fila de hoje:
+ * dito no topo da lista (decisão do usuário, 17/10/2026 — "Leste 39" parecia "39 em aberto").
+ */
+function useLegendaContagem() {
+  const { filtros } = useFiltros()
+  const hoje = useHoje()
+  return `${filtros.contarPor === 'retorno' ? 'Executados' : 'Saídas'} · ${intervaloDo(filtros.periodo, hoje).rotulo}`
+}
+
 const paraNativo = (ops: OpcaoLista[]) => ops.map((o) => ({ valor: o.valor, texto: o.texto, disabled: o.desabilitada }))
 
 function CamposLugar({ empilhado = false }: { empilhado?: boolean }) {
@@ -62,6 +72,7 @@ function CamposLugar({ empilhado = false }: { empilhado?: boolean }) {
   const escolherBairro = (b: string | null) =>
     b ? mudar({ regiao: base?.bairros.find((x) => x.nome === b)?.regiao ?? filtros.regiao, bairro: b }) : mudar({ bairro: null })
   const vazioBairro = filtros.regiao && filtros.regiao !== SEM_REGIAO ? `Todos de ${filtros.regiao}` : 'Todos os bairros'
+  const legenda = useLegendaContagem()
   if (empilhado)
     return (
       <>
@@ -72,9 +83,9 @@ function CamposLugar({ empilhado = false }: { empilhado?: boolean }) {
     )
   return (
     <>
-      <ListaEscolha rotulo="Região" vazio="Todas as regiões" opcoes={regioes} valor={filtros.regiao} aoMudar={(v) => mudar({ regiao: v })} className="w-48" />
-      <ListaEscolha rotulo="Bairro" vazio={vazioBairro} opcoes={bairros} valor={filtros.bairro} aoMudar={escolherBairro} className="w-52" />
-      <ListaEscolha rotulo="Categoria" vazio="Todas as categorias" opcoes={categorias} valor={filtros.categoria} aoMudar={(v) => mudar({ categoria: v })} className="w-60" />
+      <ListaEscolha rotulo="Região" vazio="Todas as regiões" opcoes={regioes} valor={filtros.regiao} aoMudar={(v) => mudar({ regiao: v })} className="w-48" legenda={legenda} />
+      <ListaEscolha rotulo="Bairro" vazio={vazioBairro} opcoes={bairros} valor={filtros.bairro} aoMudar={escolherBairro} className="w-52" legenda={legenda} />
+      <ListaEscolha rotulo="Categoria" vazio="Todas as categorias" opcoes={categorias} valor={filtros.categoria} aoMudar={(v) => mudar({ categoria: v })} className="w-60" legenda={legenda} />
     </>
   )
 }
@@ -82,10 +93,11 @@ function CamposLugar({ empilhado = false }: { empilhado?: boolean }) {
 function CampoOrigem({ nativo = false }: { nativo?: boolean }) {
   const { filtros, mudar } = useFiltros()
   const { origens } = useOpcoes()
+  const legenda = useLegendaContagem()
   if (nativo)
     return <Selecao rotulo="Quem pediu" vazio="Todas as origens" opcoes={paraNativo(origens)} value={filtros.origem ?? ''} onChange={(e) => mudar({ origem: e.target.value || null })} />
   return (
-    <ListaEscolha rotulo="Quem pediu" vazio="Todas as origens" opcoes={origens} valor={filtros.origem} aoMudar={(v) => mudar({ origem: v })} className="w-48" />
+    <ListaEscolha rotulo="Quem pediu" vazio="Todas as origens" opcoes={origens} valor={filtros.origem} aoMudar={(v) => mudar({ origem: v })} className="w-48" legenda={legenda} />
   )
 }
 

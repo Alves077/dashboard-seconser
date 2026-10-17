@@ -4,6 +4,7 @@ import { CATEGORIA_RISCO, diasExecucao, FAIXAS, faixa, media, situacao } from '@
 import type { Base, Saida, Servico } from '@/dados/tipos'
 import { PRAZO_DIAS } from '@/config'
 import { filtrarLugar, noIntervalo, type Filtros, type Intervalo } from '@/filtros/filtros'
+import { distanciaM, RAIO_PERTO_M } from '@/lib/geo'
 import { compararTexto } from '@/lib/formato'
 import { chaveMes, diaDaChave, fimDoMes, somarMeses, type ChaveMes, type Dia } from '@/lib/datas'
 import { calcularAgora, FAIXAS_ESPERA, type ItemFila } from './panorama'
@@ -329,11 +330,56 @@ export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia, saida: Inter
 export type RelatorioAbertos = ReturnType<typeof relatorioAbertos>
 
 // ── Lista de campo ─────────────────────────────────────────────────────────
-// Região (mais serviços primeiro) → bairro (ordem alfabética, para achar rápido) → mais antigos primeiro.
+// Região (mais serviços primeiro) → bairro (ordem alfabética, para achar rápido) → grupos de pedidos PRÓXIMOS →
+// mais antigos primeiro. Grupo (decisão do usuário, 17/10/2026): a equipe resolve o que está perto de uma vez. Pela
+// distância e não pelo nome da rua — avenida/estrada longa tem o mesmo nome a quilômetros. O pedido mais antigo
+// ainda sem grupo puxa todos a até 300 m dele (grupo de no máximo ~600 m de ponta a ponta, sem "corrente" que
+// atravessa o bairro); sem pino, junta pela rua. Nome do grupo: a rua mais comum nele ("… e arredores" se houver outras).
+
+export interface GrupoCampo {
+  nome: string
+  itens: ItemFila[]
+}
 
 export interface BairroCampo {
   nome: string
+  /** todos os itens do bairro, na ordem dos grupos */
   itens: ItemFila[]
+  grupos: GrupoCampo[]
+}
+
+const temPino = (it: ItemFila) => it.servico.lat !== null && it.servico.lng !== null
+
+function nomeDoGrupo(itens: ItemFila[], comPino: boolean): string {
+  const contagem = new Map<string, number>()
+  for (const it of itens) if (it.servico.rua) contagem.set(it.servico.rua, (contagem.get(it.servico.rua) ?? 0) + 1)
+  const [principal] = [...contagem].sort((a, b) => b[1] - a[1] || compararTexto(a[0], b[0]))[0] ?? ['Rua não identificada']
+  if (!comPino) return `${principal} (sem pino no mapa)`
+  return contagem.size > 1 ? `${principal} e arredores` : principal
+}
+
+function porProximidade(lista: ItemFila[]): GrupoCampo[] {
+  const ordem = [...lista].sort((x, y) => y.dias - x.dias)
+  const usados = new Set<ItemFila>()
+  const grupos: GrupoCampo[] = []
+  for (const semente of ordem) {
+    if (usados.has(semente)) continue
+    usados.add(semente)
+    const itens = [semente]
+    for (const outro of ordem) {
+      if (usados.has(outro)) continue
+      const junto = temPino(semente)
+        ? temPino(outro) &&
+          distanciaM(semente.servico.lat!, semente.servico.lng!, outro.servico.lat!, outro.servico.lng!) <= RAIO_PERTO_M
+        : !temPino(outro) && outro.servico.rua === semente.servico.rua
+      if (junto) {
+        usados.add(outro)
+        itens.push(outro)
+      }
+    }
+    grupos.push({ nome: nomeDoGrupo(itens, temPino(semente)), itens })
+  }
+  return grupos
 }
 
 export interface RegiaoCampo {
@@ -367,7 +413,10 @@ export function listaCampo(
     nome,
     total: [...bairros.values()].reduce((t, l) => t + l.length, 0),
     bairros: [...bairros]
-      .map(([b, lista]) => ({ nome: b, itens: lista.sort((x, y) => y.dias - x.dias) }))
+      .map(([b, lista]) => {
+        const grupos = porProximidade(lista)
+        return { nome: b, grupos, itens: grupos.flatMap((g) => g.itens) }
+      })
       .sort((x, y) => compararTexto(x.nome, y.nome)),
   }))
   regioes.sort((a, b) => b.total - a.total || compararTexto(a.nome, b.nome))

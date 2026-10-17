@@ -37,6 +37,12 @@ export interface Servico {
   vereadorId: number | null
   vereador: string | null
   led: boolean
+  /** rua padronizada no tratamento, sem número (logradouro_norm); agrupar SEMPRE com o bairro ("Rua A" existe em 11) */
+  rua: string | null
+  /** espaço público onde fica o ponto (praça, praia/orla, escadaria…) — só quando o serviço é DENTRO do lugar */
+  tipoLocal: string | null
+  /** nome do espaço público (pode faltar: "praça" sem nome no cadastro) */
+  local: string | null
   /** em ordem de data de saída */
   saidas: Saida[]
 }
@@ -104,4 +110,8 @@ export interface LinhaVw {
   origem_detalhe: string | null
   vereador_id: number | string | null
   vereador: string | null
+  /** colunas de 14/10 (não existem no retrato CSV de 09/10) */
+  tipo_local?: string | null
+  local?: string | null
+  logradouro_norm?: string | null
 }

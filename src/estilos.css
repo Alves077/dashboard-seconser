@@ -578,6 +578,23 @@ html[data-transicao='gaveta-volta']::view-transition-new(*.gaveta-lista) {
 .folha-compacta .tabela-folha td.quebra {
   white-space: normal;
 }
+/* lista de campo: tudo centrado na linha; só a linha do retorno (escrever à mão) fica embaixo */
+.tabela-campo td {
+  vertical-align: middle;
+}
+.tabela-campo td.retorno {
+  vertical-align: bottom;
+}
+/* lista de campo: subtítulo de cada grupo de pedidos próximos dentro do bairro */
+.tabela-campo tr.linha-rua td {
+  padding-top: 8px;
+  border-bottom: 1px solid var(--c-line);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--c-ink);
+  background: var(--c-page);
+  break-after: avoid; /* o nome da rua não fica sozinho no pé da folha */
+}
 /* lista de campo: mais linhas por folha */
 .tabela-campo {
   font-size: 11.5px;

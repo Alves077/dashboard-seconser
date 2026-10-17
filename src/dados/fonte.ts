@@ -133,7 +133,7 @@ async function lerTudo(tabela: string, colunas: string, ordem: string[]): Promis
 
 const COLUNAS_VW =
   'id_colab,type,categoria,categoria_revisada,bairro,regiao,data_saida,data_retorno,reaberto,' +
-  'resolvido_por_led,lat,lng,origem,origem_detalhe,vereador_id,vereador'
+  'resolvido_por_led,lat,lng,origem,origem_detalhe,vereador_id,vereador,tipo_local,local,logradouro_norm'
 
 /** Cópia da parte pública guardada no navegador, marcada com a carga de que veio */
 interface CopiaPublica {

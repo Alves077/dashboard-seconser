@@ -78,6 +78,16 @@ export function quemDe(s: Servico): string | null {
   return s.origemDetalhe
 }
 
+/**
+ * Espaço público do serviço, para mostrar: "Praça César Tinoco (praça)"; sem nome no cadastro, só o tipo
+ * ("Escadaria"). null quando o serviço não é dentro de um espaço público.
+ */
+export function rotuloLugar(s: Servico): string | null {
+  if (!s.tipoLocal) return null
+  const tipo = s.tipoLocal.charAt(0).toUpperCase() + s.tipoLocal.slice(1)
+  return s.local ? `${s.local} (${s.tipoLocal})` : tipo
+}
+
 /** Mediana certa (lista par = média dos dois do meio) */
 export function mediana(valores: number[]): number | null {
   if (!valores.length) return null

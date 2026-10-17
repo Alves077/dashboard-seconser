@@ -2,20 +2,21 @@
 // Computador: painel à direita. Celular: folha de baixo (arrastar para fechar).
 import { Drawer } from '@base-ui/react/drawer'
 import { clsx } from 'clsx'
-import { FileText, ImageOff, Images, Lightbulb, Lock, MapPin, X } from 'lucide-react'
-import { lazy, Suspense, useState, type ReactNode } from 'react'
+import { FileText, ImageOff, Images, Lightbulb, Lock, MapPin, MapPinned, X } from 'lucide-react'
+import { lazy, Suspense, useMemo, useState, type ReactNode } from 'react'
 import { Link, useLocation } from 'react-router'
 import { EstadoErro, EstadoVazio, Esqueleto } from '@/componentes/estados/Estados'
 import { useInterface } from '@/componentes/layout/interface'
 import { Botao } from '@/componentes/ui/Botao'
 import { SeloRisco, SeloSituacao } from '@/componentes/ui/SeloSituacao'
 import { useBase, useDetalhes, useFotos } from '@/dados/consultas'
-import { CATEGORIA_RISCO, diasEmAberto, diasExecucao, noPrazo, prazo, situacao, ultimaSaida } from '@/dados/regras'
+import { CATEGORIA_RISCO, diasEmAberto, diasExecucao, noPrazo, prazo, rotuloLugar, situacao, ultimaSaida } from '@/dados/regras'
 import { useSessao } from '@/dados/sessao'
 import type { Saida, Servico } from '@/dados/tipos'
 import { formatarDia } from '@/lib/datas'
-import { dias } from '@/lib/formato'
+import { dias, plural } from '@/lib/formato'
 import { useDestino, useFicha, useHoje, useMidia } from '@/lib/ganchos'
+import { distanciaM, formatarDistancia, RAIO_PERTO_M } from '@/lib/geo'
 import { VisualizadorFotos } from './VisualizadorFotos'
 
 const MiniMapa = lazy(() => import('@/mapa/MiniMapa'))
@@ -211,7 +212,8 @@ function ParteRestrita({ servico }: { servico: Servico }) {
       </Bloco>
       <Bloco titulo="Endereço">
         <p className="text-sm text-ink">{d?.endereco ?? '—'}</p>
-        {d?.local && <p className="mt-1 text-[13px] text-ink-2">Local: {d.local}</p>}
+        {/* o espaço público já aparece em "Onde": aqui só se for outro texto */}
+        {d?.local && d.local !== servico.local && <p className="mt-1 text-[13px] text-ink-2">Local: {d.local}</p>}
         {d?.mudouLogradouro && (
           <p className="mt-1 text-xs text-ink-3">Endereço corrigido no tratamento (diferente do aberto no Colab).</p>
         )}
@@ -220,6 +222,83 @@ function ParteRestrita({ servico }: { servico: Servico }) {
         <Fotos chave={servico.chave} />
       </Bloco>
     </>
+  )
+}
+
+/**
+ * Outros pedidos em aberto PERTO deste (até 300 m, qualquer rua): quem abre um pedido vê o que dá para resolver
+ * na mesma ida. Pela distância e não pelo nome da rua — avenida/estrada longa tem o mesmo nome a quilômetros
+ * (usuário, 17/10/2026). Sem pino, cai para a mesma rua e bairro. Público, como o resto da ficha fora do endereço.
+ */
+function Perto({ servico }: { servico: Servico }) {
+  const { data: base } = useBase()
+  const hoje = useHoje()
+  const { abrir } = useFicha()
+  const [todos, setTodos] = useState(false)
+  const comPino = servico.lat !== null && servico.lng !== null
+  const { abertos, noAno } = useMemo(() => {
+    const vizinhos: { s: Servico; m: number | null }[] = []
+    for (const s of base?.servicos ?? []) {
+      if (s === servico) continue
+      if (comPino) {
+        if (s.lat === null || s.lng === null) continue
+        const m = distanciaM(servico.lat!, servico.lng!, s.lat, s.lng)
+        if (m <= RAIO_PERTO_M) vizinhos.push({ s, m })
+      } else if (s.rua === servico.rua && s.bairro === servico.bairro) vizinhos.push({ s, m: null })
+    }
+    return {
+      abertos: vizinhos
+        .map((v) => ({ ...v, saida: ultimaSaida(v.s.saidas) }))
+        .filter(({ saida }) => saida.dataRetorno === null)
+        .sort((a, b) => (a.m ?? 0) - (b.m ?? 0) || a.saida.dataSaida - b.saida.dataSaida),
+      // pedidos ali (este incluído) com saída nos últimos 12 meses
+      noAno: vizinhos.filter(({ s }) => s.saidas.some((x) => x.dataSaida > hoje - 365)).length + 1,
+    }
+  }, [base, servico, hoje, comPino])
+  const visiveis = todos ? abertos : abertos.slice(0, 5)
+  const onde = comPino ? `até ${formatarDistancia(RAIO_PERTO_M)} daqui` : 'nesta rua'
+  return (
+    <Bloco titulo={comPino ? 'Perto daqui' : 'Nesta rua'}>
+      <p className="text-[13px] text-ink-2">
+        {abertos.length === 0
+          ? `Nenhum outro pedido em aberto ${onde}.`
+          : `${plural(abertos.length, 'outro pedido em aberto', 'outros pedidos em aberto')} ${onde} — dá para resolver na mesma ida.`}{' '}
+        <span className="text-ink-3">
+          {plural(noAno, 'pedido', 'pedidos')} {comPino ? 'nesse raio' : 'na rua'} nos últimos 12 meses.
+        </span>
+      </p>
+      {visiveis.length > 0 && (
+        <ul className="-mx-2 mt-2 divide-y divide-line">
+          {visiveis.map(({ s, saida, m }) => (
+            <li key={s.chave}>
+              <button
+                type="button"
+                onClick={() => abrir(s.chave)}
+                className="group flex min-h-12 w-full items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-realce"
+              >
+                <span className="numeros w-14 shrink-0 text-[13px] font-medium text-ink">{s.idColab}</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-[13px] text-ink">{s.categoria ?? 'Sem categoria'}</span>
+                  <span className="block truncate text-[11px] text-ink-3">
+                    {m !== null && <span className="numeros">{formatarDistancia(m)} · </span>}
+                    {s.rua ?? s.bairro}
+                    {/* o raio não respeita divisa: vizinho de outro bairro (ou região) diz qual */}
+                    {s.rua && s.bairro !== servico.bairro && ` · ${s.bairro}`}
+                    {s.regiao !== servico.regiao && ` (${s.regiao})`}
+                  </span>
+                </span>
+                <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(diasEmAberto(saida, hoje))} />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      {abertos.length > 5 && (
+        <button type="button" onClick={() => setTodos((v) => !v)} className="mt-1 h-9 text-[13px] font-medium text-acao hover:underline">
+          {todos ? 'Mostrar menos' : `Mostrar todos (${abertos.length})`}
+        </button>
+      )}
+    </Bloco>
   )
 }
 
@@ -260,9 +339,17 @@ function Conteudo({ servico }: { servico: Servico }) {
       </Bloco>
 
       <Bloco titulo="Onde">
-        <p className="text-sm text-ink">
+        {/* rua e espaço público são públicos (sem número da casa); o endereço completo segue só com acesso */}
+        {servico.rua && <p className="text-sm text-ink">{servico.rua}</p>}
+        <p className={servico.rua ? 'text-[13px] text-ink-2' : 'text-sm text-ink'}>
           {servico.bairro} <span className="text-ink-3">·</span> {servico.regiao}
         </p>
+        {rotuloLugar(servico) && (
+          <p className="mt-1 flex items-start gap-1.5 text-[13px] text-ink-2">
+            <MapPinned aria-hidden className="mt-0.5 size-3.5 shrink-0 text-ink-3" />
+            {rotuloLugar(servico)}
+          </p>
+        )}
         {servico.lat !== null && servico.lng !== null && (
           <div className="mt-3 overflow-hidden rounded-lg border border-line">
             <Suspense fallback={<Esqueleto className="h-48 w-full rounded-none" />}>
@@ -279,6 +366,8 @@ function Conteudo({ servico }: { servico: Servico }) {
           </Link>
         )}
       </Bloco>
+
+      {(servico.lat !== null || servico.rua) && <Perto key={servico.chave} servico={servico} />}
 
       <Bloco titulo="Quem pediu">
         <p className="text-sm text-ink">{servico.origem}</p>

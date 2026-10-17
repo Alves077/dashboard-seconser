@@ -16,7 +16,7 @@ import { Selecao } from '@/componentes/ui/Selecao'
 import { listaCampo, mesesDoRelatorio, relatorioAbertos, relatorioMensal } from '@/calculos/relatorios'
 import { useBase, useDetalhes } from '@/dados/consultas'
 import { useSessao } from '@/dados/sessao'
-import { intervaloDo, type Atalho, type Intervalo } from '@/filtros/filtros'
+import { filtrarLugar, intervaloDo, noIntervalo, type Atalho, type Intervalo } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
 import { chaveMes, formatarDia, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
 import { numero } from '@/lib/formato'
@@ -31,7 +31,7 @@ type Aba = 'mensal' | 'abertos' | 'campo'
 const ABAS: { id: Aba; nome: string; icone: typeof FileText; descricao: string }[] = [
   { id: 'mensal', nome: 'Mensal', icone: FileText, descricao: 'Para reunião e prestação de contas: o relatório de um mês fechado ou o histórico completo. Escolha o mês aqui (o período do filtro não vale nesta aba).' },
   { id: 'abertos', nome: 'Em aberto', icone: ListTodo, descricao: 'A fila de hoje da cidade, de uma região ou de um bairro (escolha nos filtros). Para ver só os que saíram para a rua numa época, escolha aqui (o período do filtro não vale nesta aba).' },
-  { id: 'campo', nome: 'Lista de campo', icone: ClipboardList, descricao: 'Para levar à rua: os abertos por região e bairro, mais antigos primeiro, com espaço para anotar o retorno. A época da saída se escolhe aqui (o período do filtro não vale nesta aba).' },
+  { id: 'campo', nome: 'Lista de campo', icone: ClipboardList, descricao: 'Para levar à rua: os abertos por região e bairro, juntando os que estão perto um do outro (até 300 m), mais antigos primeiro, com espaço para anotar o retorno. A época da saída se escolhe aqui (o período do filtro não vale nesta aba).' },
 ]
 
 // "Saíram para a rua" das abas Em aberto e Lista de campo (decisão do usuário, 17/10/2026): seletor próprio,
@@ -141,7 +141,8 @@ function PaginaRelatorios() {
   const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria, filtros.quem ?? filtros.origem].filter(Boolean).join(' · ') || 'Cidade inteira'
   // mês de referência (como no antigo): meses fechados, o mais recente por padrão; "tudo" = histórico completo
   const meses = useMemo(() => (base ? mesesDoRelatorio(base, hoje) : []), [base, hoje])
-  const paramMes = params.get('mes')
+  // "referencia" e não "mes": "mes" é do filtro de período do site (?periodo=mes&mes=2026-09)
+  const paramMes = params.get('referencia')
   const mes: ChaveMes | null = paramMes === 'tudo' ? null : meses.find((k) => String(k) === paramMes) ?? meses[0] ?? null
   const [obs, setObs] = useObservacao(JSON.stringify([mes ?? 'tudo', escopo]))
 
@@ -152,7 +153,17 @@ function PaginaRelatorios() {
     () => (base ? [...new Set(base.saidas.filter((s) => s.dataRetorno === null).map((s) => chaveMes(s.dataSaida)))].sort((a, b) => b - a) : []),
     [base],
   )
-  const rotuloSaida = saida ? `Saíram para a rua: ${ATALHOS_SAIDA.find((a) => a.id === paramSaida)?.texto.toLowerCase() ?? saida.rotulo}` : null
+  // Com a época escolhida, o relatório diz de quantos saíram e quantos seguem em aberto: "Leste, últimos 30 dias"
+  // mostrava 12 e o Panorama 39 (as saídas) — os dois certos, mas sem dizer que 12 são os 39 que ainda não voltaram
+  const quandoSaida = saida ? (ATALHOS_SAIDA.find((a) => a.id === paramSaida)?.texto.toLowerCase() ?? `em ${saida.rotulo}`) : null
+  const saidasDaEpoca = useMemo(
+    () => (base && saida ? filtrarLugar(base.saidas, filtros).filter((s) => noIntervalo(s, saida, 'saida')).length : 0),
+    [base, filtros, saida],
+  )
+  const rotuloSaida = (emAberto: number, soAtrasados = false) =>
+    quandoSaida
+      ? `Dos ${numero(saidasDaEpoca)} que saíram para a rua ${quandoSaida}, ${numero(emAberto)} ${soAtrasados ? 'seguem em atraso' : 'seguem em aberto'}`
+      : null
 
   const mensal = useMemo(() => (base && aba === 'mensal' ? relatorioMensal(base, filtros, mes, hoje) : null), [base, filtros, hoje, aba, mes])
   const abertos = useMemo(
@@ -251,13 +262,13 @@ function PaginaRelatorios() {
             className="mt-3 w-full max-w-64"
             opcoes={[{ valor: 'tudo', texto: 'Histórico completo' }, ...meses.map((k) => ({ valor: String(k), texto: rotuloMesLongo(k) }))]}
             value={mes === null ? 'tudo' : String(mes)}
-            onChange={(e) => trocar('mes', e.target.value)}
+            onChange={(e) => trocar('referencia', e.target.value)}
           />
         )}
 
         {aba !== 'mensal' && (
           <Selecao
-            rotulo="Saíram para a rua"
+            rotulo="Em aberto que saíram para a rua"
             className="mt-3 w-full max-w-64"
             opcoes={[
               { valor: '', texto: 'Qualquer data' },
@@ -326,7 +337,7 @@ function PaginaRelatorios() {
             <>
               <CabecalhoFolha
                 titulo={`Serviços em Aberto · ${filtros.bairro ? `Bairro ${filtros.bairro}` : filtros.regiao ? `Região ${filtros.regiao}` : 'Niterói'}`}
-                subtitulo={[filtros.categoria, filtros.quem ?? filtros.origem, rotuloSaida].filter(Boolean).join(' · ') || undefined}
+                subtitulo={[filtros.categoria, filtros.quem ?? filtros.origem, rotuloSaida(abertos.n)].filter(Boolean).join(' · ') || undefined}
                 meta={[geradoLongo, `${numero(abertos.n)} serviços em aberto`, dadosAte].filter(Boolean)}
               />
               <RelatorioAbertosFolha r={abertos} detalhes={comEndereco} hoje={hoje} />
@@ -336,7 +347,7 @@ function PaginaRelatorios() {
             <>
               <CabecalhoFolha
                 titulo={`Lista de campo · ${escopo}`}
-                subtitulo={[soAtraso ? 'Só os serviços em atraso (mais de 5 dias)' : 'Todos os serviços em aberto', rotuloSaida].filter(Boolean).join(' · ')}
+                subtitulo={[soAtraso ? 'Só os serviços em atraso (mais de 5 dias)' : 'Todos os serviços em aberto', rotuloSaida(campo.total, soAtraso)].filter(Boolean).join(' · ')}
                 meta={[geradoEm, dadosAte, `${numero(campo.total)} serviços${campo.risco ? ` · ${numero(campo.risco)} com risco elétrico` : ''}`].filter(Boolean)}
               />
               <ListaCampoFolha regioes={campo.regioes} detalhes={comEndereco} hoje={hoje} />

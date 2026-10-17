@@ -92,18 +92,26 @@ export function useFicha() {
   return { chave, abrir, fechar }
 }
 
+/**
+ * Escolhas que só valem dentro de uma página: não vão junto para as outras (antes, mexer na época da Lista de
+ * campo e trocar de página levava "?relatorio=campo&saida=30d" para o Panorama). Relatórios: aba, só em atraso,
+ * época da saída e mês de referência; Mapa: o que mostrar.
+ */
+const SO_DA_PAGINA = ['relatorio', 'campo', 'saida', 'referencia', 'mostrar']
+
 /** Link para outra página levando os filtros atuais (e sem a ficha aberta, salvo se pedida em `extra`) */
 export function useDestino() {
-  const { search } = useLocation()
+  const { search, pathname: aqui } = useLocation()
   return useCallback(
     (pathname: string, extra?: Record<string, string>) => {
       const p = new URLSearchParams(search)
       p.delete('servico')
+      if (pathname !== aqui) for (const k of SO_DA_PAGINA) p.delete(k)
       for (const [k, v] of Object.entries(extra ?? {})) p.set(k, v)
       const s = p.toString()
       return { pathname, search: s ? `?${s}` : '' }
     },
-    [search],
+    [search, aqui],
   )
 }
 
