@@ -217,6 +217,7 @@ export function BarraSuperior() {
           <button
             type="button"
             onClick={() => setBuscaAberta(true)}
+            data-gatilho-busca
             className="pressionavel mr-1 flex h-9 items-center gap-2 rounded-full border border-line bg-page px-3 text-[13px] text-ink-3 hover:border-acao/40 hover:text-ink-2 max-sm:w-9 max-sm:justify-center max-sm:px-0"
             aria-label="Buscar serviço, bairro ou endereço"
           >

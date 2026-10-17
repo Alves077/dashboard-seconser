@@ -103,7 +103,7 @@ export function Categorias({
                         aria-pressed={ativo}
                         className={clsx('flex items-start gap-1 text-left leading-snug text-ink', ativo && 'font-medium')}
                       >
-                        {l.nome === CATEGORIA_RISCO && <Zap aria-label="risco" className="mt-0.5 size-3.5 shrink-0 text-risco-texto" />}
+                        {l.nome === CATEGORIA_RISCO && <Zap aria-hidden className="mt-0.5 size-3.5 shrink-0 text-risco-texto" />}
                         <span className="line-clamp-2">{l.nome}</span>
                       </button>
                     </th>

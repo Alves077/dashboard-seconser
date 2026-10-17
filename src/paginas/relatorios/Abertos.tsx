@@ -137,7 +137,7 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
         </div>
         <BarraFaixas
           comPct={false}
-          partes={FAIXAS_ESPERA.map((f, i) => ({ rotulo: f.rotulo, n: r.espera[i], cor: COR_ESPERA[i], nota: i === 0 ? 'dentro do prazo' : undefined }))}
+          partes={FAIXAS_ESPERA.map((f, i) => ({ rotulo: f.rotulo, n: r.espera[i], cor: COR_ESPERA[i], textoEscuro: i < 3, nota: i === 0 ? 'dentro do prazo' : undefined }))}
           total={r.n}
         />
       </SecaoFolha>

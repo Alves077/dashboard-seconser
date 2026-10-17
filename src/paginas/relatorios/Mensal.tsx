@@ -12,7 +12,8 @@ import { decimal, numero, pct } from '@/lib/formato'
 import { BarraFaixas, IdServico, NumeroFolha, Observacoes, Rolavel, SecaoFolha } from './Folha'
 
 // cores do antigo: ≤3 verde · 4–7 azul · 8–15 âmbar · >15 vermelho
-const COR_FAIXA = ['var(--c-ok)', 'var(--c-s1)', 'var(--c-andamento)', 'var(--c-atraso)']
+// azul um pouco mais escuro que o s1: o branco em cima dele ficava em 4,4:1
+const COR_FAIXA = ['var(--c-ok)', 'color-mix(in oklab, var(--c-s1) 82%, black)', 'var(--c-andamento)', 'var(--c-atraso)']
 const COR_ESPERA = ['var(--c-ok)', 'var(--c-andamento)', 'var(--c-risco)', 'var(--c-atraso)', 'color-mix(in oklab, var(--c-atraso) 70%, black)']
 
 /** Tempo médio: acima de 15 dias em vermelho, acima de 5 em âmbar (como no antigo) */
@@ -147,7 +148,7 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
               prazo
             </p>
           </div>
-          <BarraFaixas partes={FAIXAS_ESPERA.map((f, i) => ({ rotulo: f.rotulo, n: h.fila.espera[i], cor: COR_ESPERA[i] }))} total={h.fila.total} />
+          <BarraFaixas partes={FAIXAS_ESPERA.map((f, i) => ({ rotulo: f.rotulo, n: h.fila.espera[i], cor: COR_ESPERA[i], textoEscuro: i < 3 }))} total={h.fila.total} />
           {h.fila.acima150 > 0 && <p className="mt-1.5 text-[10.5px] text-ink-3">{numero(h.fila.acima150)} acima de 150 dias.</p>}
         </SecaoFolha>
       )}
@@ -217,7 +218,7 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
 
       {totalFaixas > 0 && (
         <SecaoFolha titulo="Distribuição por faixa · só concluídos" cartao>
-          <BarraFaixas partes={FAIXAS.map((f, i) => ({ rotulo: f.rotulo, n: r.faixas[i], cor: COR_FAIXA[i] }))} total={totalFaixas} />
+          <BarraFaixas partes={FAIXAS.map((f, i) => ({ rotulo: f.rotulo, n: r.faixas[i], cor: COR_FAIXA[i], textoEscuro: i === 0 || i === 2 }))} total={totalFaixas} />
         </SecaoFolha>
       )}
 
@@ -238,7 +239,7 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
                 {r.categorias.map((c) => (
                   <tr key={c.nome}>
                     <td>
-                      {c.nome === CATEGORIA_RISCO && <span aria-label="risco">⚡ </span>}
+                      {c.nome === CATEGORIA_RISCO && <span aria-hidden>⚡ </span>}
                       {c.nome}
                     </td>
                     <td className="num">{numero(c.total)}</td>

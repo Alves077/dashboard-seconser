@@ -96,10 +96,15 @@ export function PaletaBusca() {
     <Dialog.Root open={buscaAberta} onOpenChange={(v) => (v ? setBuscaAberta(true) : fechar())}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/30" />
-        <Dialog.Popup className="fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-xl overflow-hidden border-line bg-card shadow-2 sm:top-[12vh] sm:rounded-2xl sm:border">
+        {/* ao fechar, o foco volta ao botão Buscar (aberta pelo "/", não havia para onde voltar e ele se perdia) */}
+        <Dialog.Popup
+          finalFocus={() => document.querySelector<HTMLElement>('[data-gatilho-busca]')}
+          className="fixed inset-x-0 top-0 z-50 mx-auto w-full max-w-xl overflow-hidden border-line bg-card shadow-2 sm:top-[12vh] sm:rounded-2xl sm:border"
+        >
           <Dialog.Title className="sr-only">Buscar</Dialog.Title>
           <Command shouldFilter={false} label="Buscar" className="flex max-h-[80dvh] flex-col">
-            <div className="flex items-center gap-2 border-b border-line px-4 pt-[env(safe-area-inset-top,0px)]">
+            {/* foco visível no campo: a linha de baixo vira índigo */}
+            <div className="flex items-center gap-2 border-b-2 border-line px-4 pt-[env(safe-area-inset-top,0px)] focus-within:border-acao">
               <Search aria-hidden className="size-4 shrink-0 text-ink-3" />
               <Command.Input
                 value={texto}

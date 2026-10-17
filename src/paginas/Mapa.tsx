@@ -171,7 +171,7 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
                 >
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1 truncate text-[13px] text-ink">
-                      {p.risco && <Zap aria-label="risco elétrico" className="size-3.5 shrink-0 text-risco-texto" />}
+                      {p.risco && <Zap aria-hidden className="size-3.5 shrink-0 text-risco-texto" />}
                       <span className="truncate">{p.servico.categoria ?? 'Sem categoria'}</span>
                     </span>
                     {/* sem espaço, a data desce para a linha de baixo — nunca é cortada (sem o ano quando é deste ano) */}

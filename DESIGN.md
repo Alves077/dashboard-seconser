@@ -12,7 +12,7 @@ colors:
   # Tinta
   ink: "#0d253d"              # texto principal (15.6:1)
   ink-secondary: "#273951"    # texto secundário (11.7:1)
-  ink-mute: "#64748d"         # legenda/rótulo — SÓ sobre card branco (4.75:1); no fundo da página usar ink-secondary
+  ink-mute: "#5a6a83"         # legenda/rótulo — ≥ 4,7:1 no fundo, no card e em linha destacada (17/10: era #64748d, 4,49 no fundo)
   # Superfícies
   page: "#f6f9fc"             # fundo da página
   card: "#ffffff"             # cards, painéis, tabela
@@ -201,7 +201,7 @@ ação, retângulo `rounded.sm` para campos e filtros.
 | Borda | `hairline #e3e8ee` | `dark-hairline #22314d` | 1px em card/tabela; separador |
 | Texto | `ink #0d253d` | `dark-ink #e6edf6` | títulos, valores |
 | Texto secundário | `ink-secondary #273951` | `dark-ink-secondary #a3b1c6` | descrições |
-| Texto apagado | `ink-mute #64748d` | `dark-ink-mute #7d8ba1` | legendas, eixos — **no claro, só sobre card branco** (no fundo `page` cai para 4.49:1) |
+| Texto apagado | `ink-mute #5a6a83` | `dark-ink-mute #7d8ba1` | legendas, eixos — passa AA no fundo, no card e em linha destacada (17/10/2026: era #64748d, 4,49:1 no fundo) |
 | Ação | `primary #533afd` | `dark-primary #8d87ff` | botão principal, link, foco, item selecionado |
 
 - Índigo é a **única** cor de ação e nunca representa dado.

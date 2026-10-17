@@ -212,7 +212,7 @@ function Pinos({
         continue
       }
       // vários no mesmo lugar: pino com o número
-      const tam = g.length >= 10 ? 26 : 22
+      const tam = g.length >= 10 ? 28 : 26 // 24 px é o mínimo de alvo de toque (WCAG 2.5.8)
       const atrasos = g.filter((x) => x.situacao === 'atraso').length
       const marcador = L.marker([p.lat, p.lng], {
         icon: L.divIcon({
@@ -221,7 +221,9 @@ function Pinos({
           iconSize: [tam, tam],
           iconAnchor: [tam / 2, tam / 2],
         }),
-        keyboard: true,
+        // fora do Tab: os pinos soltos (desenhados no canvas) já não são alcançáveis; quem usa teclado tem a lista
+        // do painel ao lado (antes: uma parada de Tab por grupo, chamada "2", "3"…)
+        keyboard: false,
         title: `${g.length} serviços neste ponto`,
         riseOnHover: true,
       })
@@ -376,7 +378,7 @@ export default function MapaGrande({
         zoomDelta={0.5}
         preferCanvas
         className="mapa-tema h-full w-full"
-        aria-label="Mapa dos serviços"
+        aria-label="Mapa dos serviços. Setas movem o mapa; mais e menos mudam o zoom. A lista ao lado traz os mesmos serviços."
       >
         <FundoMapa detalhado={fundoDetalhado} />
         <Pinos pontos={pontos} selecionado={selecionado} aoEscolher={aoEscolher} chaveEnquadre={chaveEnquadre} />

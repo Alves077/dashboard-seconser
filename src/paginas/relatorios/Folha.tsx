@@ -125,7 +125,8 @@ export function BarraFaixas({
   total,
   comPct = true,
 }: {
-  partes: { rotulo: string; n: number; cor: string; nota?: string }[]
+  /** textoEscuro: faixa clara (verde, âmbar, laranja) — branco nela ficava com contraste 1,8–3,4 */
+  partes: { rotulo: string; n: number; cor: string; nota?: string; textoEscuro?: boolean }[]
   total: number
   /** parte (%) também na legenda */
   comPct?: boolean
@@ -138,7 +139,7 @@ export function BarraFaixas({
             p.n > 0 && (
               <span
                 key={p.rotulo}
-                className="numeros flex items-center justify-center text-[10px] font-semibold text-white"
+                className={clsx('numeros flex items-center justify-center text-[10px] font-semibold', p.textoEscuro ? 'text-[#0d253d]' : 'text-white')}
                 style={{ flexGrow: p.n, background: p.cor }}
               >
                 {p.n / total >= 0.07 ? pct(p.n, total) : ''}

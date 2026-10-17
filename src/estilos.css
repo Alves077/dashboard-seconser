@@ -15,7 +15,7 @@
   --c-line-input: #a8c3de;
   --c-ink: #0d253d;
   --c-ink-2: #273951;
-  --c-ink-3: #64748d; /* só sobre card branco (4.75:1); no fundo da página usar ink-2 */
+  --c-ink-3: #5a6a83; /* ≥ 4,7:1 no fundo, no card e nas linhas destacadas (o #64748d dava 4,49 no fundo: abaixo do AA) */
   --c-acao: #533afd;
   --c-acao-press: #2e2b8c;
   /* fundo de hover/realce de linhas e botões discretos. Antes era a tinta a 3% — no escuro (tinta clara sobre

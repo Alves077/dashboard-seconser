@@ -72,7 +72,8 @@ export function MiniLinha({
   const marcados = destaque ? pts.filter((p, i) => p && destaque[i] && p !== ultimo) : []
 
   return (
-    <figure className={clsx('m-0', className)}>
+    // sem descrição é só enfeite (o número e a comparação já estão em texto): nada para o leitor de tela
+    <figure className={clsx('m-0', className)} aria-hidden={descricao ? undefined : true}>
       <svg viewBox={`0 0 ${L} ${A}`} className="h-7 w-full overflow-visible" aria-hidden preserveAspectRatio="none">
         {faixas.map(([a, b]) => {
           const x0 = Math.max(0, m + a * passo - passo / 2)
@@ -104,7 +105,7 @@ export function MiniLinha({
           </>
         )}
       </svg>
-      <figcaption className="sr-only">{descricao}</figcaption>
+      {descricao && <figcaption className="sr-only">{descricao}</figcaption>}
     </figure>
   )
 }

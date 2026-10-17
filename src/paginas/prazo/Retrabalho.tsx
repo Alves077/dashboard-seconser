@@ -53,7 +53,7 @@ function PorCategoria({ r }: { r: Prazo['retrabalho'] }) {
                 >
                   <span className="min-w-0">
                     <span className={clsx('flex items-start gap-1 text-[13px] leading-snug text-ink', ativo && 'font-medium')}>
-                      {ehRisco(l.nome) && <Zap aria-label="risco" className="mt-0.5 size-3.5 shrink-0 text-risco-texto" />}
+                      {ehRisco(l.nome) && <Zap aria-hidden className="mt-0.5 size-3.5 shrink-0 text-risco-texto" />}
                       <span className="line-clamp-2">{l.nome}</span>
                     </span>
                     <span className="numeros block text-[11px] text-ink-3">

@@ -42,12 +42,14 @@ function BarraEspera({
       <div className="flex h-4 w-full gap-[2px] overflow-hidden rounded">
         {espera.map((n, i) =>
           n > 0 ? (
+            // atalho só de mouse/toque: a legenda logo abaixo faz o mesmo e é quem fica no Tab e no leitor de tela
+            // (antes eram 10 paradas de Tab para 5 ações, e pedaços de 4 px de largura)
             <button
               key={FAIXAS_ESPERA[i].id}
               type="button"
+              tabIndex={-1}
+              aria-hidden
               onClick={() => alternar(i)}
-              aria-pressed={escolhida === i}
-              aria-label={`${FAIXAS_ESPERA[i].rotulo}: ${numero(n)} (${pct(n, total)})`}
               title={`${FAIXAS_ESPERA[i].rotulo}: ${numero(n)} (${pct(n, total)}) — toque para ver só estes`}
               className={clsx(
                 'h-full cursor-pointer transition-[opacity,filter] duration-150 ease-out hover:brightness-110',
@@ -69,6 +71,7 @@ function BarraEspera({
               onClick={() => alternar(i)}
               disabled={espera[i] === 0}
               aria-pressed={escolhida === i}
+              aria-label={`${f.rotulo}: ${numero(espera[i])} (${pct(espera[i], total)})`}
               className={clsx(
                 // destaque do tamanho da coluna, conteúdo centralizado nele (sem sobra só de um lado)
                 // número sempre embaixo: com o rótulo em 2 linhas (tela estreita/zoom) os números continuam alinhados

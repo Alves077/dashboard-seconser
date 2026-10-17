@@ -45,7 +45,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                         <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} />
                       </div>
                       <p className="mt-1.5 text-[13px] text-ink">
-                        {servico.categoria === CATEGORIA_RISCO && <span aria-label="risco">⚡ </span>}
+                        {servico.categoria === CATEGORIA_RISCO && <span aria-hidden>⚡ </span>}
                         {servico.categoria ?? 'Sem categoria'}
                       </p>
                       {detalhes && (
@@ -82,7 +82,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                             <IdServico servico={servico} ordem={saida.ordem} />
                           </td>
                           <td>
-                            {servico.categoria === CATEGORIA_RISCO && <span aria-label="risco">⚡ </span>}
+                            {servico.categoria === CATEGORIA_RISCO && <span aria-hidden>⚡ </span>}
                             {servico.categoria ?? 'Sem categoria'}
                           </td>
                           {detalhes && (

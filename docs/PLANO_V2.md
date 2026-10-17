@@ -549,3 +549,23 @@ em 2016. Dado real (Supabase, carga de 16/10): nenhuma data impossível; menor s
 - Base: 1 tentativa a mais (antes 3, ~8 s de esqueleto) e "Tentando de novo…" no cabeçalho; base fora do ar = selo
   vermelho "Sem dados".
 - Esqueleto do Panorama com as 5 linhas de "Esperando há mais tempo" (antes a página pulava ~400 px ao carregar).
+
+## Acessibilidade (17/10/2026)
+Auditoria: axe-core 4.10 (WCAG 2.2 AA + boas práticas) em todas as páginas, nos dois temas, computador e celular,
+e com busca, período, entrar, listas de filtro e Ficha abertas; teclado de verdade (CDP) e nomes da árvore de
+acessibilidade do Chrome. Depois das correções: nenhuma violação, exceto o aviso de "região" nas listas de opções
+abertas (Base UI as monta fora das regiões da página, em portal — limitação conhecida, sem efeito para o usuário).
+- "Pular para o conteúdo": com rotas em "#", o link `#conteudo` trocava de página; agora leva o foco ao `<main>`.
+- Leitor de tela: número e complemento separados nas listas com barra ("59, 5 em aberto" — antes "595 em aberto");
+  legenda de "Há quanto tempo esperam" com nome ("Até 5 dias: 91 (11,2%)" — antes "9111,2%"); pedaços da barra
+  fora do Tab e do leitor de tela (a legenda faz o mesmo); ícone de raio escondido (o nome já diz "risco");
+  mini-gráfico sem descrição escondido.
+- Contraste: `ink-3` claro #64748d → #5a6a83 (≥ 4,7:1 no fundo, no card e em linha destacada); porcentagens dentro
+  das barras dos relatórios com texto escuro nas faixas claras (verde, âmbar, laranja) e azul mais escuro no Mensal;
+  "Foto indisponível" legível no escuro.
+- Teclado: busca devolve o foco ao botão Buscar e tem foco visível (linha índigo); entrar abre no campo de e-mail;
+  barra de filtros é a região "Filtros"; no mapa, os grupos de pinos saíram do Tab (a lista do painel traz os mesmos
+  serviços) e ficaram com 26–28 px; o mapa tem um nome que explica as setas e o zoom.
+- Já estava certo: foco visível em todo controle, ordem lógica, gavetas e janelas prendem o foco, fecham com Esc e
+  devolvem o foco; `lang="pt-BR"`, um h1 por página, tabelas com legenda, gráficos com tabela escondida, movimento
+  reduzido respeitado.

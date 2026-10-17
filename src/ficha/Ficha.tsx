@@ -77,7 +77,7 @@ function Miniatura({ url }: { url: string }) {
   const [falhou, setFalhou] = useState(false)
   if (falhou)
     return (
-      <span className="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-realce-forte text-ink-3">
+      <span className="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-realce-forte text-ink">
         <ImageOff aria-hidden className="size-5" />
         <span className="text-[11px]">Foto indisponível</span>
       </span>

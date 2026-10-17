@@ -26,8 +26,15 @@ export function Moldura() {
   }, [pathname])
   return (
     <>
+      {/* o endereço usa "#" para as rotas: "#conteudo" virava troca de página. Aqui o foco vai direto ao conteúdo */}
       <a
         href="#conteudo"
+        onClick={(e) => {
+          e.preventDefault()
+          const main = document.getElementById('conteudo')
+          main?.focus({ preventScroll: true })
+          main?.scrollIntoView({ block: 'start' })
+        }}
         className="sr-only z-50 rounded-md bg-card px-3 py-2 text-sm focus:not-sr-only focus:fixed focus:top-2 focus:left-2"
       >
         Pular para o conteúdo
@@ -37,8 +44,9 @@ export function Moldura() {
       {/* espaço embaixo para a navegação do celular */}
       <main
         id="conteudo"
+        tabIndex={-1}
         className={clsx(
-          'mx-auto max-w-[1280px] px-4 pt-5 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:px-6',
+          'mx-auto max-w-[1280px] outline-none px-4 pt-5 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))] sm:px-6',
           pathname === '/mapa' ? 'lg:pb-0' : 'lg:pb-12',
         )}
       >

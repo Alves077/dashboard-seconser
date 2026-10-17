@@ -1,6 +1,6 @@
 import { Dialog } from '@base-ui/react/dialog'
 import { X } from 'lucide-react'
-import { useState, type FormEvent } from 'react'
+import { useRef, useState, type FormEvent } from 'react'
 import { toast } from 'sonner'
 import { Botao } from '@/componentes/ui/Botao'
 import { useSessao } from '@/dados/sessao'
@@ -8,6 +8,8 @@ import { useInterface } from './interface'
 
 // Só login: contas são criadas pelo administrador (cadastro desligado no Supabase).
 export function DialogoEntrar() {
+  // abre com o foco no e-mail (antes no "Fechar": um Tab a mais para começar a digitar)
+  const campoEmail = useRef<HTMLInputElement>(null)
   const { loginAberto, setLoginAberto } = useInterface()
   const { entrar, esqueciSenha } = useSessao()
   const [email, setEmail] = useState('')
@@ -48,7 +50,7 @@ export function DialogoEntrar() {
     <Dialog.Root open={loginAberto} onOpenChange={setLoginAberto}>
       <Dialog.Portal>
         <Dialog.Backdrop className="fixed inset-0 z-50 bg-black/30 transition-opacity duration-200 data-ending-style:opacity-0 data-starting-style:opacity-0" />
-        <Dialog.Popup className="fixed top-1/2 left-1/2 z-50 w-[min(400px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-line bg-card p-6 shadow-2 transition-[opacity,scale] duration-200 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
+        <Dialog.Popup initialFocus={campoEmail} className="fixed top-1/2 left-1/2 z-50 w-[min(400px,calc(100vw-2rem))] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-line bg-card p-6 shadow-2 transition-[opacity,scale] duration-200 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
           <Dialog.Close
             aria-label="Fechar"
             className="pressionavel absolute top-3 right-3 grid size-10 place-items-center rounded-full text-ink-2 hover:bg-realce-forte"
@@ -63,6 +65,7 @@ export function DialogoEntrar() {
             <label className="flex flex-col gap-1 text-[13px] font-medium text-ink-2">
               E-mail
               <input
+                ref={campoEmail}
                 type="email"
                 autoComplete="username"
                 required

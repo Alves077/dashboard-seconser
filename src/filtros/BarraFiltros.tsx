@@ -236,7 +236,7 @@ function GavetaFiltros() {
 
 export function BarraFiltros() {
   return (
-    <div className="barra-na-troca sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] lg:top-[calc(4rem+env(safe-area-inset-top,0px))] z-20 border-b border-line bg-page/90 backdrop-blur-md print:hidden">
+    <section aria-label="Filtros" className="barra-na-troca sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] lg:top-[calc(4rem+env(safe-area-inset-top,0px))] z-20 border-b border-line bg-page/90 backdrop-blur-md print:hidden">
       <div className="mx-auto max-w-[1280px] px-4 py-3 sm:px-6">
         {/* celular */}
         <div className="flex flex-col gap-2 md:hidden">
@@ -256,7 +256,7 @@ export function BarraFiltros() {
           <FiltrosAtivos />
         </div>
       </div>
-    </div>
+    </section>
   )
 }
 

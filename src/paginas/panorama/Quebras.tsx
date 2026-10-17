@@ -108,6 +108,8 @@ export function LinhaBarra({
         <span className="numeros min-w-16 text-right text-[13px] text-ink">
           {textoValor ?? numero(valor)}
           {/* celular: embaixo do número (do lado, a coluna ficava larga e a barra curta demais) */}
+          {/* a pausa invisível separa os números para o leitor de tela (sem ela: "59" + "5 em aberto" = "595 em aberto") */}
+          {complemento && <span className="sr-only">, </span>}
           {complemento && <span className="ml-1.5 text-xs text-ink-3 max-sm:ml-0 max-sm:block max-sm:text-[11px]">{complemento}</span>}
         </span>
       </Elemento>
@@ -302,7 +304,7 @@ export function Categorias({ linhas, medida }: { linhas: LinhaQuebra[]; medida: 
       ativo={filtros.categoria === l.nome}
       aoTocar={() => alternar(l.nome)}
       corBarra={l.nome === CATEGORIA_RISCO ? 'bg-risco' : 'bg-s1'}
-      icone={l.nome === CATEGORIA_RISCO ? <Zap aria-label="risco" className="size-3.5 shrink-0 text-risco-texto" /> : undefined}
+      icone={l.nome === CATEGORIA_RISCO ? <Zap aria-hidden className="size-3.5 shrink-0 text-risco-texto" /> : undefined}
     />
   )
   return (
