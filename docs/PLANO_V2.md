@@ -671,3 +671,22 @@ Workflow `.github/workflows/publicar.yml` (push na `v2`) com etapas `teste` (ant
 checklist do celular e desligamento do legado: `docs/PUBLICACAO.md`.
 **No ar em teste (17/10):** `…/dashboard-seconser/teste/`; testado pelo usuário num Samsung A25. Ajuste depois do
 teste: chave tripla do Panorama no celular vira 3 colunas iguais (texto em 2 linhas, alvo de 44 px; pílula a partir de sm).
+
+## Nova senha pelo link do e-mail (17/10/2026)
+Problema (teste no celular): "Esqueci a senha" mandava o e-mail certo, mas o link voltava em
+`…/teste/#access_token=…&type=recovery` (ou `#error=…&error_code=otp_expired` se vencido/já usado). Com o HashRouter
+isso virava a rota "access_token=…" → "Em construção"; e o site não tinha onde digitar a senha nova.
+- `index.html`: script antes do app — se o hash é retorno do Supabase (`access_token`/`error`), guarda em
+  `sessionStorage['retorno-auth']` e troca o hash por `#/`. Só o tempo de o app ler: `sessao.tsx` apaga na hora.
+- `lib/supabase.ts`: `detectSessionInUrl: false` (quem lê o retorno é o app).
+- `dados/sessao.tsx`: `lerRetornoDoEmail()` → `setSession` com os tokens; `type=recovery` liga `recuperando`;
+  erro, link vencido ou token malformado → aviso de 10 s "O link do e-mail expirou ou já foi usado…".
+  Novos no contexto: `recuperando`, `definirSenha` (`updateUser`, erros traduzidos: senha igual à antiga, curta,
+  vazada, sessão vencida) e `encerrarRecuperacao`.
+- `componentes/layout/DialogoNovaSenha.tsx` (montado na Moldura): "Nova senha" + "Repetir", `autocomplete=new-password`,
+  confere se as duas são iguais; gravou → "Senha trocada". Fechar sem gravar mantém a senha antiga (a pessoa segue
+  logada pelo link).
+- Conferido com Chrome sem janela: link vencido, token falso e malformado (aviso, Panorama abre), rota normal intacta,
+  e o fluxo inteiro com respostas do Supabase simuladas (janela, senhas diferentes, senha igual à antiga, sucesso).
+  Falta o teste real com e-mail novo no celular.
+

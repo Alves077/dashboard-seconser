@@ -3,6 +3,10 @@
 > **Estado (17/10, noite):** etapa `teste` no ar — `…/dashboard-seconser/teste/` = v2, raiz = site antigo. Pages já
 > em GitHub Actions e `v2` liberado no environment. Usuário testou no celular (Samsung A25): ok; pediu compartilhar
 > o relatório como PDF (hoje o botão PDF abre o "salvar" do Android e Compartilhar manda só o link).
+> **Esqueci a senha (17/10):** o link do e-mail caía em "Em construção" (o retorno `#access_token=…` do Supabase
+> brigava com as rotas `#/…`) e não havia tela de senha nova. Corrigido: `index.html` guarda o retorno antes do app
+> abrir, `sessao.tsx` entra com o token e abre "Criar nova senha" (`DialogoNovaSenha.tsx`); link vencido ou já usado
+> mostra aviso. Testar de novo com um e-mail novo (o link vale uma vez só e vence em 1 h).
 
 Endereço: `https://alves077.github.io/dashboard-seconser/` (GitHub Pages). Quem publica é o workflow
 `.github/workflows/publicar.yml`, a cada push no ramo `v2`. A linha `ETAPA:` do workflow decide o que vai ao ar.
@@ -34,6 +38,7 @@ depois desligar o Apps Script e tirar a pasta. O código do antigo fica para sem
 - [ ] Campo de busca e de senha **não** dão zoom na página ao tocar.
 - [ ] Barra de baixo não fica atrás da barra do sistema; nada gruda em "hover" depois de tocar.
 - [ ] Imprimir/salvar PDF do relatório Em aberto pelo celular.
+- [ ] Esqueci a senha: pedir o link, abrir no celular, criar a senha nova, sair e entrar com ela.
 - [ ] Segunda visita abre rápido (cópia no navegador).
 
 ## 3. Troca (quando o teste estiver aprovado)

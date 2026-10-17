@@ -23,6 +23,16 @@
         document.documentElement.dataset.theme = 'light'
       }
     </script>
+    <!-- Volta do link de e-mail do login (nova senha): o Supabase devolve os dados depois do "#", que aqui é das rotas
+         (o site mostrava "Em construção"). Guarda e limpa antes do site abrir; dados/sessao.tsx usa (só nesta aba). -->
+    <script>
+      try {
+        if (/(^#|&)(access_token|error_code|error)=/.test(location.hash)) {
+          sessionStorage.setItem('retorno-auth', location.hash.slice(1))
+          history.replaceState(null, '', location.pathname + location.search + '#/')
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body>
     <div id="root"></div>

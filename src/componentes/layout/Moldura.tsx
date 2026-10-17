@@ -10,6 +10,7 @@ import { useTema } from '@/lib/ganchos'
 import { preCarregarPaginas } from '@/paginas/carregar'
 import { BarraSuperior } from './BarraSuperior'
 import { DialogoEntrar } from './DialogoEntrar'
+import { DialogoNovaSenha } from './DialogoNovaSenha'
 import { NavInferior } from './NavInferior'
 
 export function Moldura() {
@@ -60,6 +61,7 @@ export function Moldura() {
       <Ficha />
       <PaletaBusca />
       <DialogoEntrar />
+      <DialogoNovaSenha />
       <Toaster position="bottom-center" theme={tema === 'escuro' ? 'dark' : 'light'} offset={{ bottom: 80 }} />
     </>
   )
