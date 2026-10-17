@@ -3,7 +3,7 @@
 import { CATEGORIA_RISCO, diasExecucao, FAIXAS, faixa, media, situacao } from '@/dados/regras'
 import type { Base, Saida, Servico } from '@/dados/tipos'
 import { PRAZO_DIAS } from '@/config'
-import { filtrarLugar, type Filtros } from '@/filtros/filtros'
+import { filtrarLugar, noIntervalo, type Filtros, type Intervalo } from '@/filtros/filtros'
 import { compararTexto } from '@/lib/formato'
 import { chaveMes, diaDaChave, fimDoMes, somarMeses, type ChaveMes, type Dia } from '@/lib/datas'
 import { calcularAgora, FAIXAS_ESPERA, type ItemFila } from './panorama'
@@ -253,11 +253,17 @@ function tabelaSimples(itens: ItemAberto[], chave: (s: Servico) => string, limit
 /** Origem como no script: "Cidadão", o nome do vereador, ou o detalhe da origem */
 export const origemTexto = (s: Servico) => (s.origem === 'Cidadão' ? 'Cidadão' : s.vereador || s.origemDetalhe || s.origem)
 
-export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia) {
+/**
+ * `saida` = quando saíram para a rua (seletor da própria aba; null = qualquer data). O período global do site
+ * não vale aqui: com o padrão "últimos 30 dias", a fila esconderia justamente os pedidos parados há mais tempo.
+ */
+export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia, saida: Intervalo | null = null) {
   const abertasCidade = base.saidas.filter((s) => s.dataRetorno === null)
-  const itens: ItemAberto[] = filtrarLugar(abertasCidade, f).map((s) => ({ saida: s, servico: s.servico, dias: hoje - s.dataSaida }))
+  const itens: ItemAberto[] = filtrarLugar(abertasCidade, f)
+    .filter((s) => saida === null || noIntervalo(s, saida, 'saida'))
+    .map((s) => ({ saida: s, servico: s.servico, dias: hoje - s.dataSaida }))
   const n = itens.length
-  const filtrado = !!(f.regiao || f.bairro || f.categoria || f.origem || f.quem)
+  const filtrado = !!(f.regiao || f.bairro || f.categoria || f.origem || f.quem || saida)
   const porBairro = !!(f.regiao || f.bairro)
 
   const atraso = itens.filter((it) => situacao(it.saida, hoje) === 'atraso').length
@@ -336,10 +342,19 @@ export interface RegiaoCampo {
   bairros: BairroCampo[]
 }
 
-export function listaCampo(base: Base, f: Filtros, hoje: Dia, soAtraso: boolean): { regioes: RegiaoCampo[]; total: number; risco: number } {
+/** `saida` como em relatorioAbertos: quando a saída em aberto foi para a rua (null = qualquer data) */
+export function listaCampo(
+  base: Base,
+  f: Filtros,
+  hoje: Dia,
+  soAtraso: boolean,
+  saida: Intervalo | null = null,
+): { regioes: RegiaoCampo[]; total: number; risco: number } {
   const lugar = filtrarLugar(base.saidas, f)
   const { itens } = calcularAgora([...new Set(lugar.map((s) => s.servico))], hoje)
-  const escolhidos = soAtraso ? itens.filter((i) => i.saida.dataSaida + PRAZO_DIAS < hoje) : itens
+  const escolhidos = itens.filter(
+    (i) => (!soAtraso || i.saida.dataSaida + PRAZO_DIAS < hoje) && (saida === null || noIntervalo(i.saida, saida, 'saida')),
+  )
   const porRegiao = new Map<string, Map<string, ItemFila[]>>()
   for (const it of escolhidos) {
     const r = it.servico.regiao || 'Sem região'

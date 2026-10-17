@@ -104,7 +104,7 @@ function BotaoPeriodo() {
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner sideOffset={8} align="start" className="z-40">
-          <Popover.Popup className="w-[min(560px,calc(100vw-2rem))] origin-(--transform-origin) rounded-xl border border-line bg-card p-4 shadow-2 transition-[opacity,scale] duration-200 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
+          <Popover.Popup className="max-h-(--available-height) w-[min(560px,calc(100vw-2rem))] origin-(--transform-origin) overflow-y-auto overscroll-contain rounded-xl border border-line bg-card p-4 shadow-2 transition-[opacity,scale] duration-200 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
             <Popover.Title className="sr-only">Período</Popover.Title>
             <PainelPeriodo aoEscolher={() => setAberto(false)} />
           </Popover.Popup>
@@ -236,7 +236,7 @@ function GavetaFiltros() {
 
 export function BarraFiltros() {
   return (
-    <div className="barra-na-troca sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] z-20 border-b border-line bg-page/90 backdrop-blur-md print:hidden">
+    <div className="barra-na-troca sticky top-[calc(3.5rem+env(safe-area-inset-top,0px))] lg:top-[calc(4rem+env(safe-area-inset-top,0px))] z-20 border-b border-line bg-page/90 backdrop-blur-md print:hidden">
       <div className="mx-auto max-w-[1280px] px-4 py-3 sm:px-6">
         {/* celular */}
         <div className="flex flex-col gap-2 md:hidden">

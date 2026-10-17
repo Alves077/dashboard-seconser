@@ -146,7 +146,8 @@ export function BarraSuperior() {
 
   return (
     <header className="fixo-na-troca sticky top-0 z-30 border-b border-line bg-card/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md print:hidden">
-      <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-4 sm:px-6">
+      {/* computador: 64 px — em tela cheia (F11), sem a barra do navegador, 56 px deixava o logo colado na borda */}
+      <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-4 sm:px-6 lg:h-16">
         <NavLink to={destino('/')} className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label="Início — Panorama">
           <img src={`${import.meta.env.BASE_URL}img/logo-seconser.png`} alt="" className="h-8 w-auto" />
           <span className="hidden min-w-0 leading-tight sm:block">
@@ -164,7 +165,7 @@ export function BarraSuperior() {
               title={p.pergunta}
               className={({ isActive }) =>
                 clsx(
-                  'relative flex h-14 items-center px-3 text-[13px] font-medium transition-colors duration-150',
+                  'relative flex h-16 items-center px-3 text-[13px] font-medium transition-colors duration-150',
                   isActive
                     ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-acao'
                     : 'text-ink-2 hover:text-ink',

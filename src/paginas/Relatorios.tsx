@@ -16,8 +16,9 @@ import { Selecao } from '@/componentes/ui/Selecao'
 import { listaCampo, mesesDoRelatorio, relatorioAbertos, relatorioMensal } from '@/calculos/relatorios'
 import { useBase, useDetalhes } from '@/dados/consultas'
 import { useSessao } from '@/dados/sessao'
+import { intervaloDo, type Atalho, type Intervalo } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
-import { formatarDia, rotuloMesLongo, type ChaveMes } from '@/lib/datas'
+import { chaveMes, formatarDia, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
 import { numero } from '@/lib/formato'
 import { useHoje, useMidia } from '@/lib/ganchos'
 import { RelatorioAbertosFolha } from './relatorios/Abertos'
@@ -29,9 +30,26 @@ type Aba = 'mensal' | 'abertos' | 'campo'
 
 const ABAS: { id: Aba; nome: string; icone: typeof FileText; descricao: string }[] = [
   { id: 'mensal', nome: 'Mensal', icone: FileText, descricao: 'Para reunião e prestação de contas: o relatório de um mês fechado ou o histórico completo. Escolha o mês aqui (o período do filtro não vale nesta aba).' },
-  { id: 'abertos', nome: 'Em aberto', icone: ListTodo, descricao: 'A fila de hoje da cidade, de uma região ou de um bairro (escolha nos filtros). Não depende do período.' },
-  { id: 'campo', nome: 'Lista de campo', icone: ClipboardList, descricao: 'Para levar à rua: os abertos por região e bairro, mais antigos primeiro, com espaço para anotar o retorno.' },
+  { id: 'abertos', nome: 'Em aberto', icone: ListTodo, descricao: 'A fila de hoje da cidade, de uma região ou de um bairro (escolha nos filtros). Para ver só os que saíram para a rua numa época, escolha aqui (o período do filtro não vale nesta aba).' },
+  { id: 'campo', nome: 'Lista de campo', icone: ClipboardList, descricao: 'Para levar à rua: os abertos por região e bairro, mais antigos primeiro, com espaço para anotar o retorno. A época da saída se escolhe aqui (o período do filtro não vale nesta aba).' },
 ]
+
+// "Saíram para a rua" das abas Em aberto e Lista de campo (decisão do usuário, 17/10/2026): seletor próprio,
+// padrão "qualquer data" — o período global (padrão: últimos 30 dias) esconderia os pedidos parados há mais tempo.
+// Na URL: ?saida=30d | este-ano | m202609 (mês, chave como em lib/datas) ; sem o parâmetro = qualquer data.
+const ATALHOS_SAIDA: { id: Atalho; texto: string }[] = [
+  { id: '7d', texto: 'Nos últimos 7 dias' },
+  { id: '30d', texto: 'Nos últimos 30 dias' },
+  { id: '90d', texto: 'Nos últimos 90 dias' },
+  { id: 'este-ano', texto: 'Este ano' },
+]
+
+function intervaloDaSaida(valor: string | null, hoje: Dia): Intervalo | null {
+  const atalho = ATALHOS_SAIDA.find((a) => a.id === valor)
+  if (atalho) return intervaloDo({ tipo: 'atalho', atalho: atalho.id }, hoje)
+  const mes = /^m(\d{6})$/.exec(valor ?? '')
+  return mes ? intervaloDo({ tipo: 'mes', mes: +mes[1] }, hoje) : null
+}
 
 /** Observações do relatório do período: lembradas neste navegador, por período e escopo */
 function useObservacao(chave: string) {
@@ -125,9 +143,24 @@ function PaginaRelatorios() {
   const mes: ChaveMes | null = paramMes === 'tudo' ? null : meses.find((k) => String(k) === paramMes) ?? meses[0] ?? null
   const [obs, setObs] = useObservacao(JSON.stringify([mes ?? 'tudo', escopo]))
 
+  const paramSaida = params.get('saida')
+  const saida = useMemo(() => intervaloDaSaida(paramSaida, hoje), [paramSaida, hoje])
+  // meses que ainda têm pedido em aberto (os mais recentes primeiro)
+  const mesesAbertos = useMemo(
+    () => (base ? [...new Set(base.saidas.filter((s) => s.dataRetorno === null).map((s) => chaveMes(s.dataSaida)))].sort((a, b) => b - a) : []),
+    [base],
+  )
+  const rotuloSaida = saida ? `Saíram para a rua: ${ATALHOS_SAIDA.find((a) => a.id === paramSaida)?.texto.toLowerCase() ?? saida.rotulo}` : null
+
   const mensal = useMemo(() => (base && aba === 'mensal' ? relatorioMensal(base, filtros, mes, hoje) : null), [base, filtros, hoje, aba, mes])
-  const abertos = useMemo(() => (base && aba === 'abertos' ? relatorioAbertos(base, filtros, hoje) : null), [base, filtros, hoje, aba])
-  const campo = useMemo(() => (base && aba === 'campo' ? listaCampo(base, filtros, hoje, soAtraso) : null), [base, filtros, hoje, aba, soAtraso])
+  const abertos = useMemo(
+    () => (base && aba === 'abertos' ? relatorioAbertos(base, filtros, hoje, saida) : null),
+    [base, filtros, hoje, aba, saida],
+  )
+  const campo = useMemo(
+    () => (base && aba === 'campo' ? listaCampo(base, filtros, hoje, soAtraso, saida) : null),
+    [base, filtros, hoje, aba, soAtraso, saida],
+  )
 
   const atual = ABAS.find((a) => a.id === aba)!
   // hora em que a página foi aberta (fica no cabeçalho do relatório)
@@ -220,6 +253,20 @@ function PaginaRelatorios() {
           />
         )}
 
+        {aba !== 'mensal' && (
+          <Selecao
+            rotulo="Saíram para a rua"
+            className="mt-3 w-full max-w-64"
+            opcoes={[
+              { valor: '', texto: 'Qualquer data' },
+              ...ATALHOS_SAIDA.map((a) => ({ valor: a.id, texto: a.texto })),
+              ...mesesAbertos.map((k) => ({ valor: `m${k}`, texto: `Em ${rotuloMesLongo(k)}` })),
+            ]}
+            value={saida ? (paramSaida ?? '') : ''}
+            onChange={(e) => trocar('saida', e.target.value || null)}
+          />
+        )}
+
         {aba === 'campo' && (
           <ToggleGroup
             aria-label="Quais serviços"
@@ -277,7 +324,7 @@ function PaginaRelatorios() {
             <>
               <CabecalhoFolha
                 titulo={`Serviços em Aberto · ${filtros.bairro ? `Bairro ${filtros.bairro}` : filtros.regiao ? `Região ${filtros.regiao}` : 'Niterói'}`}
-                subtitulo={[filtros.categoria, filtros.quem ?? filtros.origem].filter(Boolean).join(' · ') || undefined}
+                subtitulo={[filtros.categoria, filtros.quem ?? filtros.origem, rotuloSaida].filter(Boolean).join(' · ') || undefined}
                 meta={[geradoLongo, `${numero(abertos.n)} serviços em aberto`, dadosAte].filter(Boolean)}
               />
               <RelatorioAbertosFolha r={abertos} detalhes={comEndereco} hoje={hoje} />
@@ -287,7 +334,7 @@ function PaginaRelatorios() {
             <>
               <CabecalhoFolha
                 titulo={`Lista de campo · ${escopo}`}
-                subtitulo={soAtraso ? 'Só os serviços em atraso (mais de 5 dias)' : 'Todos os serviços em aberto'}
+                subtitulo={[soAtraso ? 'Só os serviços em atraso (mais de 5 dias)' : 'Todos os serviços em aberto', rotuloSaida].filter(Boolean).join(' · ')}
                 meta={[geradoEm, dadosAte, `${numero(campo.total)} serviços${campo.risco ? ` · ${numero(campo.risco)} com risco elétrico` : ''}`].filter(Boolean)}
               />
               <ListaCampoFolha regioes={campo.regioes} detalhes={comEndereco} hoje={hoje} />

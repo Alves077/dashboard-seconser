@@ -188,6 +188,10 @@ export interface LinhaQuebra {
   nome: string
   /** saídas no período */
   saidas: number
+  /** dessas saídas, as que ainda não voltaram (em aberto) */
+  abertosPeriodo: number
+  /** e, delas, as que já passaram do prazo */
+  atrasoPeriodo: number
   /** fila de agora */
   fila: number
   atraso: number
@@ -214,7 +218,17 @@ function quebrar(
   }
   return [...porNome].map(([nome, g]) => {
     const ind = indicadores(g.saidas, hoje)
-    return { nome, saidas: g.saidas.length, fila: g.fila, atraso: g.atraso, pctNoPrazo: ind.pctNoPrazo, tempoMedio: ind.tempoMedio }
+    const abertas = g.saidas.filter((s) => s.dataRetorno === null)
+    return {
+      nome,
+      saidas: g.saidas.length,
+      abertosPeriodo: abertas.length,
+      atrasoPeriodo: abertas.filter((s) => situacao(s, hoje) === 'atraso').length,
+      fila: g.fila,
+      atraso: g.atraso,
+      pctNoPrazo: ind.pctNoPrazo,
+      tempoMedio: ind.tempoMedio,
+    }
   })
 }
 

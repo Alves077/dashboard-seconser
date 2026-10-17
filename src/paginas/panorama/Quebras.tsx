@@ -40,6 +40,7 @@ export function LinhaBarra({
   compacta = false,
   textoValor,
   prefixo,
+  parteAberta = 0,
 }: {
   rotulo: string
   apoio?: string
@@ -59,6 +60,8 @@ export function LinhaBarra({
   textoValor?: string
   /** antes do nome, à esquerda (ex.: foto do vereador) */
   prefixo?: ReactNode
+  /** quanto do valor ainda está em aberto: a ponta da barra fica âmbar */
+  parteAberta?: number
 }) {
   const Elemento = aoTocar ? 'button' : 'div'
   const largura = maximo > 0 ? Math.max((valor / maximo) * 100, valor > 0 ? 1.5 : 0) : 0
@@ -83,19 +86,29 @@ export function LinhaBarra({
             <span className="line-clamp-3">{rotulo}</span>
           </span>
           {apoio && (
-            <span className="flex items-center gap-1.5 truncate text-[11px] text-ink-3">
-              {pontoApoio && <span aria-hidden className={clsx('size-1.5 shrink-0 rounded-full', pontoApoio)} />}
-              {apoio}
+            // quebra em vez de cortar ("Praias da Baía · 43 no período" não cabe na coluna do celular)
+            <span className="flex items-start gap-1.5 text-[11px] leading-snug text-ink-3">
+              {pontoApoio && <span aria-hidden className={clsx('mt-[5px] size-1.5 shrink-0 rounded-full', pontoApoio)} />}
+              <span className="min-w-0">{apoio}</span>
             </span>
           )}
           </span>
         </span>
         <span aria-hidden className="h-2 w-full rounded-full bg-line/60">
-          <span className={clsx('block h-full rounded-full', corBarra)} style={{ width: `${largura}%` }} />
+          {parteAberta > 0 ? (
+            // barra dividida: o que já voltou na cor da linha, o que segue em aberto em âmbar (2 px de folga entre as partes)
+            <span className="flex h-full gap-[2px] overflow-hidden rounded-full" style={{ width: `${largura}%` }}>
+              {valor > parteAberta && <span className={clsx('h-full', corBarra)} style={{ flexGrow: valor - parteAberta }} />}
+              <span className="h-full bg-andamento" style={{ flexGrow: parteAberta }} />
+            </span>
+          ) : (
+            <span className={clsx('block h-full rounded-full', corBarra)} style={{ width: `${largura}%` }} />
+          )}
         </span>
         <span className="numeros min-w-16 text-right text-[13px] text-ink">
           {textoValor ?? numero(valor)}
-          {complemento && <span className="ml-1.5 text-xs text-ink-3">{complemento}</span>}
+          {/* celular: embaixo do número (do lado, a coluna ficava larga e a barra curta demais) */}
+          {complemento && <span className="ml-1.5 text-xs text-ink-3 max-sm:ml-0 max-sm:block max-sm:text-[11px]">{complemento}</span>}
         </span>
       </Elemento>
     </li>
@@ -177,25 +190,115 @@ export function Regioes({ linhas }: { linhas: LinhaQuebra[] }) {
   )
 }
 
+// ── Medida das listas (decisão do usuário, 17/10/2026) ──────────────────────
+// Bairros, O que mais se pede e Quem pede mostram a MESMA coisa, escolhida numa chave só (SeletorMedida, na
+// página). Antes cada bloco mostrava uma coisa. Três medidas (decisão do usuário, 17/10/2026):
+//   periodo        → saídas no período (executados, contando pelo retorno); a barra separa em âmbar a parte que
+//                    ainda está em aberto, e esse número vem em destaque ao lado
+//   abertosPeriodo → só as saídas do período que seguem em aberto (some contando pelo retorno: lá tudo voltou)
+//   fila           → a fila de hoje, de qualquer mês
+// O "% atr." acompanha as duas medidas de em aberto; a linha pequena embaixo do nome dá o contexto.
+export type Medida = 'periodo' | 'abertosPeriodo' | 'fila'
+
+const valorDe = (l: LinhaQuebra, m: Medida) => (m === 'fila' ? l.fila : m === 'abertosPeriodo' ? l.abertosPeriodo : l.saidas)
+
+/** à direita do número: quantos seguem em aberto (período) ou quanto já passou do prazo (em aberto) */
+function complementoDe(l: LinhaQuebra, m: Medida): ReactNode {
+  if (m === 'fila') return l.atraso > 0 ? `${pctCurto(l.atraso, l.fila)} atr.` : undefined
+  if (m === 'abertosPeriodo') return l.atrasoPeriodo > 0 ? `${pctCurto(l.atrasoPeriodo, l.abertosPeriodo)} atr.` : undefined
+  return l.abertosPeriodo > 0 ? <span className="font-medium text-andamento-texto">{numero(l.abertosPeriodo)} em aberto</span> : undefined
+}
+
+/** contexto na linha pequena embaixo do nome (curta: no bairro ela divide a linha com a região) */
+function apoioDe(l: LinhaQuebra, m: Medida, porRetorno: boolean): string | undefined {
+  if (m === 'fila') return l.saidas > 0 ? `${numero(l.saidas)} ${porRetorno ? 'executados ' : ''}no período` : undefined
+  if (m === 'abertosPeriodo') return `de ${numero(l.saidas)} que saíram no período`
+  // a parte do total já se vê no comprimento da barra; aqui só a fila de hoje
+  return l.fila > 0 ? `${numero(l.fila)} na fila agora` : undefined
+}
+
+/** parte âmbar da barra (só na medida "no período") */
+const parteDe = (l: LinhaQuebra, m: Medida) => (m === 'periodo' ? l.abertosPeriodo : 0)
+
+const juntar = (...partes: (string | undefined)[]) => partes.filter(Boolean).join(' · ') || undefined
+
+const FilaZerada = () => <EstadoVazio titulo="Fila zerada" texto="Nenhum serviço em aberto com esses filtros." altura="min-h-40" />
+
+/** Chave única das listas do Panorama */
+export function SeletorMedida({ medida, aoMudar, porRetorno }: { medida: Medida; aoMudar: (m: Medida) => void; porRetorno: boolean }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <span className="text-xs text-ink-2">Nas listas abaixo:</span>
+      <ToggleGroup
+        aria-label="O que as listas de bairros, categorias e origens mostram"
+        value={[medida]}
+        onValueChange={(v) => v[0] && aoMudar(v[0] as Medida)}
+        className="flex h-9 items-center rounded-full border border-line bg-card p-0.5"
+      >
+        {[
+          { v: 'periodo', t: porRetorno ? 'Executados no período' : 'Saíram no período' },
+          ...(porRetorno ? [] : [{ v: 'abertosPeriodo', t: 'Em aberto do período' }]),
+          { v: 'fila', t: 'Na fila agora' },
+        ].map((o) => (
+          <Toggle
+            key={o.v}
+            value={o.v}
+            // escolhida em índigo cheio, como a aba dos Relatórios: muda o que as três listas mostram, tem que se ver
+            className="pressionavel h-full rounded-full px-3 text-xs text-ink-2 transition-colors duration-150 hover:text-ink data-pressed:bg-acao data-pressed:font-medium data-pressed:text-sobre-acao data-pressed:shadow-1"
+          >
+            {o.t}
+          </Toggle>
+        ))}
+      </ToggleGroup>
+      {medida === 'fila' && <span className="text-xs text-ink-3">Em aberto hoje, de qualquer mês: o período não muda estas listas.</span>}
+      {medida === 'abertosPeriodo' && <span className="text-xs text-ink-3">Saíram para a rua no período e ainda não voltaram.</span>}
+      {medida === 'periodo' && !porRetorno && (
+        <span className="flex items-center gap-3 text-xs text-ink-3">
+          <span className="flex items-center gap-1.5">
+            <span aria-hidden className="h-2 w-3 rounded-full bg-s1" /> já voltaram
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span aria-hidden className="h-2 w-3 rounded-full bg-andamento" /> ainda em aberto
+          </span>
+        </span>
+      )}
+    </div>
+  )
+}
+
 // ── Categorias (revisadas): o que mais se pede ─────────────────────────────
 // Quando uma categoria passa do dobro da segunda (hoje "Lâmpada apagada", ~83%), ela sai da
 // escala: vira um destaque com a sua fatia, e as demais ganham escala própria (senão viram tracinhos).
-export function Categorias({ linhas, total }: { linhas: LinhaQuebra[]; total: number }) {
+export function Categorias({ linhas, medida }: { linhas: LinhaQuebra[]; medida: Medida }) {
   const { filtros, mudar } = useFiltros()
-  const ordem = linhas.filter((l) => l.saidas > 0 || l.nome === filtros.categoria).sort((a, b) => b.saidas - a.saidas)
-  const domina = ordem.length > 2 && ordem[0].saidas > 2 * ordem[1].saidas ? ordem[0] : null
+  const porRetorno = filtros.contarPor === 'retorno'
+  const valor = (l: LinhaQuebra) => valorDe(l, medida)
+  const ordem = linhas.filter((l) => valor(l) > 0 || l.nome === filtros.categoria).sort((a, b) => valor(b) - valor(a))
+  const totalMedida = ordem.reduce((s, l) => s + valor(l), 0)
+  const domina = ordem.length > 2 && valor(ordem[0]) > 2 * valor(ordem[1]) ? ordem[0] : null
   const demais = domina ? ordem.slice(1) : ordem
-  const somaDemais = demais.reduce((s, l) => s + l.saidas, 0)
-  const max = Math.max(1, ...demais.map((l) => l.saidas))
+  const somaDemais = demais.reduce((s, l) => s + valor(l), 0)
+  const max = Math.max(1, ...demais.map(valor))
+  const unidade = medida === 'fila' ? 'da fila' : medida === 'abertosPeriodo' ? 'dos em aberto' : porRetorno ? 'dos executados' : 'das saídas'
+  // na dominante a parte do total já vem ao lado do número: embaixo só o contexto que falta
+  const apoioDomina = !domina
+    ? undefined
+    : medida === 'periodo'
+      ? domina.fila > 0
+        ? `${numero(domina.fila)} na fila agora`
+        : undefined
+      : apoioDe(domina, medida, porRetorno)
+  const destaqueDomina = domina ? complementoDe(domina, medida) : undefined
   const alternar = (nome: string) => mudar({ categoria: filtros.categoria === nome ? null : nome })
   const linha = (l: LinhaQuebra) => (
     <LinhaBarra
       key={l.nome}
       rotulo={l.nome}
-      valor={l.saidas}
+      valor={valor(l)}
       maximo={max}
-      complemento={pct(l.saidas, total)}
-      apoio={l.fila > 0 ? `${numero(l.fila)} na fila agora` : undefined}
+      complemento={complementoDe(l, medida)}
+      parteAberta={parteDe(l, medida)}
+      apoio={apoioDe(l, medida, porRetorno)}
       ativo={filtros.categoria === l.nome}
       aoTocar={() => alternar(l.nome)}
       corBarra={l.nome === CATEGORIA_RISCO ? 'bg-risco' : 'bg-s1'}
@@ -204,10 +307,20 @@ export function Categorias({ linhas, total }: { linhas: LinhaQuebra[]; total: nu
   )
   return (
     <Card aria-labelledby="titulo-categorias">
-      <CabecalhoCard id="titulo-categorias" titulo="O que mais se pede" subtitulo="Saídas no período por categoria revisada." />
+      <CabecalhoCard
+        id="titulo-categorias"
+        titulo="O que mais se pede"
+        subtitulo={
+          medida === 'fila'
+            ? 'Em aberto hoje, por categoria revisada.'
+            : medida === 'abertosPeriodo'
+              ? 'Saíram no período e seguem em aberto, por categoria revisada.'
+              : `${porRetorno ? 'Executados' : 'Saídas'} no período por categoria revisada.`
+        }
+      />
       <div className="px-3 pt-2 pb-3">
         {ordem.length === 0 ? (
-          <Vazio />
+          medida === 'fila' ? <FilaZerada /> : <Vazio />
         ) : (
           <>
             {domina && (
@@ -223,20 +336,21 @@ export function Categorias({ linhas, total }: { linhas: LinhaQuebra[]; total: nu
                 <span className="flex items-baseline justify-between gap-3">
                   <span className="text-[13px] font-medium text-ink">{domina.nome}</span>
                   <span className="numeros text-[13px] text-ink">
-                    {numero(domina.saidas)} <span className="text-xs text-ink-3">{pct(domina.saidas, total)} das saídas</span>
+                    {numero(valor(domina))} <span className="text-xs text-ink-3">{pct(valor(domina), totalMedida)} {unidade}</span>
+                    {destaqueDomina && <span className="ml-1.5 text-xs text-ink-3">· {destaqueDomina}</span>}
                   </span>
                 </span>
                 {/* fatia da dominante x resto, numa barra só */}
                 <span aria-hidden className="mt-2 flex h-2.5 gap-[2px] overflow-hidden rounded-full">
-                  <span className="bg-s1" style={{ flexGrow: domina.saidas }} />
+                  <span className="bg-s1" style={{ flexGrow: valor(domina) }} />
                   <span className="bg-s1/35" style={{ flexGrow: somaDemais }} />
                 </span>
-                <span className="mt-1 block text-[11px] text-ink-3">{numero(domina.fila)} na fila agora</span>
+                {apoioDomina && <span className="mt-1 block text-[11px] text-ink-3">{apoioDomina}</span>}
               </button>
             )}
             {domina && (
               <p className="border-t border-line px-2 pt-3 pb-1 text-xs text-ink-2">
-                Demais categorias · <span className="numeros">{numero(somaDemais)}</span> ({pct(somaDemais, total)}) — escala própria
+                Demais categorias · <span className="numeros">{numero(somaDemais)}</span> ({pct(somaDemais, totalMedida)}) — escala própria
               </p>
             )}
             <ul className={LISTA_BARRAS}>{demais.map(linha)}</ul>
@@ -247,65 +361,41 @@ export function Categorias({ linhas, total }: { linhas: LinhaQuebra[]; total: nu
   )
 }
 
-// ── Bairros: alternar entre "maior fila agora" e "mais pedidos no período" ──
+// ── Bairros: os 12 com mais (na medida escolhida), até 30 ───────────────────
 export function Bairros({
   linhas,
   regiaoDe,
+  medida,
   className,
 }: {
   linhas: LinhaQuebra[]
   regiaoDe: (bairro: string) => string
+  medida: Medida
   className?: string
 }) {
   const { filtros, mudar } = useFiltros()
-  const [modo, setModo] = useState<'fila' | 'saidas'>('fila')
   const porRetorno = filtros.contarPor === 'retorno'
   const [todos, setTodos] = useState(false)
-  const campo = modo === 'fila' ? 'fila' : 'saidas'
-  const ordem = linhas.filter((l) => l[campo] > 0).sort((a, b) => b[campo] - a[campo] || compararTexto(a.nome, b.nome))
+  const valor = (l: LinhaQuebra) => valorDe(l, medida)
+  const ordem = linhas.filter((l) => valor(l) > 0).sort((a, b) => valor(b) - valor(a) || compararTexto(a.nome, b.nome))
   const visiveis = ordem.slice(0, todos ? 30 : 12)
-  const max = Math.max(1, ...visiveis.map((l) => l[campo]))
+  const max = Math.max(1, ...visiveis.map(valor))
   return (
     <Card aria-labelledby="titulo-bairros" className={clsx('flex flex-col', className)}>
       <CabecalhoCard
         id="titulo-bairros"
         titulo="Bairros"
         subtitulo={
-          modo === 'fila'
-            ? 'Em aberto hoje, não importa quando saíram (não depende do período).'
-            : porRetorno
-              ? 'Executados dentro do período escolhido.'
-              : 'Saídas para a rua dentro do período escolhido.'
-        }
-        acao={
-          <ToggleGroup
-            aria-label="Ordenar bairros por"
-            value={[modo]}
-            onValueChange={(v) => v[0] && setModo(v[0] as 'fila' | 'saidas')}
-            className="flex h-9 items-center rounded-full border border-line bg-page p-0.5"
-          >
-            {[
-              { v: 'fila', t: 'Em aberto hoje' },
-              { v: 'saidas', t: porRetorno ? 'Executados no período' : 'Saíram no período' },
-            ].map((o) => (
-              <Toggle
-                key={o.v}
-                value={o.v}
-                className="pressionavel h-full rounded-full px-3 text-xs text-ink-2 data-pressed:bg-card data-pressed:font-medium data-pressed:text-ink data-pressed:shadow-1"
-              >
-                {o.t}
-              </Toggle>
-            ))}
-          </ToggleGroup>
+          medida === 'fila'
+            ? 'Em aberto hoje. Toque num bairro para filtrar.'
+            : medida === 'abertosPeriodo'
+              ? 'Saíram no período e seguem em aberto. Toque num bairro para filtrar.'
+              : `${porRetorno ? 'Executados' : 'Saídas para a rua'} no período. Toque num bairro para filtrar.`
         }
       />
       <div className="flex flex-1 flex-col px-3 pt-2 pb-3">
         {visiveis.length === 0 ? (
-          modo === 'fila' ? (
-            <EstadoVazio titulo="Fila zerada" texto="Nenhum serviço em aberto com esses filtros." altura="min-h-40" />
-          ) : (
-            <Vazio />
-          )
+          medida === 'fila' ? <FilaZerada /> : <Vazio />
         ) : (
           <>
             <ol className={LISTA_BARRAS}>
@@ -313,11 +403,12 @@ export function Bairros({
                 <LinhaBarra
                   key={l.nome}
                   rotulo={l.nome}
-                  apoio={regiaoDe(l.nome)}
+                  apoio={juntar(regiaoDe(l.nome), apoioDe(l, medida, porRetorno))}
                   pontoApoio={corRegiao(regiaoDe(l.nome))}
-                  valor={l[campo]}
+                  valor={valor(l)}
                   maximo={max}
-                  complemento={modo === 'fila' && l.atraso > 0 ? `${pctCurto(l.atraso, l.fila)} atr.` : undefined}
+                  complemento={complementoDe(l, medida)}
+                  parteAberta={parteDe(l, medida)}
                   ativo={filtros.bairro === l.nome}
                   aoTocar={() =>
                     filtros.bairro === l.nome ? mudar({ bairro: null }) : mudar({ regiao: regiaoDe(l.nome), bairro: l.nome })
@@ -350,16 +441,19 @@ const NOME_DO_QUEM: Record<string, string> = { Regional: 'regional', Vereador: '
 export function Origens({
   linhas,
   quens,
-  total,
+  medida,
   className,
 }: {
   linhas: LinhaQuebra[]
   /** 2º nível da origem escolhida (null = nada para abrir) */
   quens: LinhaQuebra[] | null
-  total: number
+  medida: Medida
   className?: string
 }) {
   const { filtros, mudar } = useFiltros()
+  const porRetorno = filtros.contarPor === 'retorno'
+  const valor = (l: LinhaQuebra) => valorDe(l, medida)
+  const vazio = medida === 'fila' ? <FilaZerada /> : <Vazio />
   const [todos, setTodos] = useState(false)
   const nivelQuem = quens !== null && filtros.origem !== null
   const { data: base } = useBase()
@@ -386,24 +480,34 @@ export function Origens({
   let subtitulo: string
   let corpo: ReactNode
   if (!nivelQuem) {
-    const ordem = linhas.filter((l) => l.saidas > 0 || l.nome === filtros.origem).sort((a, b) => b.saidas - a.saidas)
-    const max = Math.max(1, ...ordem.map((l) => l.saidas))
+    const ordem = linhas.filter((l) => valor(l) > 0 || l.nome === filtros.origem).sort((a, b) => valor(b) - valor(a))
+    const max = Math.max(1, ...ordem.map(valor))
+    const oQue =
+      medida === 'fila'
+        ? 'os pedidos em aberto hoje'
+        : medida === 'abertosPeriodo'
+          ? 'os que saíram no período e seguem em aberto'
+          : porRetorno
+            ? 'os executados do período'
+            : 'as saídas do período'
     titulo = filtros.origem ? `Quem pede · ${filtros.origem}` : 'Quem pede'
     subtitulo = filtros.origem
-      ? 'Saídas do período desta origem.'
-      : 'De onde vieram as saídas do período. Toque para ver as regionais, os vereadores…'
+      ? `De onde vieram ${oQue}: esta origem.`
+      : `De onde vieram ${oQue}. Toque para ver as regionais, os vereadores…`
     corpo =
       ordem.length === 0 ? (
-        <Vazio />
+        vazio
       ) : (
         <ul className={LISTA_BARRAS}>
           {ordem.map((l) => (
             <LinhaBarra
               key={l.nome}
               rotulo={l.nome}
-              valor={l.saidas}
+              valor={valor(l)}
               maximo={max}
-              complemento={pct(l.saidas, total)}
+              complemento={complementoDe(l, medida)}
+              parteAberta={parteDe(l, medida)}
+              apoio={apoioDe(l, medida, porRetorno)}
               ativo={filtros.origem === l.nome}
               aoTocar={() => escolherOrigem(filtros.origem === l.nome ? null : l.nome)}
               compacta
@@ -413,16 +517,23 @@ export function Origens({
       )
   } else {
     const ordem = quens
-      .filter((l) => l.saidas > 0 || l.nome === filtros.quem)
-      .sort((a, b) => b.saidas - a.saidas || compararTexto(a.nome, b.nome))
+      .filter((l) => valor(l) > 0 || l.nome === filtros.quem)
+      .sort((a, b) => valor(b) - valor(a) || compararTexto(a.nome, b.nome))
     const visiveis = todos ? ordem : ordem.slice(0, 10)
-    const max = Math.max(1, ...visiveis.map((l) => l.saidas))
-    const totalOrigem = quens.reduce((s, l) => s + l.saidas, 0)
+    const max = Math.max(1, ...visiveis.map(valor))
+    const oQue =
+      medida === 'fila'
+        ? 'Em aberto hoje'
+        : medida === 'abertosPeriodo'
+          ? 'Em aberto, dos que saíram no período,'
+          : porRetorno
+            ? 'Executados no período'
+            : 'Saídas do período'
     titulo = `Quem pede · ${filtros.origem}`
-    subtitulo = `Saídas do período por ${NOME_DO_QUEM[filtros.origem!] ?? 'nome'}. Toque num nome para filtrar o site todo.`
+    subtitulo = `${oQue} por ${NOME_DO_QUEM[filtros.origem!] ?? 'nome'}. Toque num nome para filtrar o site todo.`
     corpo =
       visiveis.length === 0 ? (
-        <Vazio />
+        vazio
       ) : (
         <>
           <ol className={LISTA_BARRAS}>
@@ -430,10 +541,11 @@ export function Origens({
               <LinhaBarra
                 key={l.nome}
                 rotulo={l.nome}
-                apoio={l.fila > 0 ? `${numero(l.fila)} na fila agora` : undefined}
-                valor={l.saidas}
+                apoio={apoioDe(l, medida, porRetorno)}
+                valor={valor(l)}
                 maximo={max}
-                complemento={pct(l.saidas, totalOrigem)}
+                complemento={complementoDe(l, medida)}
+                parteAberta={parteDe(l, medida)}
                 ativo={filtros.quem === l.nome}
                 aoTocar={() => mudar({ quem: filtros.quem === l.nome ? null : l.nome })}
                 prefixo={comFoto ? <FotoVereador vereador={l.nome === SEM_VEREADOR ? null : (vereadores.get(l.nome) ?? null)} /> : undefined}

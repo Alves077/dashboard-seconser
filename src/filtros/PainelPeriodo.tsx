@@ -45,15 +45,23 @@ function useContagemMeses() {
   }, [base, filtros, hoje])
 }
 
+/** Anos que aparecem sem abrir "anos anteriores" (com 8 anos de dados a grade passava da tela) */
+const ANOS_VISIVEIS = 2
+
 function GradeMeses({ selecionado, aoEscolher }: { selecionado: ChaveMes | null; aoEscolher: (k: ChaveMes) => void }) {
   const { contagem, meses } = useContagemMeses()
   const hoje = useHoje()
   const corrente = chaveMes(hoje)
+  const [todos, setTodos] = useState(false)
   const anos = [...new Set(meses.map((k) => Math.floor(k / 100)))].sort((a, b) => b - a)
   if (!anos.length) return <p className="text-[13px] text-ink-3">Sem meses com dados.</p>
+  const anoEscolhido = selecionado === null ? null : Math.floor(selecionado / 100)
+  // os mais recentes, e o ano do mês escolhido (mesmo que antigo) para ele continuar à vista
+  const visiveis = todos ? anos : anos.filter((a, i) => i < ANOS_VISIVEIS || a === anoEscolhido)
+  const escondidos = anos.filter((a) => !visiveis.includes(a))
   return (
     <div className="flex flex-col gap-3">
-      {anos.map((ano) => (
+      {visiveis.map((ano) => (
         <div key={ano} className="grid grid-cols-[2.75rem_minmax(0,1fr)] items-start gap-2">
           <span className="numeros pt-2 text-xs font-medium text-ink-2">{ano}</span>
           <div className="grid grid-cols-4 gap-1 sm:grid-cols-6">
@@ -89,6 +97,19 @@ function GradeMeses({ selecionado, aoEscolher }: { selecionado: ChaveMes | null;
           </div>
         </div>
       ))}
+      {(escondidos.length > 0 || todos) && anos.length > ANOS_VISIVEIS && (
+        <button
+          type="button"
+          onClick={() => setTodos((v) => !v)}
+          aria-expanded={todos}
+          className="flex h-9 items-center gap-2 self-start text-[13px] font-medium text-ink-2 hover:text-ink"
+        >
+          <ChevronDown aria-hidden className={clsx('size-4 transition-transform duration-150', todos && 'rotate-180')} />
+          {todos
+            ? 'Só os anos mais recentes'
+            : `Anos anteriores (${Math.min(...escondidos)}${escondidos.length > 1 ? `–${Math.max(...escondidos)}` : ''})`}
+        </button>
+      )}
     </div>
   )
 }

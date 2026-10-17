@@ -1,16 +1,18 @@
 // Busca rápida (atalho "/" ou Ctrl+K). Sem animação de abrir/fechar: é usada o tempo todo.
 // Público: nº do serviço, bairro, região. Com acesso: também endereço e local.
+// Casa por palavras, em qualquer ordem, sem acento/maiúscula e tolerando erro de digitação (casar.ts).
 // Busca de rua por texto aproximado — vira agrupada por rua normalizada depois do item 3 do roadmap.
 import { Dialog } from '@base-ui/react/dialog'
 import { Command } from 'cmdk'
 import { Hash, Map as MapaIcone, MapPin, Search } from 'lucide-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useDeferredValue, useEffect, useMemo, useState } from 'react'
 import { useInterface } from '@/componentes/layout/interface'
 import { useBase, useDetalhes } from '@/dados/consultas'
 import { situacao, ultimaSaida } from '@/dados/regras'
 import type { Servico } from '@/dados/tipos'
 import { useFiltros } from '@/filtros/useFiltros'
 import { normalizarBusca, numero } from '@/lib/formato'
+import { buscar, criarIndice, prepararConsulta } from './casar'
 import { useFicha, useHoje } from '@/lib/ganchos'
 import { SeloSituacao } from '@/componentes/ui/SeloSituacao'
 
@@ -42,33 +44,43 @@ export function PaletaBusca() {
 
   useAtalhoTeclado(() => setBuscaAberta(true))
 
-  // índice de endereços normalizados (só com acesso), montado uma vez
+  // índices montados uma vez: endereços (só com acesso), bairros e regiões
   const indiceEndereco = useMemo(() => {
-    if (!acesso || !detalhes || !base) return []
-    const r: { servico: Servico; alvo: string; texto: string }[] = []
+    if (!acesso || !detalhes || !base) return null
+    const r: { servico: Servico; texto: string }[] = []
     for (const [chave, d] of detalhes) {
       const s = base.porChave.get(chave)
       if (!s) continue
       const t = [d.endereco, d.local].filter(Boolean).join(' · ')
-      if (t) r.push({ servico: s, alvo: normalizarBusca(t), texto: t })
+      if (t) r.push({ servico: s, texto: t })
     }
-    return r
+    return criarIndice(r, (e) => e.texto)
   }, [acesso, detalhes, base])
+  const indiceLugar = useMemo(
+    () =>
+      base && {
+        bairros: criarIndice(base.bairros, (b) => b.nome),
+        regioes: criarIndice([...new Set(base.bairros.map((b) => b.regiao))], (r) => r),
+      },
+    [base],
+  )
 
+  // a lista acompanha a digitação sem travar o campo (a conta roda logo depois de cada tecla)
+  const textoBusca = useDeferredValue(texto)
   const resultado = useMemo(() => {
-    const q = normalizarBusca(texto)
-    if (!base || q.length < 2) return null
+    const q = normalizarBusca(textoBusca)
+    if (!base || !indiceLugar || q.length < 2) return null
     const soNumero = /^\d+$/.test(q)
-    const servicos = soNumero
-      ? base.servicos.filter((s) => String(s.idColab).startsWith(q)).slice(0, LIMITE)
-      : []
-    const bairros = soNumero
-      ? []
-      : base.bairros.filter((b) => normalizarBusca(b.nome).includes(q)).slice(0, LIMITE)
-    const regioes = soNumero ? [] : [...new Set(base.bairros.map((b) => b.regiao))].filter((r) => normalizarBusca(r).includes(q))
-    const enderecos = soNumero ? [] : indiceEndereco.filter((e) => e.alvo.includes(q)).slice(0, LIMITE)
-    return { servicos, bairros, regioes, enderecos }
-  }, [texto, base, indiceEndereco])
+    if (soNumero)
+      return { servicos: base.servicos.filter((s) => String(s.idColab).startsWith(q)).slice(0, LIMITE), bairros: [], regioes: [], enderecos: [] }
+    const c = prepararConsulta(textoBusca)
+    return {
+      servicos: [],
+      bairros: buscar(indiceLugar.bairros, c, LIMITE),
+      regioes: buscar(indiceLugar.regioes, c, LIMITE),
+      enderecos: indiceEndereco ? buscar(indiceEndereco, c, LIMITE) : [],
+    }
+  }, [textoBusca, base, indiceLugar, indiceEndereco])
 
   const fechar = () => {
     setBuscaAberta(false)

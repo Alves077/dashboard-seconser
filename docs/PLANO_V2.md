@@ -509,3 +509,26 @@ Corrigido (decisões do usuário seguindo as recomendações):
 - Evolução: fila num gráfico próprio em cima, entraram × executados embaixo, cada um na sua escala (a fila de 920
   achatava as linhas).
 - Relatório Em aberto: "por mês de registro" só os 12 últimos + "antes de …".
+
+## Ajustes de 17/10/2026 (2ª rodada)
+- **Cabeçalho** do computador com 64 px (era 56): em tela cheia (F11) o logo ficava colado na borda. A barra de
+  filtros gruda logo abaixo (`lg:top-16`).
+- **Período com muitos anos** (cenário Enorme): a grade de meses mostra os 2 anos mais recentes (e o do mês escolhido)
+  com "Anos anteriores (…)" para abrir; o popover tem altura máxima da tela e rola (antes passava da tela e o fim
+  ficava inalcançável).
+- **Relatório Em aberto**: nome longo (origem, associação, promotoria, bairro do Colab) quebra linha em vez de
+  empurrar as colunas para fora do cartão; o resto continua numa linha só (impressão igual à anterior).
+- **Panorama — uma medida para as três listas** (decisão do usuário): chave acima de Regiões/Bairros/Categorias/
+  Quem pede (`SeletorMedida`, Quebras.tsx) com **Saíram no período | Em aberto do período | Na fila agora** (a do meio
+  some contando pelo retorno). "Saíram no período": barra dividida — azul o que já voltou, âmbar o que segue em
+  aberto — e "N em aberto" em destaque ao lado do número (no celular, embaixo). "Em aberto do período": só as saídas
+  do período sem retorno, com "% atr." e "de N que saíram". "Na fila agora": a fila de hoje com "% atr.". Bairros
+  perdeu a chave própria; a tabela de Regiões continua com as duas colunas. `LinhaQuebra` ganhou `abertosPeriodo` e
+  `atrasoPeriodo` (calculos/panorama.ts).
+- **Relatórios — "Saíram para a rua"** (decisão do usuário): Em aberto e Lista de campo ganharam seletor próprio
+  (qualquer data — padrão —, últimos 7/30/90 dias, este ano ou um mês com pedido em aberto), na URL `?saida=`;
+  vai para o cabeçalho impresso. O período global continua não valendo nessas abas (esconderia os parados há mais tempo).
+- **Busca** (`busca/casar.ts`): por palavras em qualquer ordem, qualquer trecho, sem acento/maiúscula e tolerando
+  1 erro de digitação (2 em palavras longas) — "amral peixoto", "ernani amaral", "peixoto" acham "Av. Ernani do
+  Amaral Peixoto". Índice por palavra única (vocabulário real ~3.700 palavras) e resultado por termo guardado: poucos ms
+  por tecla. Número só (nº do serviço) continua pelo começo do número.

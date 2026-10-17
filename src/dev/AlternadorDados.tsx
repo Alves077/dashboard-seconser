@@ -9,7 +9,7 @@ export function AlternadorDados() {
     const u = new URL(window.location.href)
     if (id) u.searchParams.set('dados', id)
     else u.searchParams.delete('dados')
-    window.location.href = u.toString() // muda o ?dados= → o navegador carrega a página de novo
+    window.location.assign(u.toString()) // muda o ?dados= → o navegador carrega a página de novo
   }
   return (
     <div

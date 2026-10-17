@@ -51,7 +51,9 @@ function TabelaSimples({ titulo, linhas, total }: { titulo: string; linhas: Linh
         <tbody>
           {linhas.map((l) => (
             <tr key={l.nome}>
-              <td className="font-medium">{l.nome}</td>
+              {/* "quebra": o compacto é uma linha só, mas nome longo ("Ministério Público do Estado do Rio de
+                  Janeiro") empurrava as colunas de número para fora do cartão */}
+              <td className="quebra font-medium">{l.nome}</td>
               <td className="num">{numero(l.abertos)}</td>
               <td className="num">{pct(l.abertos, total)}</td>
               <td className="num">{decimal(l.media)}d</td>
@@ -64,6 +66,8 @@ function TabelaSimples({ titulo, linhas, total }: { titulo: string; linhas: Linh
 }
 
 const MESES_NO_RESUMO = 12
+/** a partir de quantas letras um texto da tabela de mais antigos pode quebrar linha */
+const LONGO = 24
 
 export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbertos; detalhes: Map<string, Detalhe> | null; hoje: Dia }) {
   if (r.n === 0) return <p className="py-10 text-center text-[13px] text-ink-2">Nenhum serviço em aberto com esses filtros.</p>
@@ -159,7 +163,7 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
                 <tbody>
                   {r.lugares.map((l) => (
                     <tr key={l.nome}>
-                      <td className="font-medium">{l.nome}</td>
+                      <td className="quebra font-medium">{l.nome}</td>
                       <td className="num">{numero(l.abertos)}</td>
                       <td className="num">{pct(l.abertos, r.n)}</td>
                       <td className={clsx('num', corDias(l.media))}>{decimal(l.media)}d</td>
@@ -219,9 +223,11 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
                     <IdServico servico={servico} />
                   </td>
                   {detalhes && <td className="quebra">{detalhes.get(servico.chave)?.endereco ?? '—'}</td>}
-                  <td className="centro">{servico.bairro}</td>
+                  {/* numa linha só (compacto, como o PDF do script); só texto LONGO quebra — bairro que veio do Colab,
+                      associação, promotoria —, que antes espremia o endereço e jogava "Registro" e "Dias" para fora */}
+                  <td className={clsx('centro', servico.bairro.length > LONGO && 'quebra')}>{servico.bairro}</td>
                   <td className="centro">{servico.categoria ?? 'Sem categoria'}</td>
-                  <td className="centro">{origemTexto(servico)}</td>
+                  <td className={clsx('centro', origemTexto(servico).length > LONGO && 'quebra')}>{origemTexto(servico)}</td>
                   <td className="num">{formatarDia(saida.dataSaida)}</td>
                   <td className="num font-semibold text-atraso-texto">{numero(dias)}</td>
                 </tr>

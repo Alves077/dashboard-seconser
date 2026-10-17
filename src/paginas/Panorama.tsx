@@ -1,6 +1,6 @@
 // Panorama — "Como estamos agora?". Dois blocos com nome: AGORA (fila de hoje, não depende do
 // período) e NO PERÍODO (o que saiu/voltou no período escolhido). Toda quebra é clicável e vira filtro.
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { EstadoErro, Esqueleto } from '@/componentes/estados/Estados'
 import { Card } from '@/componentes/ui/Card'
 import { calcularPanorama, type Panorama as Dados } from '@/calculos/panorama'
@@ -13,7 +13,7 @@ import { useHoje } from '@/lib/ganchos'
 import { Agora } from './panorama/Agora'
 import { Indicadores } from './panorama/Indicadores'
 import { Movimento } from './panorama/Movimento'
-import { Bairros, Categorias, Origens, Regioes } from './panorama/Quebras'
+import { Bairros, Categorias, Origens, Regioes, SeletorMedida, type Medida } from './panorama/Quebras'
 
 const B = ({ children }: { children: ReactNode }) => <strong className="font-medium text-ink">{children}</strong>
 
@@ -110,6 +110,8 @@ export function Panorama() {
   const { data: base, isLoading, error, refetch } = useBase()
   const { filtros } = useFiltros()
   const hoje = useHoje()
+  // o que Bairros, Categorias e Quem pede mostram (uma chave só para os três; ver Quebras.tsx)
+  const [medida, setMedida] = useState<Medida>('periodo')
 
   const d = useMemo(() => (base ? calcularPanorama(base, filtros, hoje) : null), [base, filtros, hoje])
   const regiaoDe = useMemo(() => {
@@ -170,17 +172,18 @@ export function Panorama() {
             </div>
             <Indicadores p={d} comparacao={rotuloComparacao(d.anterior)} porRetorno={porRetorno} />
             <Movimento m={d.movimento} primeiraSaida={d.primeiraSaida} hoje={hoje} />
+            <SeletorMedida medida={medida} aoMudar={setMedida} porRetorno={porRetorno} />
             {/* duas colunas independentes (sem buraco entre cards de alturas diferentes):
                 à esquerda ONDE (regiões, bairros), à direita O QUÊ e QUEM (categorias, origem) */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div className="flex flex-col gap-4">
                 <Regioes linhas={d.regioes} />
                 {/* o último card de cada coluna estica: as duas colunas terminam na mesma linha */}
-                <Bairros linhas={d.bairros} regiaoDe={regiaoDe} className="lg:flex-1" />
+                <Bairros linhas={d.bairros} regiaoDe={regiaoDe} medida={medida} className="lg:flex-1" />
               </div>
               <div className="flex flex-col gap-4">
-                <Categorias linhas={d.categorias} total={d.atual.saidas} />
-                <Origens key={filtros.origem ?? ''} linhas={d.origens} quens={d.quens} total={d.atual.saidas} className="lg:flex-1" />
+                <Categorias linhas={d.categorias} medida={medida} />
+                <Origens key={filtros.origem ?? ''} linhas={d.origens} quens={d.quens} medida={medida} className="lg:flex-1" />
               </div>
             </div>
           </section>
