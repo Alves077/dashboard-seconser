@@ -5,7 +5,10 @@ import { escreverFiltros, FILTROS_PADRAO, lerFiltros, type Filtros } from './fil
 /** Filtros globais lidos/escritos na URL (#/rota?periodo=…&regiao=…) */
 export function useFiltros() {
   const [params, setParams] = useSearchParams()
-  const filtros = useMemo(() => lerFiltros(params), [params])
+  // o objeto só muda quando muda um FILTRO: abrir/fechar a Ficha (?servico=) também mexe na URL, e antes
+  // isso recalculava a página inteira (300–400 ms com 4–5× o volume de hoje)
+  const chave = escreverFiltros(lerFiltros(params), new URLSearchParams()).toString()
+  const filtros = useMemo(() => lerFiltros(new URLSearchParams(chave)), [chave])
 
   const mudar = useCallback(
     (parcial: Partial<Filtros>) => {

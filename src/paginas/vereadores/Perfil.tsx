@@ -21,7 +21,7 @@ import { chaveMes, formatarDia, rotuloMes, rotuloMesLongo } from '@/lib/datas'
 import { decimal, dias, enxuto, numero, pct, plural } from '@/lib/formato'
 import { direcaoDaTroca, useDestino, useFicha, useHoje } from '@/lib/ganchos'
 import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
-import { LinhaBarra } from '@/paginas/panorama/Quebras'
+import { LinhaBarra, LISTA_BARRAS } from '@/paginas/panorama/Quebras'
 
 /** Escala só com inteiros (contagem de pedidos: "0,5 pedido" não existe) */
 function marcasInteiras(max: number): number[] | undefined {
@@ -136,7 +136,7 @@ function Contagem({
           <EstadoVazio titulo="Nada no período" texto="Nenhum pedido com esses filtros neste período." altura="min-h-32" />
         ) : (
           <>
-            <ol>
+            <ol className={LISTA_BARRAS}>
               {visiveis.map((l) => (
                 <LinhaBarra
                   key={l.nome}
@@ -230,7 +230,7 @@ function EmAberto({ p }: { p: PerfilVereador }) {
                 >
                   <span className="numeros w-14 shrink-0 text-[13px] font-medium text-ink">{servico.idColab}</span>
                   <span className="min-w-0 flex-1">
-                    <span className="block truncate text-[13px] text-ink">{servico.categoria}</span>
+                    <span className="block truncate text-[13px] text-ink">{servico.categoria ?? 'Sem categoria'}</span>
                     <span className="block truncate text-xs text-ink-3">
                       {servico.bairro} · saiu em {formatarDia(saida.dataSaida)}
                     </span>

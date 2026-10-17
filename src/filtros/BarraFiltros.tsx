@@ -8,6 +8,7 @@ import { ListaEscolha, type OpcaoLista } from '@/componentes/ui/ListaEscolha'
 import { Selecao } from '@/componentes/ui/Selecao'
 import { corRegiao } from '@/lib/cores'
 import { useBase } from '@/dados/consultas'
+import { SEM_REGIAO } from '@/dados/montar'
 import { compararTexto, numero } from '@/lib/formato'
 import { useHoje } from '@/lib/ganchos'
 import { aplicarFiltros, contarAtivos, contarOpcoes, type Dimensao } from './filtros'
@@ -60,7 +61,7 @@ function CamposLugar({ empilhado = false }: { empilhado?: boolean }) {
   // escolher um bairro já acerta a região dele
   const escolherBairro = (b: string | null) =>
     b ? mudar({ regiao: base?.bairros.find((x) => x.nome === b)?.regiao ?? filtros.regiao, bairro: b }) : mudar({ bairro: null })
-  const vazioBairro = filtros.regiao ? `Todos de ${filtros.regiao}` : 'Todos os bairros'
+  const vazioBairro = filtros.regiao && filtros.regiao !== SEM_REGIAO ? `Todos de ${filtros.regiao}` : 'Todos os bairros'
   if (empilhado)
     return (
       <>

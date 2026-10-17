@@ -9,11 +9,16 @@ import { Landmark } from 'lucide-react'
 import { useState } from 'react'
 import type { Vereador } from '@/dados/tipos'
 
+// título antes do nome não vira inicial ("Professora Ana … Mello" → AM, não PM)
+const TITULO = /^(dr|dra|prof|profa|professor|professora|pastor|pastora|delegado|delegada|sargento|coronel|capitão|doutor|doutora)\.?$/i
+
 function iniciais(nome: string) {
-  const partes = nome.split(/[\s/]+/).filter((p) => p.length > 2 || /^[A-ZÀ-Ú]/.test(p))
+  // só o nome antes da "/": depois vem o apelido ("Dr. Jorge Fernandes/Jorginho da Saúde" → JF)
+  const principal = nome.split('/')[0]
+  const partes = principal.split(/\s+/).filter((p) => p && !TITULO.test(p) && (p.length > 2 || /^[A-ZÀ-Ú]/.test(p)))
   if (partes.length === 0) return '?'
-  if (partes.length === 1) return partes[0].slice(0, 2)
-  return partes[0][0] + partes[partes.length - 1][0]
+  if (partes.length === 1) return [...partes[0]].slice(0, 2).join('')
+  return [...partes[0]][0] + [...partes[partes.length - 1]][0]
 }
 
 /**

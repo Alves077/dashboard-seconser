@@ -1,8 +1,8 @@
 // Foto ampliada na própria página, por cima da ficha. Setas (tela, teclado ← → e arrastar no
 // celular) passam as fotos; Esc, × ou tocar fora fecha. Trocar de foto não anima: é ação repetida.
 import { Dialog } from '@base-ui/react/dialog'
-import { ChevronLeft, ChevronRight, X } from 'lucide-react'
-import { useRef, type KeyboardEvent, type PointerEvent } from 'react'
+import { ChevronLeft, ChevronRight, ImageOff, X } from 'lucide-react'
+import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 import type { Foto } from '@/dados/tipos'
 
 const ARRASTE_MINIMO = 50 // px para contar como "passar a foto"
@@ -19,6 +19,8 @@ export function VisualizadorFotos({
   aoFechar: () => void
 }) {
   const inicioX = useRef<number | null>(null)
+  // fotos que não carregaram (sumiram do Colab): mensagem no lugar do ícone quebrado
+  const [falhas, setFalhas] = useState<Set<string>>(() => new Set())
   const total = fotos.length
   const atual = indice === null ? null : fotos[indice]
   const anterior = () => indice !== null && aoMudar((indice - 1 + total) % total)
@@ -55,7 +57,13 @@ export function VisualizadorFotos({
             Foto {indice !== null ? indice + 1 : ''} de {total}
           </Dialog.Title>
 
-          {atual && (
+          {atual && falhas.has(atual.url) && (
+            <p className="flex flex-col items-center gap-2 text-sm text-white/80">
+              <ImageOff aria-hidden className="size-8" />
+              Foto indisponível (não está mais no Colab)
+            </p>
+          )}
+          {atual && !falhas.has(atual.url) && (
             <img
               key={atual.url}
               src={atual.url}
@@ -64,6 +72,7 @@ export function VisualizadorFotos({
               draggable={false}
               onPointerDown={aoPressionar}
               onPointerUp={aoSoltar}
+              onError={() => setFalhas((f) => new Set(f).add(atual.url))}
               className="max-h-full max-w-full touch-pan-y rounded-lg object-contain shadow-2 select-none"
             />
           )}

@@ -482,3 +482,30 @@ nome do lugar para a camada **pública** (nome de lugar não é dado pessoal). D
 ### 8.4 Ordem
 8.1 filtro quem → 8.2 fotos tratadas → cartões → perfil → conferência dos números contra o CSV (Python) → docs.
 8.3 quando o dado existir. Cada etapa testada no celular e no computador, claro e escuro.
+
+## Teste de pior caso (17/10/2026)
+Cenários de dados inventados **só no `npm run dev`** (`src/dev/`, fora do build — conferido): seletor no rodapé ou
+`…/?dados=pior#/` — **Dados reais / Pior caso** (nomes longos reais e plausíveis, sem bairro/região/categoria/pino,
+pinos empilhados, 912 dias em aberto, bairro fora da tabela, descrição de 2.000 letras, 40 fotos, foto que sumiu)
+**/ Vazio / Um** (toda contagem em 1) **/ Enorme** (8 anos, ~95 mil saídas). Entram pela mesma porta do dado real
+(`dados/fonte.ts`); a parte restrita fica liberada como no CSV local. Manter: é o teste de regressão da próxima mudança.
+
+Corrigido (decisões do usuário seguindo as recomendações):
+- Cabeçalho em 320 px com dado velho + "Entrar" rolava 45 px para o lado → selo vira só o ícone abaixo de 360 px.
+- Barra de baixo com 6 páginas em 320 px: nomes encostavam → 10 px abaixo de 360 px.
+- Ficha: foto que sumiu do Colab → quadro "Foto indisponível" (miniatura e visualizador); 9 miniaturas no máximo,
+  a última vira "+N".
+- Abrir/fechar a Ficha recalculava a página inteira (300–400 ms no Enorme) → `useFiltros` só muda com filtro (~60 ms).
+- Legenda "Há quanto tempo esperam" quebra linha em vez de cortar ("Mais de ..."); números alinhados embaixo.
+- Listas com barra (`LinhaBarra`): `subgrid` (`LISTA_BARRAS`) — todas as barras terminam no mesmo ponto; nomes em até
+  3 linhas (associações com o mesmo começo).
+- "Esperando há mais tempo" (Panorama e Mapa): a data desce de linha, nunca é cortada; Lista de campo mostra o ano
+  quando a saída é de outro ano (`formatarDiaNoAno`).
+- "Sem categoria" em todo lugar onde a categoria revisada falta; Regiões vazias com aviso; eixo dos gráficos com passo
+  mínimo 1; título de coluna dos relatórios pode quebrar (cortava "ESPERA MÉDIA").
+- Iniciais do vereador sem foto ignoram título (Dr., Professora…) e o apelido depois da "/".
+- Filtro de bairro: "Todos os bairros" com "Sem região"; bairro que não está na tabela (e "Sem bairro") entra nas opções
+  e na busca (`montar.ts`); busca de endereço em 2 linhas.
+- Evolução: fila num gráfico próprio em cima, entraram × executados embaixo, cada um na sua escala (a fila de 920
+  achatava as linhas).
+- Relatório Em aberto: "por mês de registro" só os 12 últimos + "antes de …".

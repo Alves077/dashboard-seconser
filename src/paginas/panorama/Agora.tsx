@@ -13,7 +13,7 @@ import { corRegiao } from '@/lib/cores'
 import { compararTexto, dias, numero, pct, plural } from '@/lib/formato'
 import { direcaoDaTroca, useFicha } from '@/lib/ganchos'
 import { gavetaCartao, gavetaLista, trocarComTransicao } from '@/lib/gaveta'
-import { LinhaBarra } from './Quebras'
+import { LinhaBarra, LISTA_BARRAS } from './Quebras'
 
 const COR_ESPERA = ['bg-o1', 'bg-o2', 'bg-o3', 'bg-o4', 'bg-o5']
 
@@ -71,14 +71,16 @@ function BarraEspera({
               aria-pressed={escolhida === i}
               className={clsx(
                 // destaque do tamanho da coluna, conteúdo centralizado nele (sem sobra só de um lado)
-                'pressionavel w-full rounded-md px-2 py-1 text-center transition-opacity duration-150 disabled:cursor-default',
+                // número sempre embaixo: com o rótulo em 2 linhas (tela estreita/zoom) os números continuam alinhados
+                'pressionavel flex h-full w-full flex-col justify-between rounded-md px-2 py-1 text-center transition-opacity duration-150 disabled:cursor-default',
                 escolhida === i ? 'bg-acao-suave' : 'enabled:hover:bg-realce',
                 apagada(i) && 'opacity-50',
               )}
             >
-              <span className="flex items-center justify-center gap-1.5 text-xs text-ink-2">
+              {/* o rótulo quebra linha em vez de cortar ("Mais de ..." em tela estreita ou com zoom) */}
+              <span className="flex items-center justify-center gap-1.5 text-xs leading-tight text-ink-2">
                 <span aria-hidden className={clsx('size-2.5 shrink-0 rounded-sm', COR_ESPERA[i])} />
-                <span className="truncate">{f.rotulo}</span>
+                <span>{f.rotulo}</span>
               </span>
               <span className="numeros mt-0.5 block text-[15px] font-medium text-ink">
                 {numero(espera[i])}
@@ -140,7 +142,7 @@ function OndeEstao({ itens, rotuloFaixa }: { itens: ItemFila[]; rotuloFaixa: str
       <p className="mt-0.5 mb-2 text-xs text-ink-3">
         {regiao ? 'Bairros da região com mais pedidos nesta faixa.' : 'Toque numa região para ver os bairros.'}
       </p>
-      <ol {...gavetaLista('onde')}>
+      <ol className={LISTA_BARRAS} {...gavetaLista('onde')}>
         {visiveis.map((l) => (
           <LinhaBarra
             key={l.nome}
@@ -293,9 +295,11 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
                   >
                     <span className="numeros w-14 shrink-0 text-[13px] font-medium text-ink">{servico.idColab}</span>
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[13px] text-ink">{servico.categoria}</span>
-                      <span className="block truncate text-xs text-ink-3">
-                        {servico.bairro} · saiu em {formatarDia(saida.dataSaida)}
+                      <span className="block truncate text-[13px] text-ink">{servico.categoria ?? 'Sem categoria'}</span>
+                      {/* sem espaço, a data desce para a linha de baixo — nunca é cortada */}
+                      <span className="flex flex-wrap gap-x-1 text-xs text-ink-3">
+                        <span className="max-w-full truncate">{servico.bairro} ·</span>
+                        <span className="shrink-0">saiu em {formatarDia(saida.dataSaida)}</span>
                       </span>
                       {/* celular: selo embaixo, para o nome da categoria caber */}
                       <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} className="mt-1 sm:hidden" />

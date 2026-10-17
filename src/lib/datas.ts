@@ -50,6 +50,11 @@ export function formatarDiaCurto(d: Dia): string {
   return `${String(p.dia).padStart(2, '0')}/${String(p.mes0 + 1).padStart(2, '0')}`
 }
 
+/** 09/10 se for do mesmo ano de `hoje`; senão 09/10/2025 (data curta que nunca deixa o ano em dúvida) */
+export function formatarDiaNoAno(d: Dia, hoje: Dia): string {
+  return partes(d).ano === partes(hoje).ano ? formatarDiaCurto(d) : formatarDia(d)
+}
+
 // ── Meses ──────────────────────────────────────────────────────────────────
 // Chave de mês = ano * 100 + mês de 0 a 11, como no site antigo (outubro/2026 = 202609, porque
 // janeiro é 0). Ordena certo e cabe num número; para exibir, use sempre rotuloMes/rotuloMesLongo.

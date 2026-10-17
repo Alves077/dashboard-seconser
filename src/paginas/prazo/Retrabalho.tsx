@@ -142,7 +142,7 @@ function QuaisVoltaram({ r }: { r: Prazo['retrabalho'] }) {
               <span className="min-w-0 flex-1">
                 <span className="flex items-baseline gap-2">
                   <span className="numeros text-[13px] font-medium text-ink">{servico.idColab}</span>
-                  <span className="truncate text-[13px] text-ink">{servico.categoria}</span>
+                  <span className="truncate text-[13px] text-ink">{servico.categoria ?? 'Sem categoria'}</span>
                 </span>
                 <span className="block truncate text-xs text-ink-3">{servico.bairro}</span>
                 <Historia saidas={servico.saidas} />

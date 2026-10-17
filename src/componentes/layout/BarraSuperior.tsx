@@ -46,7 +46,9 @@ function StatusDados() {
         {isFetching ? (
           <span className="hidden sm:inline">Atualizando…</span>
         ) : velho ? (
-          <span>
+          // abaixo de 360 px só o ícone âmbar (o texto empurrava o cabeçalho para fora da tela; o aviso
+          // continua no aria-label e ao tocar)
+          <span className="max-[359px]:hidden">
             <span className="hidden xl:inline">Dados de {curto} · </span>há {dias} dias
           </span>
         ) : (

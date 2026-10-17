@@ -58,7 +58,10 @@ function Cartao({ l, aoAbrir }: { l: LinhaVereador; aoAbrir: () => void }) {
       className="pressionavel group flex h-full w-full flex-col items-center rounded-xl border border-line bg-card px-3 pt-4 pb-3 text-center shadow-1 hover:border-acao/40"
     >
       <FotoVereador vereador={l.vereador} className="size-16" prioridade />
-      <span className="mt-2.5 line-clamp-2 min-h-[2.5em] text-[13px] leading-tight font-medium text-ink">{l.nome}</span>
+      {/* até 3 linhas: nome é o que identifica ("Professora Ana Cláudia Bittencourt de Albuquerque Mello") */}
+      <span className="mt-2.5 line-clamp-3 min-h-[2.5em] text-[13px] leading-tight font-medium text-ink" title={l.nome}>
+        {l.nome}
+      </span>
       <span className="numeros mt-2 text-[28px] leading-none font-light tracking-[-0.5px] text-ink">{numero(l.pedidos)}</span>
       <span className="mt-1 text-[11px] text-ink-3">{l.pedidos === 1 ? 'pedido' : 'pedidos'} no período</span>
       {/* duas linhas sempre (numa só, quebrava em uns e não em outros e desalinhava os cartões) */}
@@ -82,7 +85,9 @@ function Linha({ l, aoAbrir, nota }: { l: LinhaVereador; aoAbrir: () => void; no
       <button type="button" onClick={aoAbrir} className="group flex min-h-14 w-full items-center gap-3 px-5 py-2 text-left hover:bg-realce">
         <FotoVereador vereador={l.vereador} className="size-9" />
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-[13px] text-ink">{l.nome}</span>
+          <span className="block truncate text-[13px] text-ink" title={l.nome}>
+            {l.nome}
+          </span>
           {nota && <span className="block truncate text-[11px] text-ink-3">{nota}</span>}
         </span>
         <span className="numeros shrink-0 text-right text-[13px] text-ink">

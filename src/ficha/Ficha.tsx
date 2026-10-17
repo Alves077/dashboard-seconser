@@ -70,6 +70,30 @@ function Historico({ servico }: { servico: Servico }) {
   )
 }
 
+const MAX_MINIATURAS = 9
+
+/** Miniatura quadrada; foto que sumiu do Colab vira um quadro "indisponível" (não o ícone quebrado do navegador) */
+function Miniatura({ url }: { url: string }) {
+  const [falhou, setFalhou] = useState(false)
+  if (falhou)
+    return (
+      <span className="flex aspect-square w-full flex-col items-center justify-center gap-1 bg-realce-forte text-ink-3">
+        <ImageOff aria-hidden className="size-5" />
+        <span className="text-[11px]">Foto indisponível</span>
+      </span>
+    )
+  return (
+    <img
+      src={url}
+      alt=""
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      onError={() => setFalhou(true)}
+      className="aspect-square w-full object-cover transition-opacity duration-150 hover:opacity-90"
+    />
+  )
+}
+
 function Fotos({ chave }: { chave: string }) {
   const { acesso } = useDetalhes()
   const { data, isLoading, isError } = useFotos(chave, acesso)
@@ -88,27 +112,32 @@ function Fotos({ chave }: { chave: string }) {
         <ImageOff aria-hidden className="size-4" /> Nenhuma foto neste serviço.
       </p>
     )
+  // muitas fotos (já houve serviço com 40): 9 quadros, e o último vira "+N" que abre o visualizador ali
+  const mostradas = data.length > MAX_MINIATURAS ? data.slice(0, MAX_MINIATURAS) : data
+  const resto = data.length - mostradas.length
   return (
     <>
       <ul className="grid grid-cols-3 gap-2">
-        {data.map((f, i) => (
-          <li key={f.url}>
-            <button
-              type="button"
-              onClick={() => setAberta(i)}
-              aria-label={`Ampliar foto ${i + 1} de ${data.length}`}
-              className="pressionavel block w-full cursor-zoom-in overflow-hidden rounded-md bg-line"
-            >
-              <img
-                src={f.url}
-                alt=""
-                loading="lazy"
-                referrerPolicy="no-referrer"
-                className="aspect-square w-full object-cover transition-opacity duration-150 hover:opacity-90"
-              />
-            </button>
-          </li>
-        ))}
+        {mostradas.map((f, i) => {
+          const ultima = resto > 0 && i === mostradas.length - 1
+          return (
+            <li key={f.url}>
+              <button
+                type="button"
+                onClick={() => setAberta(i)}
+                aria-label={ultima ? `Ver mais ${resto + 1} fotos` : `Ampliar foto ${i + 1} de ${data.length}`}
+                className="pressionavel relative block w-full cursor-zoom-in overflow-hidden rounded-md bg-line"
+              >
+                <Miniatura url={f.url} />
+                {ultima && (
+                  <span className="numeros absolute inset-0 grid place-items-center bg-black/60 text-lg font-medium text-white backdrop-blur-[2px]">
+                    +{resto + 1}
+                  </span>
+                )}
+              </button>
+            </li>
+          )
+        })}
       </ul>
       <VisualizadorFotos fotos={data} indice={aberta} aoMudar={setAberta} aoFechar={() => setAberta(null)} />
     </>

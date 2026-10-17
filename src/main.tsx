@@ -1,6 +1,6 @@
 import '@/estilos.css'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { StrictMode } from 'react'
+import { lazy, StrictMode, Suspense } from 'react'
 import { createRoot } from 'react-dom/client'
 import { createHashRouter } from 'react-router'
 import { RouterProvider } from 'react-router/dom'
@@ -36,6 +36,11 @@ const rotas = createHashRouter([
   },
 ])
 
+// seletor de dados de teste (pior caso, vazio…): só no `npm run dev`, nunca no site publicado
+const AlternadorDados = import.meta.env.DEV
+  ? lazy(() => import('@/dev/AlternadorDados').then((m) => ({ default: m.AlternadorDados })))
+  : null
+
 const cliente = new QueryClient({
   defaultOptions: { queries: { refetchOnWindowFocus: false } },
 })
@@ -46,6 +51,11 @@ createRoot(document.getElementById('root')!).render(
       <ProvedorSessao>
         <ProvedorInterface>
           <RouterProvider router={rotas} />
+          {AlternadorDados && (
+            <Suspense>
+              <AlternadorDados />
+            </Suspense>
+          )}
         </ProvedorInterface>
       </ProvedorSessao>
     </QueryClientProvider>

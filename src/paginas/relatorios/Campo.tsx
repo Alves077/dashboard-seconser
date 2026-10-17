@@ -7,7 +7,7 @@ import { SeloSituacao } from '@/componentes/ui/SeloSituacao'
 import type { RegiaoCampo } from '@/calculos/relatorios'
 import { CATEGORIA_RISCO, situacao } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
-import { formatarDia, formatarDiaCurto, type Dia } from '@/lib/datas'
+import { formatarDia, formatarDiaNoAno, type Dia } from '@/lib/datas'
 import { dias, numero } from '@/lib/formato'
 import { IdServico } from './Folha'
 
@@ -46,7 +46,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                       </div>
                       <p className="mt-1.5 text-[13px] text-ink">
                         {servico.categoria === CATEGORIA_RISCO && <span aria-label="risco">⚡ </span>}
-                        {servico.categoria}
+                        {servico.categoria ?? 'Sem categoria'}
                       </p>
                       {detalhes && (
                         <p className="text-[12px] text-ink-2">
@@ -83,7 +83,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                           </td>
                           <td>
                             {servico.categoria === CATEGORIA_RISCO && <span aria-label="risco">⚡ </span>}
-                            {servico.categoria}
+                            {servico.categoria ?? 'Sem categoria'}
                           </td>
                           {detalhes && (
                             <td>
@@ -91,7 +91,8 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                               {d?.local && <span className="block text-[10.5px] text-ink-3">{d.local}</span>}
                             </td>
                           )}
-                          <td className="num">{formatarDiaCurto(saida.dataSaida)}</td>
+                          {/* sem o ano só quando é deste ano: "20/12" de um pedido de 301 dias deixava o ano em dúvida */}
+                          <td className="num">{formatarDiaNoAno(saida.dataSaida, hoje)}</td>
                           <td className={`num ${atraso ? 'font-medium text-atraso-texto' : ''}`}>{numero(dias)}</td>
                           {/* para escrever à mão */}
                           <td>

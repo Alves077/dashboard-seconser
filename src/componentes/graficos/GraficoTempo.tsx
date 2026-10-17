@@ -28,12 +28,12 @@ const DIR = 12
 const TOPO = 12
 const BAIXO = 24
 
-/** Topo "redondo" da escala e 3–5 marcas */
+/** Topo "redondo" da escala e 3–5 marcas; passo de no mínimo 1 (contagens e dias: "0,5 serviço" não existe) */
 function escala(max: number): number[] {
   if (max <= 0) return [0, 1]
   const bruto = max / 4
   const p = 10 ** Math.floor(Math.log10(bruto))
-  const passo = [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= bruto)!
+  const passo = Math.max(1, [1, 2, 2.5, 5, 10].map((m) => m * p).find((s) => s >= bruto)!)
   const topo = Math.ceil(max / passo) * passo
   const marcas: number[] = []
   for (let v = 0; v <= topo + passo / 2; v += passo) marcas.push(Math.round(v * 100) / 100)

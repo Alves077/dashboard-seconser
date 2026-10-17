@@ -2,8 +2,10 @@
 // restrito (detalhes e fotos) só para quem pode ver.
 //   csv      → retrato local do banco servido pelo `npm run dev` (vite.config.ts); restrito liberado
 //   supabase → projeto dip-iluminacao; restrito só logado e na lista de acessos (RLS)
-import { FONTE } from '@/config'
+import { CENARIO, FONTE } from '@/config'
+import { hoje } from '@/lib/datas'
 import { supabase } from '@/lib/supabase'
+import type { Cenario } from '@/dev/cenarios'
 import { gravarCache, lerCache } from './cacheLocal'
 import { chaveServico, lerBairro, lerCategoria, lerDetalhe, lerVereador, montarBase } from './montar'
 import type { Base, Detalhe, Foto, LinhaVw } from './tipos'
@@ -213,4 +215,20 @@ function fonteSupabase(): Fonte {
   }
 }
 
-export const fonte: Fonte = FONTE === 'csv' ? fonteCsv() : fonteSupabase()
+// ── Cenários de teste (só desenvolvimento: src/dev/cenarios.ts) ─────────────────
+
+function fonteCenario(cenario: string): Fonte {
+  const dados = import('@/dev/cenarios').then((m) => m.gerarCenario(cenario as Cenario, hoje()))
+  return {
+    tipo: 'csv',
+    async carregarBase() {
+      const d = await dados
+      return montarBase(d.linhas, { vereadores: d.vereadores, categorias: d.categorias, bairros: d.bairros }, d.atualizadoEm)
+    },
+    carregarDetalhes: async () => (await dados).detalhes,
+    carregarFotos: async (chave) => (await dados).fotos.get(chave) ?? [],
+  }
+}
+
+export const fonte: Fonte =
+  import.meta.env.DEV && CENARIO ? fonteCenario(CENARIO) : FONTE === 'csv' ? fonteCsv() : fonteSupabase()

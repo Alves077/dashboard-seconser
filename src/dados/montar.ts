@@ -15,6 +15,10 @@ const num = (v: unknown): number | null => {
 }
 const bool = (v: unknown): boolean => v === true || v === 1 || v === '1' || v === 'true' || v === 't'
 
+/** serviço sem bairro/região no banco (o nome que aparece no site) */
+export const SEM_BAIRRO = 'Sem bairro'
+export const SEM_REGIAO = 'Sem região'
+
 export const chaveServico = (idColab: number, type: string) => `${idColab}-${type}`
 
 /**
@@ -45,8 +49,8 @@ export function montarBase(
         type,
         categoriaColab: txt(l.categoria),
         categoria: txt(l.categoria_revisada),
-        bairro: txt(l.bairro) ?? 'Sem bairro',
-        regiao: txt(l.regiao) ?? 'Sem região',
+        bairro: txt(l.bairro) ?? SEM_BAIRRO,
+        regiao: txt(l.regiao) ?? SEM_REGIAO,
         lat: num(l.lat),
         lng: num(l.lng),
         origem: txt(l.origem) ?? 'Cidadão',
@@ -74,13 +78,20 @@ export function montarBase(
     s.saidas.forEach((x, i) => (x.ordem = i + 1))
   }
 
+  // bairro que veio do Colab e não está na tabela (o banco aceita) e o "Sem bairro": entram na lista com a
+  // região do próprio serviço — senão aparecem nos números mas não dá para escolher no filtro nem buscar
+  const conhecidos = new Set(ref.bairros.map((b) => b.nome))
+  const extras = new Map<string, Bairro>()
+  for (const s of porChave.values())
+    if (!conhecidos.has(s.bairro) && !extras.has(s.bairro)) extras.set(s.bairro, { id: -(extras.size + 1), nome: s.bairro, regiao: s.regiao })
+
   return {
     servicos: [...porChave.values()],
     saidas,
     porChave,
     vereadores: [...ref.vereadores].sort((a, b) => compararTexto(a.nome, b.nome)),
     categorias: [...ref.categorias].sort((a, b) => a.id - b.id),
-    bairros: [...ref.bairros].sort((a, b) => compararTexto(a.nome, b.nome)),
+    bairros: [...ref.bairros, ...extras.values()].sort((a, b) => compararTexto(a.nome, b.nome)),
     atualizadoEm,
   }
 }

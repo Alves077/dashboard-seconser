@@ -533,6 +533,11 @@ html[data-transicao='gaveta-volta']::view-transition-new(*.gaveta-lista) {
   text-align: center;
   white-space: nowrap;
 }
+/* o título da coluna pode quebrar ("ESPERA / MÉDIA"); só o número não. Sem isso, a tabela de categorias
+   do relatório Em aberto passava 8 px do cartão e cortava o título */
+.tabela-folha th.num {
+  white-space: normal;
+}
 /* cabeçalhos centralizados; a 1ª coluna (nomes) fica à esquerda */
 .tabela-folha th {
   text-align: center;

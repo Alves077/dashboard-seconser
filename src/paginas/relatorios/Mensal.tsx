@@ -363,7 +363,7 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
                     <td>
                       <IdServico servico={servico} />
                     </td>
-                    <td className="centro">{servico.categoria}</td>
+                    <td className="centro">{servico.categoria ?? 'Sem categoria'}</td>
                     <td className="centro">{servico.bairro}</td>
                     <td className="centro">{servico.regiao}</td>
                     <td className="num">{formatarDia(saida.dataSaida)}</td>

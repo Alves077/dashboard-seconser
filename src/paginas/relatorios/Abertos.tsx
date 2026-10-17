@@ -63,10 +63,15 @@ function TabelaSimples({ titulo, linhas, total }: { titulo: string; linhas: Linh
   )
 }
 
+const MESES_NO_RESUMO = 12
+
 export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbertos; detalhes: Map<string, Detalhe> | null; hoje: Dia }) {
   if (r.n === 0) return <p className="py-10 text-center text-[13px] text-ink-2">Nenhum serviço em aberto com esses filtros.</p>
   const grupo = r.porBairro ? 'Bairro' : 'Região'
   const somaTres = r.tres.reduce((t, l) => t + l.abertos, 0)
+  // mês a mês só os 12 mais recentes; o resto vira "antes de …" (com anos de fila virava um parágrafo de ~100 meses)
+  const ultimosMeses = r.meses.slice(-MESES_NO_RESUMO)
+  const antes = r.meses.slice(0, -MESES_NO_RESUMO).reduce((t, [, n]) => t + n, 0)
 
   return (
     <div className="folha-compacta">
@@ -88,7 +93,12 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
         <strong className="font-semibold text-ink">{decimal(r.media)} dias</strong>. {r.porBairro ? 'Os três bairros' : 'As três regiões'} com mais
         pendências ({r.tres.map((l) => l.nome).join(', ')}) somam <strong className="font-semibold text-ink">{numero(somaTres)}</strong> serviços (
         {pct(somaTres, r.n)}). Por mês de registro:{' '}
-        {r.meses.map(([k, n], i) => (
+        {antes > 0 && (
+          <span>
+            antes de {rotuloMes(ultimosMeses[0][0])}: <strong className="font-semibold text-ink">{numero(antes)}</strong> ·{' '}
+          </span>
+        )}
+        {ultimosMeses.map(([k, n], i) => (
           <span key={k}>
             {i > 0 && ' · '}
             {rotuloMes(k)}: <strong className="font-semibold text-ink">{numero(n)}</strong>
@@ -210,7 +220,7 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
                   </td>
                   {detalhes && <td className="quebra">{detalhes.get(servico.chave)?.endereco ?? '—'}</td>}
                   <td className="centro">{servico.bairro}</td>
-                  <td className="centro">{servico.categoria}</td>
+                  <td className="centro">{servico.categoria ?? 'Sem categoria'}</td>
                   <td className="centro">{origemTexto(servico)}</td>
                   <td className="num">{formatarDia(saida.dataSaida)}</td>
                   <td className="num font-semibold text-atraso-texto">{numero(dias)}</td>

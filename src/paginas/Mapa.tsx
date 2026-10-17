@@ -14,7 +14,7 @@ import { useBase } from '@/dados/consultas'
 import { CATEGORIA_RISCO } from '@/dados/regras'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
-import { formatarDia } from '@/lib/datas'
+import { formatarDiaNoAno } from '@/lib/datas'
 import { dias, numero, pct } from '@/lib/formato'
 import { useFicha, useHoje, useMidia } from '@/lib/ganchos'
 
@@ -108,7 +108,9 @@ function LinhaPainel({ c, ativo, aoTocar, ponto, icone }: { c: Contagem; ativo: 
       >
         {ponto && <span aria-hidden className={clsx('size-2.5 shrink-0 rounded-full', ponto)} />}
         {icone}
-        <span className="min-w-0 flex-1 truncate">{c.nome}</span>
+        <span className="line-clamp-2 min-w-0 flex-1 leading-snug" title={c.nome}>
+          {c.nome}
+        </span>
         <span className="numeros text-ink">{numero(c.total)}</span>
         <span className={clsx('numeros w-14 text-right text-xs', c.atraso > 0 ? 'text-atraso-texto' : 'text-ink-3')}>
           {c.atraso > 0 ? `${numero(c.atraso)} atr.` : '—'}
@@ -121,6 +123,7 @@ function LinhaPainel({ c, ativo, aoTocar, ponto, icone }: { c: Contagem; ativo: 
 function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
   const { filtros, mudar } = useFiltros()
   const { abrir } = useFicha()
+  const hoje = useHoje()
   const abertosModo = mostrar === 'abertos' || mostrar === 'atraso'
 
   return (
@@ -169,10 +172,14 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1 truncate text-[13px] text-ink">
                       {p.risco && <Zap aria-label="risco elétrico" className="size-3.5 shrink-0 text-risco-texto" />}
-                      <span className="truncate">{p.servico.categoria}</span>
+                      <span className="truncate">{p.servico.categoria ?? 'Sem categoria'}</span>
                     </span>
-                    <span className="block truncate text-xs text-ink-3">
-                      {p.servico.idColab} · {p.servico.bairro} · saiu {formatarDia(p.saida.dataSaida)}
+                    {/* sem espaço, a data desce para a linha de baixo — nunca é cortada (sem o ano quando é deste ano) */}
+                    <span className="flex flex-wrap gap-x-1 text-xs text-ink-3">
+                      <span className="max-w-full truncate">
+                        {p.servico.idColab} · {p.servico.bairro} ·
+                      </span>
+                      <span className="shrink-0">saiu {formatarDiaNoAno(p.saida.dataSaida, hoje)}</span>
                     </span>
                   </span>
                   <SeloSituacao situacao={p.situacao} texto={dias(p.dias)} />

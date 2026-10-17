@@ -5,9 +5,17 @@ export const SUPABASE_URL: string =
 export const SUPABASE_CHAVE_PUBLICA: string =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || 'sb_publishable_x36UY7Bd_NjZd4L58AArPQ_-W27fYPQ'
 
-/** De onde vêm os dados. Produção é sempre Supabase; o CSV local só existe no `npm run dev`. */
+/**
+ * Cenário de teste (dados inventados: pior caso, vazio…), escolhido por `?dados=` no endereço.
+ * SÓ no `npm run dev` — no site publicado é sempre null e o código dos cenários nem entra (src/dev/).
+ */
+export const CENARIO: string | null = import.meta.env.DEV
+  ? new URLSearchParams(window.location.search).get('dados')
+  : null
+
+/** De onde vêm os dados. Produção é sempre Supabase; o CSV local (e os cenários) só existem no `npm run dev`. */
 export const FONTE: 'csv' | 'supabase' =
-  import.meta.env.PROD || import.meta.env.VITE_FONTE === 'supabase' ? 'supabase' : 'csv'
+  !CENARIO && (import.meta.env.PROD || import.meta.env.VITE_FONTE === 'supabase') ? 'supabase' : 'csv'
 
 /** Prazo de atendimento: 5 dias corridos a partir da saída (decisão de 12/10/2026) */
 export const PRAZO_DIAS = 5

@@ -1,6 +1,7 @@
 // Gráficos da Evolução. Cada um com o seu eixo (escalas diferentes não dividem quadro):
-//   Fluxo     — entraram × executados (linhas) com a fila/estoque no fundo (área), mesmo eixo: com
-//               blocos de ~7 dias ou mês a mês, os três ficam na mesma ordem de grandeza
+//   Fluxo     — a fila no fim de cada bloco (área) num gráfico baixo em cima, e entraram × executados
+//               (linhas) embaixo, cada um com a sua escala: com a fila muito maior que o fluxo da semana
+//               (920 × ~150 em out/26), no mesmo eixo as duas linhas achatavam no chão
 //   Tempo     — tempo médio até a execução, com a linha do prazo
 //   No prazo  — % dos executados em até 5 dias (escala fixa 0–100%)
 import { GraficoTempo, LegendaTempo } from '@/componentes/graficos/GraficoTempo'
@@ -34,27 +35,35 @@ export function Fluxo({ e }: { e: Evolucao }) {
       <CabecalhoCard
         id="titulo-fluxo"
         titulo="Entraram, foram executados e ficaram na fila"
-        subtitulo={`${POR[passo]}. Laranja acima do azul: a fila (área cinza) diminui.`}
+        subtitulo={`${POR[passo]}. Laranja acima do azul: a fila diminui.`}
       />
       <div className="px-5 pt-3 pb-4">
         <LegendaTempo
-          className="mb-3"
+          className="mb-2"
+          itens={[{ nome: 'Na fila no fim', cor: COR_FILA, valor: numero(total.filaFim), area: true }]}
+        />
+        <GraficoTempo
+          altura={130}
+          intervalos={blocos}
+          series={[{ id: 'fila', nome: 'Na fila no fim', cor: COR_FILA, valores: pontos.map((p) => p.fila), estilo: 'area' }]}
+          descricao={`Fila no fim de cada bloco, ${POR[passo].toLowerCase()}`}
+        />
+        <LegendaTempo
+          className="mt-5 mb-2 border-t border-line pt-4"
           itens={[
             { nome: 'Entraram', cor: COR_ENTRARAM, valor: numero(total.entraram) },
             { nome: 'Executados', cor: COR_EXECUTADOS, valor: numero(total.executados) },
-            { nome: 'Na fila no fim', cor: COR_FILA, valor: numero(total.filaFim), area: true },
           ]}
         />
         <GraficoTempo
-          altura={260}
+          altura={220}
           intervalos={blocos}
           series={[
-            { id: 'fila', nome: 'Na fila no fim', cor: COR_FILA, valores: pontos.map((p) => p.fila), estilo: 'area' },
             { id: 'entraram', nome: 'Entraram', cor: COR_ENTRARAM, valores: pontos.map((p) => p.entraram) },
             { id: 'executados', nome: 'Executados', cor: COR_EXECUTADOS, valores: pontos.map((p) => p.executados) },
           ]}
           extra={(i) => <Saldo v={pontos[i].entraram - pontos[i].executados} />}
-          descricao={`Entraram, executados e fila no fim, ${POR[passo].toLowerCase()}`}
+          descricao={`Entraram e executados, ${POR[passo].toLowerCase()}`}
         />
       </div>
     </Card>

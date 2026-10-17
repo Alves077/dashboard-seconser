@@ -113,7 +113,7 @@ export function PaletaBusca() {
                           <Hash aria-hidden className="size-4 shrink-0 text-ink-3" />
                           <span className="numeros font-medium">{s.idColab}</span>
                           <span className="min-w-0 flex-1 truncate text-ink-2">
-                            {s.categoria} · {s.bairro}
+                            {s.categoria ?? 'Sem categoria'} · {s.bairro}
                           </span>
                           <SeloSituacao situacao={situacao(ultimaSaida(s.saidas), hoje)} />
                         </Command.Item>
@@ -159,7 +159,8 @@ export function PaletaBusca() {
                           className={item}
                         >
                           <MapPin aria-hidden className="size-4 shrink-0 text-ink-3" />
-                          <span className="min-w-0 flex-1 truncate">{e.texto}</span>
+                          {/* 2 linhas: cortado em 1, o bairro (que muitas vezes é o que bateu na busca) sumia */}
+                          <span className="line-clamp-2 min-w-0 flex-1 leading-snug">{e.texto}</span>
                           <span className="numeros text-xs text-ink-3">{e.servico.idColab}</span>
                         </Command.Item>
                       ))}

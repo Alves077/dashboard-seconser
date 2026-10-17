@@ -23,7 +23,8 @@ export function NavInferior() {
               end={caminho === '/'}
               className={({ isActive }) =>
                 clsx(
-                  'pressionavel flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium',
+                  // abaixo de 360 px, 6 nomes de 11px encostavam ("EvoluçãoVereadoresRelatórios")
+                  'pressionavel flex h-14 flex-col items-center justify-center gap-0.5 text-[11px] font-medium max-[359px]:text-[10px] max-[359px]:tracking-tight',
                   isActive ? 'text-acao' : 'text-ink-3',
                 )
               }

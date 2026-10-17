@@ -17,7 +17,15 @@ import { compararTexto, decimal, numero, pct, pctCurto } from '@/lib/formato'
 import { direcaoDaTroca } from '@/lib/ganchos'
 import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
 
-/** Linha clicável com barra: rótulo · barra · valor · complemento (também usada no Prazo) */
+/**
+ * Colunas da lista de LinhaBarra (rótulo · barra · valor). Vão na <ul>/<ol>: as linhas usam `subgrid`, então a
+ * coluna do valor tem a largura do MAIOR valor da lista e todas as barras terminam no mesmo ponto
+ * (antes, "109 93,6% atr." encurtava só a barra da sua linha).
+ */
+export const LISTA_BARRAS =
+  'grid grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)_auto] gap-x-3 sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto]'
+
+/** Linha clicável com barra: rótulo · barra · valor · complemento. Sempre dentro de uma lista com LISTA_BARRAS. */
 export function LinhaBarra({
   rotulo,
   apoio,
@@ -55,12 +63,12 @@ export function LinhaBarra({
   const Elemento = aoTocar ? 'button' : 'div'
   const largura = maximo > 0 ? Math.max((valor / maximo) * 100, valor > 0 ? 1.5 : 0) : 0
   return (
-    <li>
+    <li className="col-span-3 grid grid-cols-subgrid">
       <Elemento
         {...(aoTocar ? { type: 'button' as const, onClick: aoTocar, 'aria-pressed': ativo } : {})}
         title={apoio ? `${rotulo} · ${apoio}` : rotulo}
         className={clsx(
-          'grid w-full grid-cols-[minmax(0,9.5rem)_minmax(0,1fr)_auto] items-center gap-x-3 rounded-md px-2 text-left sm:grid-cols-[minmax(0,13rem)_minmax(0,1fr)_auto]',
+          'col-span-3 grid grid-cols-subgrid items-center rounded-md px-2 text-left',
           compacta ? 'min-h-9 py-1 pointer-coarse:min-h-11' : 'min-h-11 py-1.5',
           ativo ? 'bg-acao-suave' : aoTocar && 'hover:bg-realce',
         )}
@@ -68,10 +76,11 @@ export function LinhaBarra({
         <span className={clsx('min-w-0', prefixo && 'flex items-center gap-2.5')}>
           {prefixo}
           <span className="min-w-0">
-          {/* nome quebra em até 2 linhas em vez de cortar ("Direcionamento / ofuscamento") */}
+          {/* nome quebra em até 3 linhas em vez de cortar: associações e vereadores com o mesmo começo
+              ("Associação de Moradores do…") só se distinguem no fim */}
           <span className={clsx('flex items-start gap-1 text-[13px] leading-snug', ativo ? 'font-medium text-ink' : 'text-ink')}>
             {icone && <span className="mt-0.5">{icone}</span>}
-            <span className="line-clamp-2">{rotulo}</span>
+            <span className="line-clamp-3">{rotulo}</span>
           </span>
           {apoio && (
             <span className="flex items-center gap-1.5 truncate text-[11px] text-ink-3">
@@ -105,59 +114,65 @@ export function Regioes({ linhas }: { linhas: LinhaQuebra[] }) {
   return (
     <Card aria-labelledby="titulo-regioes" className="overflow-hidden">
       <CabecalhoCard id="titulo-regioes" titulo="Regiões" subtitulo="Fila de agora e desempenho no período. Toque numa região para filtrar." />
-      <div className="mt-2 overflow-x-auto px-3 pb-3">
-        <table className="w-full border-separate border-spacing-0 text-[13px]">
-          <caption className="sr-only">Regiões: fila de agora, em atraso, saídas no período, no prazo e tempo médio</caption>
-          <thead>
-            <tr className="text-left text-[11px] tracking-[0.4px] text-ink-3 uppercase">
-              <th scope="col" className="py-2 pr-2 pl-2 font-medium">Região</th>
-              <th scope="col" className="px-2 py-2 font-medium">Fila agora</th>
-              <th scope="col" className="px-2 py-2 text-right font-medium">Atraso</th>
-              <th scope="col" className="hidden px-2 py-2 text-right font-medium sm:table-cell">Saídas</th>
-              <th scope="col" className="px-2 py-2 text-right font-medium">No prazo</th>
-              <th scope="col" className="hidden py-2 pr-2 pl-2 text-right font-medium sm:table-cell">Tempo médio</th>
-            </tr>
-          </thead>
-          <tbody className="numeros">
-            {ordem.map((l) => {
-              const ativo = filtros.regiao === l.nome
-              const celula = clsx('py-2.5 first:rounded-l-md last:rounded-r-md', ativo ? 'bg-acao-suave' : 'group-hover:bg-realce')
-              return (
-                <tr key={l.nome} onClick={() => alternar(l.nome)} className="group cursor-pointer">
-                  <th scope="row" className={clsx(celula, 'pr-2 pl-2 text-left font-normal')}>
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        alternar(l.nome)
-                      }}
-                      aria-pressed={ativo}
-                      className={clsx('flex min-h-6 items-center gap-2 text-left', ativo ? 'font-medium text-ink' : 'text-ink')}
-                    >
-                      <span aria-hidden className={clsx('size-2.5 shrink-0 rounded-full', corRegiao(l.nome))} />
-                      {l.nome}
-                    </button>
-                  </th>
-                  <td className={clsx(celula, 'px-2')}>
-                    <span className="flex items-center gap-2">
-                      <span aria-hidden className="h-2 w-16 rounded-full bg-line/60 sm:w-24">
-                        <span className="block h-full rounded-full bg-s1" style={{ width: `${(l.fila / maxFila) * 100}%` }} />
+      {ordem.length === 0 ? (
+        <div className="px-3 pb-3">
+          <EstadoVazio titulo="Nada para mostrar" texto="Nenhum serviço em aberto nem saída no período com esses filtros." altura="min-h-40" />
+        </div>
+      ) : (
+        <div className="mt-2 overflow-x-auto px-3 pb-3">
+          <table className="w-full border-separate border-spacing-0 text-[13px]">
+            <caption className="sr-only">Regiões: fila de agora, em atraso, saídas no período, no prazo e tempo médio</caption>
+            <thead>
+              <tr className="text-left text-[11px] tracking-[0.4px] text-ink-3 uppercase">
+                <th scope="col" className="py-2 pr-2 pl-2 font-medium">Região</th>
+                <th scope="col" className="px-2 py-2 font-medium">Fila agora</th>
+                <th scope="col" className="px-2 py-2 text-right font-medium">Atraso</th>
+                <th scope="col" className="hidden px-2 py-2 text-right font-medium sm:table-cell">Saídas</th>
+                <th scope="col" className="px-2 py-2 text-right font-medium">No prazo</th>
+                <th scope="col" className="hidden py-2 pr-2 pl-2 text-right font-medium sm:table-cell">Tempo médio</th>
+              </tr>
+            </thead>
+            <tbody className="numeros">
+              {ordem.map((l) => {
+                const ativo = filtros.regiao === l.nome
+                const celula = clsx('py-2.5 first:rounded-l-md last:rounded-r-md', ativo ? 'bg-acao-suave' : 'group-hover:bg-realce')
+                return (
+                  <tr key={l.nome} onClick={() => alternar(l.nome)} className="group cursor-pointer">
+                    <th scope="row" className={clsx(celula, 'pr-2 pl-2 text-left font-normal')}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          alternar(l.nome)
+                        }}
+                        aria-pressed={ativo}
+                        className={clsx('flex min-h-6 items-center gap-2 text-left', ativo ? 'font-medium text-ink' : 'text-ink')}
+                      >
+                        <span aria-hidden className={clsx('size-2.5 shrink-0 rounded-full', corRegiao(l.nome))} />
+                        {l.nome}
+                      </button>
+                    </th>
+                    <td className={clsx(celula, 'px-2')}>
+                      <span className="flex items-center gap-2">
+                        <span aria-hidden className="h-2 w-16 rounded-full bg-line/60 sm:w-24">
+                          <span className="block h-full rounded-full bg-s1" style={{ width: `${(l.fila / maxFila) * 100}%` }} />
+                        </span>
+                        {numero(l.fila)}
                       </span>
-                      {numero(l.fila)}
-                    </span>
-                  </td>
-                  <td className={clsx(celula, 'px-2 text-right', l.atraso > 0 ? 'text-atraso-texto' : 'text-ink-3')}>{numero(l.atraso)}</td>
-                  <td className={clsx(celula, 'hidden px-2 text-right text-ink sm:table-cell')}>{numero(l.saidas)}</td>
-                  <td className={clsx(celula, 'px-2 text-right text-ink')}>{l.pctNoPrazo === null ? '—' : `${decimal(l.pctNoPrazo)}%`}</td>
-                  <td className={clsx(celula, 'hidden pr-2 pl-2 text-right text-ink sm:table-cell')}>
-                    {l.tempoMedio === null ? '—' : `${decimal(l.tempoMedio)} d`}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
+                    </td>
+                    <td className={clsx(celula, 'px-2 text-right', l.atraso > 0 ? 'text-atraso-texto' : 'text-ink-3')}>{numero(l.atraso)}</td>
+                    <td className={clsx(celula, 'hidden px-2 text-right text-ink sm:table-cell')}>{numero(l.saidas)}</td>
+                    <td className={clsx(celula, 'px-2 text-right text-ink')}>{l.pctNoPrazo === null ? '—' : `${decimal(l.pctNoPrazo)}%`}</td>
+                    <td className={clsx(celula, 'hidden pr-2 pl-2 text-right text-ink sm:table-cell')}>
+                      {l.tempoMedio === null ? '—' : `${decimal(l.tempoMedio)} d`}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </Card>
   )
 }
@@ -224,7 +239,7 @@ export function Categorias({ linhas, total }: { linhas: LinhaQuebra[]; total: nu
                 Demais categorias · <span className="numeros">{numero(somaDemais)}</span> ({pct(somaDemais, total)}) — escala própria
               </p>
             )}
-            <ul>{demais.map(linha)}</ul>
+            <ul className={LISTA_BARRAS}>{demais.map(linha)}</ul>
           </>
         )}
       </div>
@@ -293,7 +308,7 @@ export function Bairros({
           )
         ) : (
           <>
-            <ol>
+            <ol className={LISTA_BARRAS}>
               {visiveis.map((l) => (
                 <LinhaBarra
                   key={l.nome}
@@ -381,7 +396,7 @@ export function Origens({
       ordem.length === 0 ? (
         <Vazio />
       ) : (
-        <ul>
+        <ul className={LISTA_BARRAS}>
           {ordem.map((l) => (
             <LinhaBarra
               key={l.nome}
@@ -410,7 +425,7 @@ export function Origens({
         <Vazio />
       ) : (
         <>
-          <ol>
+          <ol className={LISTA_BARRAS}>
             {visiveis.map((l) => (
               <LinhaBarra
                 key={l.nome}
