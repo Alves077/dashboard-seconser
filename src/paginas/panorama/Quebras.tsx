@@ -73,7 +73,7 @@ export function LinhaBarra({
         className={clsx(
           'col-span-3 grid grid-cols-subgrid items-center rounded-md px-2 text-left',
           compacta ? 'min-h-9 py-1 pointer-coarse:min-h-11' : 'min-h-11 py-1.5',
-          ativo ? 'bg-acao-suave' : aoTocar && 'hover:bg-realce',
+          ativo ? 'bg-acao-suave' : aoTocar && 'tocavel hover:bg-realce',
         )}
       >
         <span className={clsx('min-w-0', prefixo && 'flex items-center gap-2.5')}>
@@ -332,7 +332,7 @@ export function Categorias({ linhas, medida }: { linhas: LinhaQuebra[]; medida: 
                 aria-pressed={filtros.categoria === domina.nome}
                 className={clsx(
                   'mb-2 w-full rounded-lg px-2 py-2 text-left',
-                  filtros.categoria === domina.nome ? 'bg-acao-suave' : 'hover:bg-realce',
+                  filtros.categoria === domina.nome ? 'bg-acao-suave' : 'tocavel hover:bg-realce',
                 )}
               >
                 <span className="flex items-baseline justify-between gap-3">
@@ -422,7 +422,7 @@ export function Bairros({
               <button
                 type="button"
                 onClick={() => setTodos((v) => !v)}
-                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-realce"
+                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao tocavel hover:bg-realce"
               >
                 {todos ? 'Mostrar só os 12 primeiros' : `Mostrar até 30 (de ${numero(ordem.length)})`}
               </button>
@@ -559,7 +559,7 @@ export function Origens({
             <button
               type="button"
               onClick={() => setTodos((v) => !v)}
-              className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-realce"
+              className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao tocavel hover:bg-realce"
             >
               {todos ? 'Mostrar só os 10 primeiros' : `Mostrar todos (${numero(ordem.length)})`}
             </button>

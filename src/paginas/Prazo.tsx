@@ -1,6 +1,7 @@
 // Prazo — "Estamos atendendo bem?". Indicadores (no prazo, tempo médio, em atraso agora, precisou
 // voltar), quantos dias levou (histograma), atraso de agora e tempo por região lado a lado, e o
 // retrabalho. Prazo e dias só existem para quem VOLTOU; o atraso de agora é a fila de hoje.
+import { clsx } from 'clsx'
 import { useMemo } from 'react'
 import { EstadoErro, Esqueleto } from '@/componentes/estados/Estados'
 import { Card } from '@/componentes/ui/Card'
@@ -10,7 +11,7 @@ import type { Periodo } from '@/filtros/filtros'
 import { fraseQuando, rotuloComparacao } from '@/filtros/frases'
 import { useFiltros } from '@/filtros/useFiltros'
 import { FrasePrazoRetorno, FrasePrazoSaidas } from './panorama/FrasePrazo'
-import { useHoje } from '@/lib/ganchos'
+import { useEntradaSuave, useHoje } from '@/lib/ganchos'
 import { AtrasoAgora } from './prazo/AtrasoAgora'
 import { Distribuicao } from './prazo/Distribuicao'
 import { Faixas } from './prazo/Faixas'
@@ -80,6 +81,7 @@ function Carregando() {
 
 export function Prazo() {
   const { data: base, isLoading, error, refetch } = useBase()
+  const entrada = useEntradaSuave(isLoading)
   const { filtros } = useFiltros()
   const hoje = useHoje()
   const d = useMemo(() => (base ? calcularPrazo(base, filtros, hoje) : null), [base, filtros, hoje])
@@ -104,7 +106,7 @@ export function Prazo() {
       ) : isLoading || !d ? (
         <Carregando />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className={clsx(entrada, 'flex flex-col gap-8')}>
           <section aria-labelledby="titulo-periodo" className="flex flex-col gap-4">
             <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
               <h2 id="titulo-periodo" className="text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">

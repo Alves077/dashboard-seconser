@@ -2,6 +2,7 @@
 // dado), em blocos que acompanham o tamanho dele (dia, ~7 dias ou mês): o que entrou × o que foi
 // executado com a fila ao fundo; tempo médio e % no prazo ao longo do tempo; onde a fila cresceu;
 // e o que mudou nas categorias.
+import { clsx } from 'clsx'
 import { useMemo, type ReactNode } from 'react'
 import { EstadoErro, Esqueleto } from '@/componentes/estados/Estados'
 import { Card } from '@/componentes/ui/Card'
@@ -12,7 +13,7 @@ import { fraseQuando, rotuloComparacao } from '@/filtros/frases'
 import { useFiltros } from '@/filtros/useFiltros'
 import { formatarDiaCurto } from '@/lib/datas'
 import { numero } from '@/lib/formato'
-import { useHoje } from '@/lib/ganchos'
+import { useEntradaSuave, useHoje } from '@/lib/ganchos'
 import { Categorias } from './evolucao/Categorias'
 import { Fluxo, NoPrazo, Tempo } from './evolucao/Graficos'
 import { Indicadores } from './evolucao/Indicadores'
@@ -75,6 +76,7 @@ function Carregando() {
 
 export function Evolucao() {
   const { data: base, isLoading, error, refetch } = useBase()
+  const entrada = useEntradaSuave(isLoading)
   const { filtros } = useFiltros()
   const hoje = useHoje()
   const e = useMemo(() => (base ? calcularEvolucao(base, filtros, hoje) : null), [base, filtros, hoje])
@@ -98,7 +100,7 @@ export function Evolucao() {
       ) : isLoading || !e ? (
         <Carregando />
       ) : (
-        <section aria-labelledby="titulo-periodo" className="flex flex-col gap-4">
+        <section aria-labelledby="titulo-periodo" className={clsx(entrada, 'flex flex-col gap-4')}>
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <h2 id="titulo-periodo" className="text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">
               No período · {e.periodo.rotulo}

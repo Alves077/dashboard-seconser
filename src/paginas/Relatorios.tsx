@@ -124,13 +124,17 @@ function PaginaRelatorios() {
   const [params, setParams] = useSearchParams()
   const aba: Aba = (['mensal', 'abertos', 'campo'] as const).find((a) => a === params.get('relatorio')) ?? 'mensal'
   const soAtraso = params.get('campo') === 'atraso'
+  // aba, mês, época, "só em atraso": o mesmo esmaecer da troca de filtro (antes trocava a folha seco)
   const trocar = (chave: string, valor: string | null) =>
-    setParams((p) => {
-      const n = new URLSearchParams(p)
-      if (valor === null) n.delete(chave)
-      else n.set(chave, valor)
-      return n
-    })
+    setParams(
+      (p) => {
+        const n = new URLSearchParams(p)
+        if (valor === null) n.delete(chave)
+        else n.set(chave, valor)
+        return n
+      },
+      { viewTransition: true },
+    )
 
   const { data: base, isLoading, error, refetch } = useBase()
   // a página só abre com acesso (ver Relatorios acima): os detalhes (endereço) estão sempre disponíveis

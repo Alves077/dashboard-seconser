@@ -654,3 +654,13 @@ total); período e "hoje" separados; o detalhe e as porcentagens ficam nos cart�
   do prazo · 91 ainda no prazo" (antes "64 de 559 (236 em aberto já fora do prazo)" — o 559 não aparecia em lugar nenhum).
 - Evolução: "650 entraram na fila e 809 foram executados: a fila caiu de 971 para 812."
 - Vereadores: "saíram 30 pedidos de vereador para a rua. Na fila de hoje há 58, 30 deles indicações legislativas."
+
+## Animações que faltavam (find-animation-opportunities, 17/10/2026)
+- **Retorno ao toque nas linhas** (`@utility tocavel`): fundo `realce-forte` ao tocar, 100 ms `ease`, só cor (sem
+  escala numa linha da largura da tela). Em todas as listas tocáveis, fila, painel do Mapa, "Mostrar mais".
+- **Esmaecer de 160 ms** (o mesmo da troca de filtro) na chave das listas do Panorama, na faixa de espera e nas
+  escolhas dos Relatórios (aba, mês, época, só em atraso) — `trocarComEsmaecer` (lib/gaveta.ts) e `viewTransition`.
+- **Esqueleto → página** com fade de 200 ms (`.entra-suave`, `@starting-style`), só quando o esqueleto apareceu
+  nessa montagem (`useEntradaSuave`): trocar de página com o dado em memória não anima.
+- Descartados: busca (teclado), "Mostrar mais" crescendo (atrasa a leitura), números contando, troca de tema com
+  efeito, expansões do painel de período.

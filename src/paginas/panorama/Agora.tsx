@@ -12,7 +12,7 @@ import { formatarDia, type Dia } from '@/lib/datas'
 import { corRegiao } from '@/lib/cores'
 import { compararTexto, dias, numero, pct, plural } from '@/lib/formato'
 import { direcaoDaTroca, useFicha } from '@/lib/ganchos'
-import { gavetaCartao, gavetaLista, trocarComTransicao } from '@/lib/gaveta'
+import { gavetaCartao, gavetaLista, trocarComEsmaecer, trocarComTransicao } from '@/lib/gaveta'
 import { LinhaBarra, LISTA_BARRAS } from './Quebras'
 
 const COR_ESPERA = ['bg-o1', 'bg-o2', 'bg-o3', 'bg-o4', 'bg-o5']
@@ -164,7 +164,7 @@ function OndeEstao({ itens, rotuloFaixa }: { itens: ItemFila[]; rotuloFaixa: str
         <button
           type="button"
           onClick={() => setTodos((v) => !v)}
-          className="mt-1 h-10 w-full rounded-md text-[13px] font-medium text-acao hover:bg-realce"
+          className="mt-1 h-10 w-full rounded-md text-[13px] font-medium text-acao tocavel hover:bg-realce"
         >
           {todos ? 'Mostrar só os 8 primeiros' : `Mostrar todos (${numero(contagem.length)})`}
         </button>
@@ -248,10 +248,12 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
             espera={agora.espera}
             total={agora.total}
             escolhida={faixa}
-            aoEscolher={(i) => {
-              setFaixa(i)
-              setMais(false)
-            }}
+            aoEscolher={(i) =>
+              trocarComEsmaecer(() => {
+                setFaixa(i)
+                setMais(false)
+              })
+            }
           />
           <p className="mt-3 text-center text-xs text-ink-3">Contado da última saída para a rua até hoje. Prazo: 5 dias corridos.</p>
         </div>
@@ -279,7 +281,7 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
               {faixa !== null && (
                 <button
                   type="button"
-                  onClick={() => setFaixa(null)}
+                  onClick={() => trocarComEsmaecer(() => setFaixa(null))}
                   className="pressionavel -mr-2 flex h-8 items-center gap-1 rounded-full px-2 text-xs font-medium text-acao hover:bg-realce"
                 >
                   <X aria-hidden className="size-3.5" />
@@ -294,7 +296,7 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
                   <button
                     type="button"
                     onClick={() => abrir(servico.chave)}
-                    className="group flex min-h-14 w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-realce sm:gap-4"
+                    className="group flex min-h-14 w-full items-center gap-3 px-5 py-2.5 text-left tocavel hover:bg-realce sm:gap-4"
                   >
                     <span className="numeros w-14 shrink-0 text-[13px] font-medium text-ink">{servico.idColab}</span>
                     <span className="min-w-0 flex-1">
@@ -318,7 +320,7 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
               <button
                 type="button"
                 onClick={() => setMais((v) => !v)}
-                className="h-11 w-full border-t border-line text-[13px] font-medium text-acao hover:bg-realce"
+                className="h-11 w-full border-t border-line text-[13px] font-medium text-acao tocavel hover:bg-realce"
               >
                 {mais ? 'Mostrar menos' : `Mostrar mais (${plural(Math.min(daFaixa.length, 15) - 5, 'outro', 'outros')})`}
               </button>

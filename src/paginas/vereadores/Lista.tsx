@@ -82,7 +82,7 @@ function Cartao({ l, aoAbrir }: { l: LinhaVereador; aoAbrir: () => void }) {
 function Linha({ l, aoAbrir, nota }: { l: LinhaVereador; aoAbrir: () => void; nota?: string }) {
   return (
     <li className="border-b border-line last:border-b-0 lg:odd:border-r lg:[&:nth-last-child(2):nth-child(odd)]:border-b-0">
-      <button type="button" onClick={aoAbrir} className="group flex min-h-14 w-full items-center gap-3 px-5 py-2 text-left hover:bg-realce">
+      <button type="button" onClick={aoAbrir} className="group flex min-h-14 w-full items-center gap-3 px-5 py-2 text-left tocavel hover:bg-realce">
         <FotoVereador vereador={l.vereador} className="size-9" />
         <span className="min-w-0 flex-1">
           <span className="block truncate text-[13px] text-ink" title={l.nome}>

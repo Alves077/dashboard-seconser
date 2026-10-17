@@ -1,5 +1,6 @@
 // Panorama — "Como estamos agora?". Dois blocos com nome: AGORA (fila de hoje, não depende do
 // período) e NO PERÍODO (o que saiu/voltou no período escolhido). Toda quebra é clicável e vira filtro.
+import { clsx } from 'clsx'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { EstadoErro, Esqueleto } from '@/componentes/estados/Estados'
 import { Card } from '@/componentes/ui/Card'
@@ -9,8 +10,9 @@ import type { Periodo } from '@/filtros/filtros'
 import { fraseQuando, rotuloComparacao } from '@/filtros/frases'
 import { useFiltros } from '@/filtros/useFiltros'
 import { numero, plural } from '@/lib/formato'
+import { trocarComEsmaecer } from '@/lib/gaveta'
 import { FrasePrazoRetorno, FrasePrazoSaidas } from './panorama/FrasePrazo'
-import { useHoje } from '@/lib/ganchos'
+import { useEntradaSuave, useHoje } from '@/lib/ganchos'
 import { Agora } from './panorama/Agora'
 import { Indicadores } from './panorama/Indicadores'
 import { Movimento } from './panorama/Movimento'
@@ -102,6 +104,7 @@ function Carregando() {
 
 export function Panorama() {
   const { data: base, isLoading, error, refetch } = useBase()
+  const entrada = useEntradaSuave(isLoading)
   const { filtros } = useFiltros()
   const hoje = useHoje()
   // o que Bairros, Categorias e Quem pede mostram (uma chave só para os três; ver Quebras.tsx)
@@ -151,7 +154,7 @@ export function Panorama() {
       ) : isLoading || !d ? (
         <Carregando />
       ) : (
-        <div className="flex flex-col gap-8">
+        <div className={clsx(entrada, 'flex flex-col gap-8')}>
           <Agora agora={d.agora} hoje={hoje} />
 
           <section ref={secaoPeriodo} aria-labelledby="titulo-periodo" className="flex scroll-mt-36 flex-col gap-4">
@@ -166,7 +169,7 @@ export function Panorama() {
             </div>
             <Indicadores p={d} comparacao={rotuloComparacao(d.anterior)} porRetorno={porRetorno} />
             <Movimento m={d.movimento} primeiraSaida={d.primeiraSaida} hoje={hoje} />
-            <SeletorMedida medida={medida} aoMudar={setMedida} porRetorno={porRetorno} />
+            <SeletorMedida medida={medida} aoMudar={(m) => trocarComEsmaecer(() => setMedida(m))} porRetorno={porRetorno} />
             {/* duas colunas independentes (sem buraco entre cards de alturas diferentes):
                 à esquerda ONDE (regiões, bairros), à direita O QUÊ e QUEM (categorias, origem) */}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

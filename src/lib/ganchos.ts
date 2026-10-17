@@ -163,3 +163,14 @@ export function direcaoDaTroca(direcao: 'entra' | 'volta' | 'gaveta-entra' | 'ga
   }
   requestAnimationFrame(vigiar)
 }
+
+/**
+ * Classe de entrada suave (opacidade, 200 ms) só quando o conteúdo chega DEPOIS do esqueleto — na troca de página
+ * com o dado já em memória (o caso comum, dezenas de vezes por dia) não anima nada (find-animation-opportunities,
+ * 17/10/2026). Guarda se o esqueleto apareceu nesta montagem.
+ */
+export function useEntradaSuave(carregando: boolean): string | undefined {
+  const [veioDoEsqueleto, setVeio] = useState(carregando)
+  if (carregando && !veioDoEsqueleto) setVeio(true)
+  return veioDoEsqueleto ? 'entra-suave' : undefined
+}

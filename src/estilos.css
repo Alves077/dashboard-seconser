@@ -196,6 +196,24 @@
   }
 }
 
+/* Linha tocável (listas, fila, painel do mapa): no celular não há hover, e tocar não dava sinal nenhum até a página
+   mudar. Retorno ao toque só com a cor de fundo — numa linha da largura da tela o encolher do `pressionavel`
+   parece tremido (find-animation-opportunities, 17/10/2026). Só cor: vale igual com movimento reduzido. */
+@utility tocavel {
+  transition: background-color 100ms ease;
+  &:active:not(:disabled) {
+    background-color: var(--c-realce-forte);
+  }
+}
+
+/* Esqueleto → página pronta: só opacidade (o esqueleto já ocupa o lugar certo; nada se desloca). Ver useEntradaSuave. */
+.entra-suave {
+  transition: opacity 200ms var(--ease-saida);
+  @starting-style {
+    opacity: 0;
+  }
+}
+
 /* Troca de filtro: crossfade curto da página (View Transitions). Barra superior e de filtros ficam
    fora (não piscam: são o que o usuário está tocando). Com movimento reduzido, troca direta. */
 ::view-transition-old(root),

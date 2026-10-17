@@ -274,7 +274,7 @@ function Perto({ servico }: { servico: Servico }) {
               <button
                 type="button"
                 onClick={() => abrir(s.chave)}
-                className="group flex min-h-12 w-full items-center gap-3 rounded-md px-2 py-1.5 text-left hover:bg-realce"
+                className="group flex min-h-12 w-full items-center gap-3 rounded-md px-2 py-1.5 text-left tocavel hover:bg-realce"
               >
                 <span className="numeros w-14 shrink-0 text-[13px] font-medium text-ink">{s.idColab}</span>
                 <span className="min-w-0 flex-1">

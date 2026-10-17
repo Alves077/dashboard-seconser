@@ -9,7 +9,7 @@ import { Card } from '@/componentes/ui/Card'
 import { calcularPerfil, calcularVereadores, ORIGEM_VEREADOR } from '@/calculos/vereadores'
 import { useBase } from '@/dados/consultas'
 import { useFiltros } from '@/filtros/useFiltros'
-import { direcaoDaTroca, useHoje } from '@/lib/ganchos'
+import { direcaoDaTroca, useEntradaSuave, useHoje } from '@/lib/ganchos'
 import { Lista } from './vereadores/Lista'
 import { Perfil } from './vereadores/Perfil'
 
@@ -44,6 +44,8 @@ export function Vereadores() {
   const quem = filtros.origem === ORIGEM_VEREADOR ? filtros.quem : null
   const lista = useMemo(() => (base && !quem ? calcularVereadores(base, filtros, hoje) : null), [base, filtros, hoje, quem])
   const perfil = useMemo(() => (base && quem ? calcularPerfil(base, filtros, quem, hoje) : null), [base, filtros, hoje, quem])
+  // entrada suave só vindo do esqueleto (não a cada troca lista ↔ perfil: isso é troca de filtro, que já esmaece)
+  const entrada = useEntradaSuave(isLoading || (!lista && !perfil))
   const escopo = [filtros.bairro ?? filtros.regiao, filtros.categoria].filter(Boolean).join(' · ')
 
   const abrir = (nome: string) => {
@@ -82,9 +84,13 @@ export function Vereadores() {
       ) : isLoading || (!lista && !perfil) ? (
         <Carregando />
       ) : perfil && quem ? (
-        <Perfil p={perfil} quem={quem} aoVoltar={voltar} />
+        <div className={entrada}>
+          <Perfil p={perfil} quem={quem} aoVoltar={voltar} />
+        </div>
       ) : lista ? (
-        <Lista d={lista} periodo={filtros.periodo} aoAbrir={abrir} />
+        <div className={entrada}>
+          <Lista d={lista} periodo={filtros.periodo} aoAbrir={abrir} />
+        </div>
       ) : null}
     </>
   )

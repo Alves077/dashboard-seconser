@@ -27,3 +27,16 @@ export function trocarComTransicao(direcao: 'gaveta-entra' | 'gaveta-volta', alv
   direcaoDaTroca(direcao, alvos)
   document.startViewTransition(() => flushSync(trocar))
 }
+
+/**
+ * Troca do que se vê que NÃO passa pela URL (chave das listas do Panorama, faixa de espera): o mesmo esmaecer de
+ * 160 ms da troca de filtro (estilos.css, ::view-transition-old/new(root)), sem deslizar — antes trocava seco
+ * enquanto o filtro esmaecia (find-animation-opportunities, 17/10/2026). Sem View Transitions: troca direta.
+ */
+export function trocarComEsmaecer(trocar: () => void) {
+  if (!document.startViewTransition) {
+    trocar()
+    return
+  }
+  document.startViewTransition(() => flushSync(trocar))
+}

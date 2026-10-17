@@ -48,7 +48,7 @@ function PorCategoria({ r }: { r: Prazo['retrabalho'] }) {
                   aria-pressed={ativo}
                   className={clsx(
                     'grid min-h-12 w-full grid-cols-[minmax(0,10rem)_minmax(0,1fr)_3.5rem] items-center gap-x-3 rounded-md px-2 py-1.5 text-left sm:grid-cols-[minmax(0,12rem)_minmax(0,1fr)_3.5rem]',
-                    ativo ? 'bg-acao-suave' : 'hover:bg-realce',
+                    ativo ? 'bg-acao-suave' : 'tocavel hover:bg-realce',
                   )}
                 >
                   <span className="min-w-0">
@@ -132,7 +132,7 @@ function QuaisVoltaram({ r }: { r: Prazo['retrabalho'] }) {
             <button
               type="button"
               onClick={() => abrir(servico.chave)}
-              className="group flex min-h-14 w-full items-center gap-3 px-2 py-2 text-left hover:bg-realce"
+              className="group flex min-h-14 w-full items-center gap-3 px-2 py-2 text-left tocavel hover:bg-realce"
             >
               {/* quantas idas à rua: o número que importa aqui */}
               <span className="flex w-11 shrink-0 flex-col items-center rounded-md bg-s7/10 py-1 text-s7">
@@ -157,7 +157,7 @@ function QuaisVoltaram({ r }: { r: Prazo['retrabalho'] }) {
         <button
           type="button"
           onClick={() => setMais((v) => !v)}
-          className="h-10 w-full text-[13px] font-medium text-acao hover:bg-realce"
+          className="h-10 w-full text-[13px] font-medium text-acao tocavel hover:bg-realce"
         >
           {mais ? 'Mostrar menos' : `Mostrar mais (${numero(Math.min(r.voltaram.length, 20) - 6)})`}
         </button>

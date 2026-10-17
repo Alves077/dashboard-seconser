@@ -103,7 +103,7 @@ function LinhaPainel({ c, ativo, aoTocar, ponto, icone }: { c: Contagem; ativo: 
         aria-pressed={ativo}
         className={clsx(
           'flex min-h-10 w-full items-center gap-2 rounded-md px-2 text-left text-[13px] pointer-coarse:min-h-11',
-          ativo ? 'bg-acao-suave font-medium text-ink' : 'text-ink hover:bg-realce',
+          ativo ? 'bg-acao-suave font-medium text-ink' : 'text-ink tocavel hover:bg-realce',
         )}
       >
         {ponto && <span aria-hidden className={clsx('size-2.5 shrink-0 rounded-full', ponto)} />}
@@ -167,7 +167,7 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
                 <button
                   type="button"
                   onClick={() => abrir(p.servico.chave)}
-                  className="group flex min-h-12 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left hover:bg-realce"
+                  className="group flex min-h-12 w-full items-center gap-2 rounded-md px-2 py-1.5 text-left tocavel hover:bg-realce"
                 >
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1 truncate text-[13px] text-ink">

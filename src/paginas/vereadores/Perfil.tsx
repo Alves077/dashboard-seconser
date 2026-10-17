@@ -155,7 +155,7 @@ function Contagem({
               <button
                 type="button"
                 onClick={() => setTodos((v) => !v)}
-                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao hover:bg-realce"
+                className="mt-auto h-10 w-full rounded-md pt-1 text-[13px] font-medium text-acao tocavel hover:bg-realce"
               >
                 {todos ? 'Mostrar só os 8 primeiros' : `Mostrar todos (${numero(linhas.length)})`}
               </button>
@@ -226,7 +226,7 @@ function EmAberto({ p }: { p: PerfilVereador }) {
                 <button
                   type="button"
                   onClick={() => abrir(servico.chave)}
-                  className="group flex min-h-14 w-full items-center gap-3 px-5 py-2.5 text-left hover:bg-realce sm:gap-4"
+                  className="group flex min-h-14 w-full items-center gap-3 px-5 py-2.5 text-left tocavel hover:bg-realce sm:gap-4"
                 >
                   <span className="numeros w-14 shrink-0 text-[13px] font-medium text-ink">{servico.idColab}</span>
                   <span className="min-w-0 flex-1">
@@ -252,7 +252,7 @@ function EmAberto({ p }: { p: PerfilVereador }) {
             <button
               type="button"
               onClick={() => setTodos((v) => !v)}
-              className="h-11 w-full border-t border-line text-[13px] font-medium text-acao hover:bg-realce"
+              className="h-11 w-full border-t border-line text-[13px] font-medium text-acao tocavel hover:bg-realce"
             >
               {todos ? 'Mostrar só os 10 primeiros' : `Mostrar todos (${numero(base.length)})`}
             </button>
