@@ -688,5 +688,5 @@ isso virava a rota "access_token=…" → "Em construção"; e o site não tinha
   logada pelo link).
 - Conferido com Chrome sem janela: link vencido, token falso e malformado (aviso, Panorama abre), rota normal intacta,
   e o fluxo inteiro com respostas do Supabase simuladas (janela, senhas diferentes, senha igual à antiga, sucesso).
-  Falta o teste real com e-mail novo no celular.
+  Teste real (usuário, 17/10): saiu, pediu o link, abriu do e-mail e refez a senha no site — ok.
 
