@@ -29,7 +29,7 @@ const TOPO = 12
 const BAIXO = 24
 
 /** Topo "redondo" da escala e 3–5 marcas; passo de no mínimo 1 (contagens e dias: "0,5 serviço" não existe) */
-function escala(max: number): number[] {
+export function escala(max: number): number[] {
   if (max <= 0) return [0, 1]
   const bruto = max / 4
   const p = 10 ** Math.floor(Math.log10(bruto))

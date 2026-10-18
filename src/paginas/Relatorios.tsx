@@ -2,10 +2,12 @@
 // que o navegador salva em PDF): o relatório mensal / histórico completo (o mesmo do site antigo, com
 // o seu seletor de mês), os serviços em aberto e a lista de campo. Aba e mês ficam na URL
 // (?relatorio=…&mes=…), dá para mandar o link. Valem os filtros de região, bairro, categoria e origem.
+// O link pede login; para quem não tem conta, o PDF de verdade (src/relatorios-pdf, montado aqui no
+// navegador): baixar no computador, compartilhar o arquivo no celular (decisão do usuário, 17/10/2026).
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
-import { ClipboardList, FileText, Link2, ListTodo, LogIn, Printer, Share2 } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { ClipboardList, Download, FileText, Link2, ListTodo, LogIn, Printer, Share2 } from 'lucide-react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
 import { EstadoErro, EstadoRestrito, Esqueleto } from '@/componentes/estados/Estados'
@@ -21,6 +23,7 @@ import { useFiltros } from '@/filtros/useFiltros'
 import { chaveMes, formatarDia, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
 import { numero } from '@/lib/formato'
 import { useHoje, useMidia } from '@/lib/ganchos'
+import type { PedidoPdf } from '@/relatorios-pdf'
 import { RelatorioAbertosFolha } from './relatorios/Abertos'
 import { ListaCampoFolha } from './relatorios/Campo'
 import { CabecalhoFolha, Folha, useImpressaoClara } from './relatorios/Folha'
@@ -119,6 +122,27 @@ export function Relatorios() {
   )
 }
 
+/**
+ * Botão que monta o PDF. O "Gerando…" fica só nele: com o estado na página, ligar e desligar o aviso
+ * redesenhava a folha inteira (a lista de campo da cidade tem centenas de linhas) e atrasava o PDF.
+ */
+function BotaoPdf({ aoTocar, disabled, children }: { aoTocar: () => Promise<void>; disabled: boolean; children: ReactNode }) {
+  const [gerando, setGerando] = useState(false)
+  const tocar = async () => {
+    setGerando(true)
+    try {
+      await aoTocar()
+    } finally {
+      setGerando(false)
+    }
+  }
+  return (
+    <Botao variante="primario" onClick={tocar} disabled={disabled || gerando} aria-busy={gerando}>
+      {gerando ? 'Gerando…' : children}
+    </Botao>
+  )
+}
+
 function PaginaRelatorios() {
   useImpressaoClara()
   const [params, setParams] = useSearchParams()
@@ -186,6 +210,29 @@ function PaginaRelatorios() {
   const dadosAte = base?.atualizadoEm ? `Dados até ${base.atualizadoEm.toLocaleDateString('pt-BR')} (última carga)` : null
   const comEndereco = aba !== 'mensal' && acesso === true ? (detalhes ?? null) : null
   const geradoLongo = `Gerado em ${agora.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })}`
+  const soTexto = (lista: (string | null | undefined | false)[]) => lista.filter((m): m is string => !!m)
+
+  // cabeçalho da folha — o mesmo na tela e no PDF
+  const cab =
+    aba === 'mensal' && mensal
+      ? {
+          titulo: mensal.todos ? 'Visão Geral · Todo o Período' : `Relatório Mensal · ${rotuloMesLongo(mensal.mes!)}`,
+          subtitulo: escopo === 'Cidade inteira' ? undefined : escopo,
+          meta: soTexto([geradoLongo, `${numero(mensal.total)} serviços ${mensal.todos ? 'no período' : 'registrados no mês'}`, dadosAte]),
+        }
+      : aba === 'abertos' && abertos
+        ? {
+            titulo: `Serviços em Aberto · ${filtros.bairro ? `Bairro ${filtros.bairro}` : filtros.regiao ? `Região ${filtros.regiao}` : 'Niterói'}`,
+            subtitulo: soTexto([filtros.categoria, filtros.quem ?? filtros.origem, rotuloSaida(abertos.n)]).join(' · ') || undefined,
+            meta: soTexto([geradoLongo, `${numero(abertos.n)} serviços em aberto`, dadosAte]),
+          }
+        : aba === 'campo' && campo
+          ? {
+              titulo: `Lista de campo · ${escopo}`,
+              subtitulo: soTexto([soAtraso ? 'Só os serviços em atraso (mais de 5 dias)' : 'Todos os serviços em aberto', rotuloSaida(campo.total, soAtraso)]).join(' · '),
+              meta: soTexto([geradoEm, dadosAte, `${numero(campo.total)} serviços${campo.risco ? ` · ${numero(campo.risco)} com risco elétrico` : ''}`]),
+            }
+          : null
 
   // compartilhar = o link desta tela (aba, mês e filtros vão na URL); quem abre precisa entrar com a conta
   const celular = useMidia('(max-width: 767px)')
@@ -201,6 +248,83 @@ function PaginaRelatorios() {
       /* a pessoa fechou a janela de compartilhar: nada a fazer */
     }
   }
+  // ---- PDF de verdade (arquivo) ----
+  // o gerador e as fontes descem sem pressa depois que a página abre: no toque o PDF sai na hora, e a janela
+  // de compartilhar ainda abre (o navegador só a deixa abrir logo depois de um toque). São ~0,5 MB: com
+  // economia de dados ou rede lenta, só descem no toque (se demorar, o aviso "PDF pronto" abre a janela)
+  useEffect(() => {
+    const rede = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection
+    if (rede?.saveData || ['slow-2g', '2g', '3g'].includes(rede?.effectiveType ?? '')) return
+    const t = window.setTimeout(() => {
+      import('@/relatorios-pdf').then((m) => m.prepararPdf()).catch(() => {})
+    }, 1500)
+    return () => window.clearTimeout(t)
+  }, [])
+  const podeEnviarArquivo = useMemo(() => {
+    try {
+      return typeof navigator.canShare === 'function' && navigator.canShare({ files: [new File([''], 'teste.pdf', { type: 'application/pdf' })] })
+    } catch {
+      return false
+    }
+  }, [])
+  const pedidoPdf = (): PedidoPdf | null => {
+    if (!cab) return null
+    if (aba === 'mensal' && mensal) return { tipo: 'mensal', cabecalho: cab, hoje, r: mensal, obs }
+    if (aba === 'abertos' && abertos) return { tipo: 'abertos', cabecalho: cab, hoje, r: abertos, detalhes: comEndereco }
+    if (aba === 'campo' && campo) return { tipo: 'campo', cabecalho: cab, hoje, regioes: campo.regioes, detalhes: comEndereco }
+    return null
+  }
+  // "Relatório Mensal - setembro de 2026 - Leste.pdf"; Em aberto e Lista de campo levam a data (mudam todo dia)
+  const nomeArquivo = cab
+    ? `${soTexto([cab.titulo, aba === 'mensal' && escopo !== 'Cidade inteira' && escopo, aba !== 'mensal' && formatarDia(hoje).replaceAll('/', '-')])
+        .join(' - ')
+        .replaceAll(' · ', ' - ')
+        .replace(/[\\/:*?"<>|]/g, '-')}.pdf`
+    : 'relatorio.pdf'
+  const gerarArquivo = async (): Promise<File | null> => {
+    const pedido = pedidoPdf()
+    if (!pedido) return null
+    try {
+      const { gerarPdf } = await import('@/relatorios-pdf')
+      return new File([await gerarPdf(pedido)], nomeArquivo, { type: 'application/pdf' })
+    } catch (e) {
+      console.error('PDF do relatório', e)
+      toast.error('Não foi possível montar o PDF. Confira a internet e tente de novo.')
+      return null
+    }
+  }
+  const baixar = (arquivo: File) => {
+    const url = URL.createObjectURL(arquivo)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = arquivo.name
+    document.body.append(a)
+    a.click()
+    a.remove()
+    window.setTimeout(() => URL.revokeObjectURL(url), 10_000)
+  }
+  const baixarPdf = async () => {
+    const arquivo = await gerarArquivo()
+    if (arquivo) baixar(arquivo)
+  }
+  const enviar = (arquivo: File) => navigator.share({ files: [arquivo], title: tituloCompartilhar })
+  const compartilharPdf = async () => {
+    const arquivo = await gerarArquivo()
+    if (!arquivo) return
+    try {
+      await enviar(arquivo)
+    } catch (e) {
+      const nome = e instanceof DOMException ? e.name : ''
+      // a pessoa fechou a janela de compartilhar: nada a fazer
+      if (nome === 'AbortError') return
+      // demorou e o navegador não abre mais a janela sem um toque novo: o toque do aviso abre
+      if (nome === 'NotAllowedError')
+        toast('PDF pronto', { action: { label: 'Compartilhar', onClick: () => void enviar(arquivo).catch(() => {}) }, duration: 15_000 })
+      // o aparelho não aceita mandar esse arquivo: baixa
+      else baixar(arquivo)
+    }
+  }
+
   const copiarLink = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href)
@@ -215,29 +339,40 @@ function PaginaRelatorios() {
       <header className="mb-5 print:hidden">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-normal tracking-[-0.4px] text-ink">Relatórios</h1>
-          {/* celular: compartilhar o link (janela nativa: WhatsApp, e-mail…) é o principal, o PDF fica ao lado;
-              computador: imprimir/PDF é o principal, com "copiar link" ao lado */}
-          {celular && podeCompartilhar ? (
+          {/* celular: o principal é mandar o PDF (o arquivo abre sem login; WhatsApp, e-mail…), com o link ao lado
+              para quem tem conta; computador: baixar o PDF é o principal, com imprimir e copiar o link ao lado */}
+          {celular ? (
             <div className="flex gap-2">
-              <Botao variante="secundario" onClick={() => window.print()} disabled={!base} aria-label="Imprimir ou salvar PDF">
-                <Printer aria-hidden className="size-4" />
-                PDF
-              </Botao>
-              <Botao variante="primario" onClick={compartilhar} disabled={!base}>
-                <Share2 aria-hidden className="size-4" />
-                Compartilhar
-              </Botao>
+              {podeCompartilhar ? (
+                <Botao variante="secundario" onClick={compartilhar} aria-label="Compartilhar o link (quem abre precisa entrar com a conta)">
+                  <Link2 aria-hidden className="size-4" />
+                  Link
+                </Botao>
+              ) : (
+                <Botao variante="secundario" onClick={copiarLink} aria-label="Copiar o link deste relatório">
+                  <Link2 aria-hidden className="size-4" />
+                  Copiar link
+                </Botao>
+              )}
+              <BotaoPdf aoTocar={podeEnviarArquivo ? compartilharPdf : baixarPdf} disabled={!cab}>
+                {podeEnviarArquivo ? <Share2 aria-hidden className="size-4" /> : <Download aria-hidden className="size-4" />}
+                {podeEnviarArquivo ? 'Compartilhar PDF' : 'Baixar PDF'}
+              </BotaoPdf>
             </div>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Botao variante="secundario" onClick={copiarLink} aria-label="Copiar o link deste relatório">
                 <Link2 aria-hidden className="size-4" />
                 Copiar link
               </Botao>
-              <Botao variante="primario" onClick={() => window.print()} disabled={!base}>
+              <Botao variante="secundario" onClick={() => window.print()} disabled={!base}>
                 <Printer aria-hidden className="size-4" />
-                Imprimir ou salvar PDF
+                Imprimir
               </Botao>
+              <BotaoPdf aoTocar={baixarPdf} disabled={!cab}>
+                <Download aria-hidden className="size-4" />
+                Baixar PDF
+              </BotaoPdf>
             </div>
           )}
         </div>
@@ -329,31 +464,19 @@ function PaginaRelatorios() {
         <Folha>
           {aba === 'mensal' && mensal && (
             <>
-              <CabecalhoFolha
-                titulo={mensal.todos ? 'Visão Geral · Todo o Período' : `Relatório Mensal · ${rotuloMesLongo(mensal.mes!)}`}
-                subtitulo={escopo === 'Cidade inteira' ? undefined : escopo}
-                meta={[geradoLongo, `${numero(mensal.total)} serviços ${mensal.todos ? 'no período' : 'registrados no mês'}`, dadosAte].filter(Boolean)}
-              />
+              {cab && <CabecalhoFolha {...cab} />}
               <RelatorioMensalFolha r={mensal} obs={obs} aoMudarObs={setObs} />
             </>
           )}
           {aba === 'abertos' && abertos && (
             <>
-              <CabecalhoFolha
-                titulo={`Serviços em Aberto · ${filtros.bairro ? `Bairro ${filtros.bairro}` : filtros.regiao ? `Região ${filtros.regiao}` : 'Niterói'}`}
-                subtitulo={[filtros.categoria, filtros.quem ?? filtros.origem, rotuloSaida(abertos.n)].filter(Boolean).join(' · ') || undefined}
-                meta={[geradoLongo, `${numero(abertos.n)} serviços em aberto`, dadosAte].filter(Boolean)}
-              />
+              {cab && <CabecalhoFolha {...cab} />}
               <RelatorioAbertosFolha r={abertos} detalhes={comEndereco} hoje={hoje} />
             </>
           )}
           {aba === 'campo' && campo && (
             <>
-              <CabecalhoFolha
-                titulo={`Lista de campo · ${escopo}`}
-                subtitulo={[soAtraso ? 'Só os serviços em atraso (mais de 5 dias)' : 'Todos os serviços em aberto', rotuloSaida(campo.total, soAtraso)].filter(Boolean).join(' · ')}
-                meta={[geradoEm, dadosAte, `${numero(campo.total)} serviços${campo.risco ? ` · ${numero(campo.risco)} com risco elétrico` : ''}`].filter(Boolean)}
-              />
+              {cab && <CabecalhoFolha {...cab} />}
               <ListaCampoFolha regioes={campo.regioes} detalhes={comEndereco} hoje={hoje} />
             </>
           )}

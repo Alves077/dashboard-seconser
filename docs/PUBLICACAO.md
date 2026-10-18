@@ -2,7 +2,8 @@
 
 > **Estado (17/10, noite):** etapa `teste` no ar — `…/dashboard-seconser/teste/` = v2, raiz = site antigo. Pages já
 > em GitHub Actions e `v2` liberado no environment. Usuário testou no celular (Samsung A25): ok; pediu compartilhar
-> o relatório como PDF (hoje o botão PDF abre o "salvar" do Android e Compartilhar manda só o link).
+> o relatório como PDF (o botão PDF abria o "salvar" do Android e Compartilhar mandava só o link) → **feito
+> (17/10, à noite): "Compartilhar PDF" manda o arquivo** (PLANO_V2, "Relatório em PDF de verdade").
 > **Esqueci a senha (17/10):** o link do e-mail caía em "Em construção" (o retorno `#access_token=…` do Supabase
 > brigava com as rotas `#/…`) e não havia tela de senha nova. Corrigido: `index.html` guarda o retorno antes do app
 > abrir, `sessao.tsx` entra com o token e abre "Criar nova senha" (`DialogoNovaSenha.tsx`); link vencido ou já usado
@@ -37,7 +38,8 @@ depois desligar o Apps Script e tirar a pasta. O código do antigo fica para sem
 - [ ] Tocar nas linhas (fundo escurece ao tocar), arrastar a Ficha para fechar, gaveta de filtros.
 - [ ] Campo de busca e de senha **não** dão zoom na página ao tocar.
 - [ ] Barra de baixo não fica atrás da barra do sistema; nada gruda em "hover" depois de tocar.
-- [ ] Imprimir/salvar PDF do relatório Em aberto pelo celular.
+- [ ] Relatórios → "Compartilhar PDF" no celular: escolher o WhatsApp, abrir o arquivo do outro lado (sem login).
+- [ ] Computador: "Baixar PDF" das três abas; conferir números com a tela.
 - [x] Esqueci a senha (17/10, ok): pedir o link, abrir no celular, criar a senha nova, sair e entrar com ela.
 - [ ] Segunda visita abre rápido (cópia no navegador).
 

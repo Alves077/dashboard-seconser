@@ -690,3 +690,36 @@ isso virava a rota "access_token=…" → "Em construção"; e o site não tinha
   e o fluxo inteiro com respostas do Supabase simuladas (janela, senhas diferentes, senha igual à antiga, sucesso).
   Teste real (usuário, 17/10): saiu, pediu o link, abriu do e-mail e refez a senha no site — ok.
 
+## Relatório em PDF de verdade (17/10/2026)
+Pedido do usuário (teste no A25): o "PDF" abria o salvar/imprimir do Android e "Compartilhar" mandava só o link —
+que pede login. Para mandar a quem não tem conta, o arquivo. Decisão: montar o PDF no próprio navegador.
+- **`src/relatorios-pdf/`** (carregado só quando usado, import dinâmico): `motor.ts` (pdf-lib + Inter em .woff,
+  medidas em px de CSS, quebra de texto com trechos de estilos diferentes, caixas, linhas, rodapé "Página x de y"),
+  `pecas.ts` (cabeçalho, seção, cartão que continua na página seguinte, tabela, barra de faixas, gráfico),
+  `mensal.ts` / `abertos.ts` / `campo.ts` (as mesmas seções das folhas da tela, na mesma ordem), `index.ts`
+  (`gerarPdf(pedido)`, `prepararPdf()`).
+- Montado **a partir dos dados** (não é "foto" da tela): texto nítido e pesquisável, arquivo leve (Mensal ~30 KB,
+  Em aberto ~35 KB, Lista de campo da cidade ~165 KB / 28 páginas no cenário pior caso), tabelas que continuam na página
+  seguinte **repetindo o cabeçalho**, subtítulo de grupo e nome de bairro nunca sozinhos no pé da página, cada região
+  da Lista de campo numa página nova, coluna de retorno para escrever à mão. Seções pequenas não quebram no meio
+  (como `break-inside: avoid` da impressão) — por isso Mensal e Em aberto ainda deixam parte da página 1 em branco,
+  igual à impressão do Chrome.
+- Rodapé: título · DIP · SECONSER e "Página x de y"; com endereço (Em aberto e Lista de campo, para quem tem acesso),
+  também **"Contém endereços: uso interno"** — o arquivo leva dado restrito para fora do login.
+- Botões: **celular** = "Link" (o de antes) + **"Compartilhar PDF"** (janela do sistema com o arquivo; sem suporte a
+  arquivo, "Baixar PDF"); **computador** = Copiar link · Imprimir · **Baixar PDF**. Nome do arquivo:
+  "Relatório Mensal - setembro de 2026 - Leste.pdf", "Lista de campo - Norte - 17-10-2026.pdf".
+- O navegador só abre a janela de compartilhar logo depois do toque: o gerador e as fontes descem 1,5 s depois de
+  abrir Relatórios (só com rede boa e sem economia de dados — são ~0,5 MB) e, se mesmo assim demorar, aparece o aviso
+  **"PDF pronto · Compartilhar"** (o toque nele abre a janela).
+- Desempenho (computador, depois de 3 ajustes: largura de texto guardada, regras tipográficas da fonte desligadas —
+  o pdf-lib descartava o kerning de qualquer jeito —, WOFF → TTF uma vez por visita com o descompactador do navegador,
+  e o "Gerando…" num componente próprio para não redesenhar a folha): Mensal 0,2 s, Em aberto 0,25 s, Lista de campo
+  0,8 s (323 serviços) e 6,3 s no cenário enorme (5.176 serviços, 412 páginas). Fila real (~800): ~1,5 s.
+- Conferido com Chrome sem janela: os 3 relatórios, histórico com gráficos, filtro de região, "só em atraso" com
+  época, vazio, um serviço, enorme; texto extraído (pdftotext/PyMuPDF) batendo com a tela; toque real em
+  "Compartilhar PDF" (arquivo certo chega ao compartilhar, toque ainda válido) e o aviso de reserva; 320 px sem
+  rolagem de lado. Falta: **teste no celular de verdade** (WhatsApp) com dado real.
+- Fonte em .woff (não .woff2): o fontkit do pdf-lib quebra ao recortar woff2. `escala()` do GraficoTempo exportada
+  para o gráfico do PDF usar as mesmas marcas.
+
