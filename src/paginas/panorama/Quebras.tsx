@@ -16,6 +16,7 @@ import { corRegiao } from '@/lib/cores'
 import { compararTexto, decimal, numero, pct, pctCurto } from '@/lib/formato'
 import { direcaoDaTroca } from '@/lib/ganchos'
 import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
+import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 
 /**
  * Colunas da lista de LinhaBarra (rótulo · barra · valor). Vão na <ul>/<ol>: as linhas usam `subgrid`, então a
@@ -243,8 +244,9 @@ export function SeletorMedida({ medida, aoMudar, porRetorno }: { medida: Medida;
         onValueChange={(v) => v[0] && aoMudar(v[0] as Medida)}
         // celular: os três dividem a largura e o texto quebra em duas linhas com respiro (antes "Saíram no período"
         // quebrava dentro de uma pílula de 36 px, sem padding); a partir de sm, pílula numa linha só
-        className="grid w-full auto-cols-fr grid-flow-col gap-0.5 rounded-xl border border-line bg-card p-1 sm:flex sm:h-9 sm:w-auto sm:items-center sm:rounded-full sm:p-0.5"
+        className="relative grid w-full auto-cols-fr grid-flow-col gap-0.5 rounded-xl border border-line bg-card p-1 sm:flex sm:h-9 sm:w-auto sm:items-center sm:rounded-full sm:p-0.5"
       >
+        <MarcadorChave className="bg-acao shadow-1" />
         {[
           { v: 'periodo', t: porRetorno ? 'Executados no período' : 'Saíram no período' },
           ...(porRetorno ? [] : [{ v: 'abertosPeriodo', t: 'Em aberto do período' }]),
@@ -254,7 +256,7 @@ export function SeletorMedida({ medida, aoMudar, porRetorno }: { medida: Medida;
             key={o.v}
             value={o.v}
             // escolhida em índigo cheio, como a aba dos Relatórios: muda o que as três listas mostram, tem que se ver
-            className="pressionavel min-h-11 rounded-lg px-2 py-1.5 text-xs leading-tight text-ink-2 transition-colors duration-150 hover:text-ink data-pressed:bg-acao data-pressed:font-medium data-pressed:text-sobre-acao data-pressed:shadow-1 sm:h-full sm:min-h-0 sm:rounded-full sm:px-3 sm:py-0"
+            className="opcao-chave min-h-11 rounded-lg px-2 py-1.5 text-xs leading-tight text-ink-2 hover:text-ink data-pressed:font-medium data-pressed:text-sobre-acao sm:h-full sm:min-h-0 sm:rounded-full sm:px-3 sm:py-0"
           >
             {o.t}
           </Toggle>

@@ -13,6 +13,7 @@ import { PRAZO_DIAS } from '@/config'
 import type { ContarPor } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
 import { dias, numero, pct, pctCurto } from '@/lib/formato'
+import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 
 interface Barra {
   id: string
@@ -199,13 +200,14 @@ export function Distribuicao({ p }: { p: Prazo }) {
             aria-label="Quais serviços entram na conta"
             value={[filtros.contarPor]}
             onValueChange={(v) => v[0] && mudar({ contarPor: v[0] as ContarPor })}
-            className="flex h-9 shrink-0 items-center self-start rounded-full border border-line bg-page p-0.5"
+            className="relative flex h-9 shrink-0 items-center self-start rounded-full border border-line bg-page p-0.5"
           >
+            <MarcadorChave className="bg-card shadow-1" />
             {OPCOES.map((o) => (
               <Toggle
                 key={o.v}
                 value={o.v}
-                className="pressionavel h-full rounded-full px-3 text-xs whitespace-nowrap text-ink-2 data-pressed:bg-card data-pressed:font-medium data-pressed:text-ink data-pressed:shadow-1"
+                className="opcao-chave h-full rounded-full px-3 text-xs whitespace-nowrap text-ink-2 data-pressed:font-medium data-pressed:text-ink"
               >
                 {/* abaixo de 360 px os dois rótulos inteiros não cabem: "no período" some (o texto ao lado explica) */}
                 {o.t.replace(' no período', '')}

@@ -22,6 +22,7 @@ import { decimal, dias, enxuto, numero, pct, plural } from '@/lib/formato'
 import { direcaoDaTroca, useDestino, useFicha, useHoje } from '@/lib/ganchos'
 import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
 import { LinhaBarra, LISTA_BARRAS } from '@/paginas/panorama/Quebras'
+import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 
 /** Escala só com inteiros (contagem de pedidos: "0,5 pedido" não existe) */
 function marcasInteiras(max: number): number[] | undefined {
@@ -198,8 +199,9 @@ function EmAberto({ p }: { p: PerfilVereador }) {
               aria-label="Quais pedidos em aberto"
               value={[soIndicacoes ? 'ind' : 'todos']}
               onValueChange={(v) => v[0] && setSoIndicacoes(v[0] === 'ind')}
-              className="flex h-9 items-center rounded-full border border-line bg-page p-0.5"
+              className="relative flex h-9 items-center rounded-full border border-line bg-page p-0.5"
             >
+              <MarcadorChave className="bg-card shadow-1" />
               {[
                 { v: 'todos', t: `Todos (${numero(p.emAberto)})` },
                 { v: 'ind', t: `Indicações (${numero(p.indicacoesAbertas)})` },
@@ -207,7 +209,7 @@ function EmAberto({ p }: { p: PerfilVereador }) {
                 <Toggle
                   key={o.v}
                   value={o.v}
-                  className="pressionavel h-full rounded-full px-3 text-xs text-ink-2 data-pressed:bg-card data-pressed:font-medium data-pressed:text-ink data-pressed:shadow-1"
+                  className="opcao-chave h-full rounded-full px-3 text-xs text-ink-2 data-pressed:font-medium data-pressed:text-ink"
                 >
                   {o.t}
                 </Toggle>

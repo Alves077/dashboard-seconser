@@ -28,6 +28,7 @@ import { RelatorioAbertosFolha } from './relatorios/Abertos'
 import { ListaCampoFolha } from './relatorios/Campo'
 import { CabecalhoFolha, Folha, useImpressaoClara } from './relatorios/Folha'
 import { RelatorioMensalFolha } from './relatorios/Mensal'
+import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 
 type Aba = 'mensal' | 'abertos' | 'campo'
 
@@ -380,13 +381,14 @@ function PaginaRelatorios() {
           aria-label="Relatório"
           value={[aba]}
           onValueChange={(v) => v[0] && trocar('relatorio', v[0] === 'mensal' ? null : (v[0] as string))}
-          className="mt-4 grid grid-cols-3 gap-1 rounded-xl border border-line bg-card p-1 sm:inline-grid sm:w-auto"
+          className="relative mt-4 grid grid-cols-3 gap-1 rounded-xl border border-line bg-card p-1 sm:inline-grid sm:w-auto"
         >
+          <MarcadorChave className="bg-acao" />
           {ABAS.map(({ id, nome, icone: Icone }) => (
             <Toggle
               key={id}
               value={id}
-              className="pressionavel flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-[12px] text-ink-2 hover:text-ink data-pressed:bg-acao data-pressed:font-medium data-pressed:text-sobre-acao sm:flex-row sm:gap-2 sm:text-[13px]"
+              className="opcao-chave flex min-h-11 flex-col items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-[12px] text-ink-2 hover:text-ink data-pressed:font-medium data-pressed:text-sobre-acao sm:flex-row sm:gap-2 sm:text-[13px]"
             >
               <Icone aria-hidden className="size-4" />
               {nome}
@@ -424,8 +426,9 @@ function PaginaRelatorios() {
             aria-label="Quais serviços"
             value={[soAtraso ? 'atraso' : 'todos']}
             onValueChange={(v) => v[0] && trocar('campo', v[0] === 'atraso' ? 'atraso' : null)}
-            className="mt-3 flex h-9 w-fit items-center rounded-full border border-line bg-page p-0.5"
+            className="relative mt-3 flex h-9 w-fit items-center rounded-full border border-line bg-page p-0.5"
           >
+            <MarcadorChave className="bg-card shadow-1" />
             {[
               { v: 'todos', t: 'Todos em aberto' },
               { v: 'atraso', t: 'Só em atraso' },
@@ -433,7 +436,7 @@ function PaginaRelatorios() {
               <Toggle
                 key={o.v}
                 value={o.v}
-                className="pressionavel h-full rounded-full px-3 text-xs text-ink-2 data-pressed:bg-card data-pressed:font-medium data-pressed:text-ink data-pressed:shadow-1"
+                className="opcao-chave h-full rounded-full px-3 text-xs text-ink-2 data-pressed:font-medium data-pressed:text-ink"
               >
                 {o.t}
               </Toggle>

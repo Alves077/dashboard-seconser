@@ -723,3 +723,21 @@ que pede login. Para mandar a quem não tem conta, o arquivo. Decisão: montar o
 - Fonte em .woff (não .woff2): o fontkit do pdf-lib quebra ao recortar woff2. `escala()` do GraficoTempo exportada
   para o gráfico do PDF usar as mesmas marcas.
 
+## Marcador deslizante nas chaves (18/10/2026)
+Do vídeo "Dashboard V14" (Instagram, code.xr) que o usuário mandou, o único efeito que valia para um painel de dados:
+a escolha de uma chave desliza de uma opção para a outra em vez de pular. Recusados, com o motivo: números contando
+(mostram o número errado por um instante — um print no meio vira dado falso), barras crescendo e cartões entrando um
+a um (repetem a cada filtro/página), vidro fosco/cartão em gradiente/saudação (contra o DESIGN.md).
+- `componentes/ui/MarcadorChave.tsx`: primeiro filho do grupo; acha a opção escolhida sozinho (`[data-pressed]` do
+  Toggle ou `[aria-checked="true"]`), acompanha troca de escolha, tamanho de tela e quantidade de opções
+  (ResizeObserver + MutationObserver); posição por `translate`, largura/altura junto (elemento solto, não empurra
+  nada); 220 ms com `--ease-saida`; nasce no lugar (só desliza depois da 1ª medida); movimento reduzido = pula.
+- Utilitário `opcao-chave` (estilos.css): opção por cima do marcador, cor do texto muda em 220 ms junto com ele, o
+  encolher ao tocar continua. As opções não pintam mais o próprio fundo.
+- Fora do esmaecer da troca: cada chave ganha `view-transition-name: chave-N` + classe `chave` (sem isso a foto antiga
+  da página mostrava o marcador velho sumindo por cima do novo — dois marcadores por um instante).
+- Nas 7 chaves: Panorama (medida), Mapa (Mostrar, grade 2×2 no celular), Prazo (quais serviços), Relatórios (abas e
+  todos/só em atraso), perfil do vereador (todos/indicações), filtro de período (contar pela data de).
+- Conferido no Chrome: posição exata ao abrir e no fim da troca em todas, deslize medido quadro a quadro (203 → 48 px em
+  ~12 quadros), foto no meio da troca (um marcador só), movimento reduzido pulando, celular 375 px, tema escuro.
+

@@ -17,6 +17,7 @@ import { corRegiao } from '@/lib/cores'
 import { formatarDiaNoAno } from '@/lib/datas'
 import { dias, numero, pct } from '@/lib/formato'
 import { useFicha, useHoje, useMidia } from '@/lib/ganchos'
+import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 
 const MapaGrande = lazy(() => import('@/mapa/MapaGrande'))
 
@@ -69,13 +70,14 @@ function SeletorMostrar({ valor, aoMudar }: { valor: Mostrar; aoMudar: (m: Mostr
       aria-label="Mostrar no mapa"
       value={[valor]}
       onValueChange={(v) => v[0] && aoMudar(v[0] as Mostrar)}
-      className="grid w-full grid-cols-2 gap-1 rounded-2xl border border-line bg-card p-1 sm:flex sm:h-11 sm:w-auto sm:rounded-full"
+      className="relative grid w-full grid-cols-2 gap-1 rounded-2xl border border-line bg-card p-1 sm:flex sm:h-11 sm:w-auto sm:rounded-full"
     >
+      <MarcadorChave className="bg-acao" />
       {OPCOES_MOSTRAR.map((o) => (
         <Toggle
           key={o.id}
           value={o.id}
-          className="pressionavel h-10 rounded-xl px-3 text-[13px] whitespace-nowrap text-ink-2 hover:text-ink data-pressed:bg-acao data-pressed:font-medium data-pressed:text-sobre-acao sm:h-full sm:rounded-full"
+          className="opcao-chave h-10 rounded-xl px-3 text-[13px] whitespace-nowrap text-ink-2 hover:text-ink data-pressed:font-medium data-pressed:text-sobre-acao sm:h-full sm:rounded-full"
         >
           {o.rotulo}
         </Toggle>

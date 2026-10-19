@@ -10,6 +10,7 @@ import { numero } from '@/lib/formato'
 import { useHoje } from '@/lib/ganchos'
 import { filtrarLugar, intervaloDo, type Atalho, type ContarPor, type Periodo } from './filtros'
 import { useFiltros } from './useFiltros'
+import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 
 // Os mais usados; os demais atalhos continuam valendo em links antigos, só não aparecem aqui
 const ATALHOS_VISIVEIS: { id: Atalho; rotulo: string }[] = [
@@ -122,7 +123,8 @@ function ContarPorEscolha({ valor, aoMudar }: { valor: ContarPor; aoMudar: (v: C
   return (
     <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-line pt-3">
       <span className="text-xs text-ink-2">Contar pela data de</span>
-      <div role="radiogroup" aria-label="Contar o período pela data de" className="flex h-9 items-center rounded-full border border-line bg-page p-0.5">
+      <div role="radiogroup" aria-label="Contar o período pela data de" className="relative flex h-9 items-center rounded-full border border-line bg-page p-0.5">
+        <MarcadorChave className="bg-card shadow-1" />
         {opcoes.map((o) => (
           <button
             key={o.v}
@@ -131,8 +133,8 @@ function ContarPorEscolha({ valor, aoMudar }: { valor: ContarPor; aoMudar: (v: C
             aria-checked={valor === o.v}
             onClick={() => aoMudar(o.v)}
             className={clsx(
-              'pressionavel h-full rounded-full px-3 text-xs whitespace-nowrap',
-              valor === o.v ? 'bg-card font-medium text-ink shadow-1' : 'text-ink-2 hover:text-ink',
+              'opcao-chave h-full rounded-full px-3 text-xs whitespace-nowrap',
+              valor === o.v ? 'font-medium text-ink' : 'text-ink-2 hover:text-ink',
             )}
           >
             {o.titulo}

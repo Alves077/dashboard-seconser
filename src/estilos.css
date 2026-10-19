@@ -196,6 +196,18 @@
   }
 }
 
+/* Opção de uma chave com marcador deslizante (componentes/ui/MarcadorChave): por cima do marcador; a cor do texto
+   muda junto com a chegada do marcador (220 ms); o encolher ao tocar do `pressionavel` continua */
+@utility opcao-chave {
+  position: relative;
+  transition:
+    color 220ms var(--ease-saida),
+    transform 140ms var(--ease-saida);
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+}
+
 /* Linha tocável (listas, fila, painel do mapa): no celular não há hover, e tocar não dava sinal nenhum até a página
    mudar. Retorno ao toque só com a cor de fundo — numa linha da largura da tela o encolher do `pressionavel`
    parece tremido (find-animation-opportunities, 17/10/2026). Só cor: vale igual com movimento reduzido. */
@@ -275,6 +287,18 @@ html[data-transicao='volta']::view-transition-new(root) {
     opacity: 0;
     transform: translateX(-24px);
   }
+}
+/* Chaves com marcador deslizante (MarcadorChave): fora do esmaecer da troca. Sem isto a foto antiga da página
+   (marcador no lugar velho) sumia aos poucos por cima do marcador novo deslizando — dois marcadores por um
+   instante. Cada chave tem nome próprio (`chave-N`) e a classe `chave`; a nova aparece ao vivo, sem esmaecer. */
+::view-transition-group(*.chave) {
+  animation: none;
+}
+::view-transition-old(*.chave) {
+  display: none;
+}
+::view-transition-new(*.chave) {
+  animation: none;
 }
 /* Vai-e-volta dentro de um card (região → bairros, origem → nomes): o card ajusta a altura suavemente e a
    lista desliza — entrar vem da direita, voltar vem da esquerda; a página fica parada. Cada card tem nomes
@@ -367,7 +391,8 @@ html[data-transicao='gaveta-volta']::view-transition-new(*.gaveta-lista) {
 /* Movimento reduzido: menos e mais suave, não zero (emil-design-eng). Tira deslocamento/escala;
    fades e trocas de cor continuam. Componentes usam `motion-reduce:` para o resto. */
 @media (prefers-reduced-motion: reduce) {
-  .pressionavel:active:not(:disabled) {
+  .pressionavel:active:not(:disabled),
+  .opcao-chave:active:not(:disabled) {
     transform: none;
   }
 }
