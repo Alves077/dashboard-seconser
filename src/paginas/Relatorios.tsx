@@ -40,8 +40,10 @@ const ABAS: { id: Aba; nome: string; icone: typeof FileText; descricao: string }
 
 // "Saíram para a rua" das abas Em aberto e Lista de campo (decisão do usuário, 17/10/2026): seletor próprio,
 // padrão "qualquer data" — o período global (padrão: últimos 30 dias) esconderia os pedidos parados há mais tempo.
-// Na URL: ?saida=30d | este-ano | m202609 (mês, chave como em lib/datas) ; sem o parâmetro = qualquer data.
-const ATALHOS_SAIDA: { id: Atalho; texto: string }[] = [
+// Na URL: ?saida=hoje | 30d | este-ano | m202609 (mês, chave como em lib/datas) ; sem o parâmetro = qualquer data.
+// "Hoje" (pedido do usuário, 20/10/2026): a lista de campo só com o que saiu para a rua no dia.
+const ATALHOS_SAIDA: { id: Atalho | 'hoje'; texto: string }[] = [
+  { id: 'hoje', texto: 'Hoje' },
   { id: '7d', texto: 'Nos últimos 7 dias' },
   { id: '30d', texto: 'Nos últimos 30 dias' },
   { id: '90d', texto: 'Nos últimos 90 dias' },
@@ -49,8 +51,9 @@ const ATALHOS_SAIDA: { id: Atalho; texto: string }[] = [
 ]
 
 function intervaloDaSaida(valor: string | null, hoje: Dia): Intervalo | null {
+  if (valor === 'hoje') return { de: hoje, ate: hoje, parcial: true, rotulo: 'Hoje' }
   const atalho = ATALHOS_SAIDA.find((a) => a.id === valor)
-  if (atalho) return intervaloDo({ tipo: 'atalho', atalho: atalho.id }, hoje)
+  if (atalho && atalho.id !== 'hoje') return intervaloDo({ tipo: 'atalho', atalho: atalho.id }, hoje)
   const mes = /^m(\d{6})$/.exec(valor ?? '')
   return mes ? intervaloDo({ tipo: 'mes', mes: +mes[1] }, hoje) : null
 }
@@ -189,10 +192,13 @@ function PaginaRelatorios() {
     () => (base && saida ? filtrarLugar(base.saidas, filtros).filter((s) => noIntervalo(s, saida, 'saida')).length : 0),
     [base, filtros, saida],
   )
+  // "Hoje": está saindo agora, não faz sentido dizer quantos seguem em aberto (usuário, 20/10/2026)
   const rotuloSaida = (emAberto: number, soAtrasados = false) =>
-    quandoSaida
-      ? `Dos ${numero(saidasDaEpoca)} que saíram para a rua ${quandoSaida}, ${numero(emAberto)} ${soAtrasados ? 'seguem em atraso' : 'seguem em aberto'}`
-      : null
+    paramSaida === 'hoje' && saida
+      ? `${numero(saidasDaEpoca)} ${saidasDaEpoca === 1 ? 'saiu' : 'saíram'} para a rua hoje`
+      : quandoSaida
+        ? `Dos ${numero(saidasDaEpoca)} que saíram para a rua ${quandoSaida}, ${numero(emAberto)} ${soAtrasados ? 'seguem em atraso' : 'seguem em aberto'}`
+        : null
 
   const mensal = useMemo(() => (base && aba === 'mensal' ? relatorioMensal(base, filtros, mes, hoje) : null), [base, filtros, hoje, aba, mes])
   const abertos = useMemo(
