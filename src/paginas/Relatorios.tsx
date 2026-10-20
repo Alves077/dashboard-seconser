@@ -283,11 +283,14 @@ function PaginaRelatorios() {
       return false
     }
   }, [])
+  // celular: uma página contínua, que rola como a tela (a A4 chegava "cortada", usuário 20/10/2026); computador: A4,
+  // que é o que vai para a impressora (a lista de campo é impressa)
+  const formato = celular ? 'continuo' : 'a4'
   const pedidoPdf = (): PedidoPdf | null => {
     if (!cab) return null
-    if (aba === 'mensal' && mensal) return { tipo: 'mensal', cabecalho: cab, hoje, r: mensal, obs }
-    if (aba === 'abertos' && abertos) return { tipo: 'abertos', cabecalho: cab, hoje, r: abertos, detalhes: comEndereco }
-    if (aba === 'campo' && campo) return { tipo: 'campo', cabecalho: cab, hoje, regioes: campo.regioes, detalhes: comEndereco }
+    if (aba === 'mensal' && mensal) return { tipo: 'mensal', cabecalho: cab, hoje, formato, r: mensal, obs }
+    if (aba === 'abertos' && abertos) return { tipo: 'abertos', cabecalho: cab, hoje, formato, r: abertos, detalhes: comEndereco }
+    if (aba === 'campo' && campo) return { tipo: 'campo', cabecalho: cab, hoje, formato, regioes: campo.regioes, detalhes: comEndereco }
     return null
   }
   // "Relatório Mensal - setembro de 2026 - Leste.pdf"; Em aberto e Lista de campo levam a data (mudam todo dia)

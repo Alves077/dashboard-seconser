@@ -7,7 +7,7 @@ import type { Dia } from '@/lib/datas'
 import { desenharAbertos } from './abertos'
 import { desenharCampo } from './campo'
 import { desenharMensal } from './mensal'
-import { Folha } from './motor'
+import { Folha, type Formato } from './motor'
 import { cabecalho, type Cabecalho } from './pecas'
 
 export { carregarFontes as prepararPdf } from './motor'
@@ -15,6 +15,8 @@ export { carregarFontes as prepararPdf } from './motor'
 export type PedidoPdf = {
   cabecalho: Cabecalho
   hoje: Dia
+  /** 'continuo' no celular (uma página que rola), 'a4' no computador (para imprimir) */
+  formato: Formato
 } & (
   | { tipo: 'mensal'; r: RelatorioMensal; obs: string }
   | { tipo: 'abertos'; r: RelatorioAbertos; detalhes: Map<string, Detalhe> | null }
@@ -22,7 +24,7 @@ export type PedidoPdf = {
 )
 
 export async function gerarPdf(p: PedidoPdf): Promise<Blob> {
-  const f = await Folha.criar(p.cabecalho.titulo)
+  const f = await Folha.criar(p.cabecalho.titulo, p.formato)
   cabecalho(f, p.cabecalho)
   if (p.tipo === 'mensal') desenharMensal(f, p.r, p.obs)
   else if (p.tipo === 'abertos') desenharAbertos(f, p.r, p.detalhes, p.hoje)

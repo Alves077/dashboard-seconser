@@ -35,7 +35,9 @@ export function desenharCampo(f: Folha, regioes: RegiaoCampo[], detalhes: Map<st
   ]
 
   regioes.forEach((reg, i) => {
-    if (i > 0 && f.y > MARGEM + 1) f.novaPagina()
+    // folhas A4: cada região numa folha nova (como a impressão); contínuo (celular): segue rolando
+    if (i > 0 && f.continuo) f.y += 32
+    else if (i > 0 && f.y > MARGEM + 1) f.novaPagina()
     // região: nome à esquerda, total à direita, fio embaixo
     f.texto(reg.nome, x, f.y, { tam: 15, peso: 600 })
     f.texto(`${numero(reg.total)} ${reg.total === 1 ? 'serviço' : 'serviços'}`, x + w, f.y + 2, { tam: 11, cor: COR.ink2, alinhar: 'dir' })

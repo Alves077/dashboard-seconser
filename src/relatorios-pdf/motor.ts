@@ -15,6 +15,13 @@ import url700 from '@fontsource/inter/files/inter-latin-700-normal.woff?url'
 const PT = 0.75
 const A4: [number, number] = [595.28, 841.89]
 export const PAGINA = { largura: A4[0] / PT, altura: A4[1] / PT }
+/**
+ * Formato "contínuo" (celular, usuário 20/10/2026: a folha A4 chegava "cortada", com metade em branco): uma página
+ * só, do tamanho do conteúdo, que rola como uma tela. Desenha numa página alta e no fim corta a sobra de baixo.
+ * 14.400 pt (200 polegadas) é o limite de tamanho de página dos leitores de PDF; passou disso, abre outra página.
+ */
+const ALTURA_MAX_CONTINUO_PT = 14400
+export type Formato = 'a4' | 'continuo'
 /** 12 mm, como o @page da impressão */
 export const MARGEM = (12 / 25.4) * 96
 /** respiro entre o fim do conteúdo e o rodapé (que fica dentro da margem de baixo) */
@@ -177,14 +184,20 @@ export class Folha {
   readonly doc: PDFDocument
   private readonly fontes: Record<Peso, PDFFont>
   private readonly caracteres: Set<number>
+  /** página contínua (celular) em vez de folhas A4 */
+  readonly continuo: boolean
+  /** altura da página em px (A4, ou a página alta do formato contínuo antes do corte) */
+  private readonly altura: number
 
-  private constructor(doc: PDFDocument, fontes: Record<Peso, PDFFont>, caracteres: Set<number>) {
+  private constructor(doc: PDFDocument, fontes: Record<Peso, PDFFont>, caracteres: Set<number>, formato: Formato) {
     this.doc = doc
     this.fontes = fontes
     this.caracteres = caracteres
+    this.continuo = formato === 'continuo'
+    this.altura = this.continuo ? ALTURA_MAX_CONTINUO_PT / PT : PAGINA.altura
   }
 
-  static async criar(titulo: string): Promise<Folha> {
+  static async criar(titulo: string, formato: Formato = 'a4'): Promise<Folha> {
     const [bytes, doc] = await Promise.all([carregarFontes(), PDFDocument.create()])
     doc.registerFontkit(fontkit)
     const lista = await Promise.all(bytes.map((b) => doc.embedFont(b, { subset: true, features: SEM_FORMAS })))
@@ -194,7 +207,7 @@ export class Folha {
     doc.setCreator('Painel da DIP')
     doc.setProducer('Painel da DIP')
     doc.setLanguage('pt-BR')
-    const f = new Folha(doc, porPeso, new Set(lista[1].getCharacterSet()))
+    const f = new Folha(doc, porPeso, new Set(lista[1].getCharacterSet()), formato)
     f.novaPagina()
     return f
   }
@@ -205,7 +218,7 @@ export class Folha {
   }
   /** último y útil da página (acima do rodapé) */
   get fim() {
-    return PAGINA.altura - MARGEM - RODAPE
+    return this.altura - MARGEM - RODAPE
   }
   get alturaUtil() {
     return this.fim - MARGEM
@@ -220,7 +233,7 @@ export class Folha {
 
   novaPagina() {
     if (this.doc.getPageCount() > 0) this.fimDaPagina.push(this.y)
-    this.pagina = this.doc.addPage(A4)
+    this.pagina = this.doc.addPage([A4[0], this.altura * PT])
     this.y = this.topo
     this.aoVirar?.()
   }
@@ -316,7 +329,7 @@ export class Folha {
     const w = this.medirTexto(t, tam, peso, espaco)
     const xi = alinhar === 'centro' ? x - w / 2 : alinhar === 'dir' ? x - w : x
     const base = o.base ?? this.base(y, tam, lh)
-    const comum = { size: tam * PT, font: this.fontes[peso], color: rgbDe(cor), opacity: opacidade, y: (PAGINA.altura - base) * PT }
+    const comum = { size: tam * PT, font: this.fontes[peso], color: rgbDe(cor), opacity: opacidade, y: (this.altura - base) * PT }
     // espaço entre letras pelo próprio PDF (Tc): o texto continua uma palavra só para copiar e buscar
     if (espaco) this.pagina.pushOperators(pushGraphicsState(), setCharacterSpacing(espaco * PT))
     this.pagina.drawText(t, { ...comum, x: xi * PT })
@@ -420,7 +433,7 @@ export class Folha {
     const esp = o.esp ?? 1
     const cores = { color: o.fundo ? rgbDe(o.fundo) : undefined, borderColor: o.borda ? rgbDe(o.borda) : undefined, opacity: o.opacidade, borderOpacity: o.opacidade }
     if (raios.every((r) => r === 0)) {
-      pg.drawRectangle({ x: x * PT, y: (PAGINA.altura - y - h) * PT, width: w * PT, height: h * PT, ...cores, borderWidth: o.borda ? esp * PT : 0 })
+      pg.drawRectangle({ x: x * PT, y: (this.altura - y - h) * PT, width: w * PT, height: h * PT, ...cores, borderWidth: o.borda ? esp * PT : 0 })
       return
     }
     // a borda fica por dentro (como no CSS): o caminho anda meia espessura para dentro
@@ -428,7 +441,7 @@ export class Folha {
     const r = raios.map((v) => Math.max(0, Math.min(v - m, (w - 2 * m) / 2, (h - 2 * m) / 2)))
     pg.drawSvgPath(retanguloRedondo(w - 2 * m, h - 2 * m, r), {
       x: (x + m) * PT,
-      y: (PAGINA.altura - y - m) * PT,
+      y: (this.altura - y - m) * PT,
       scale: PT,
       ...cores,
       borderWidth: o.borda ? esp : undefined,
@@ -438,8 +451,8 @@ export class Folha {
   linha(x1: number, y1: number, x2: number, y2: number, o: { cor?: string; esp?: number; traco?: number[]; redonda?: boolean; opacidade?: number } = {}) {
     if (this._medindo) return
     this.pagina.drawLine({
-      start: { x: x1 * PT, y: (PAGINA.altura - y1) * PT },
-      end: { x: x2 * PT, y: (PAGINA.altura - y2) * PT },
+      start: { x: x1 * PT, y: (this.altura - y1) * PT },
+      end: { x: x2 * PT, y: (this.altura - y2) * PT },
       thickness: (o.esp ?? 1) * PT,
       color: rgbDe(o.cor ?? COR.line),
       opacity: o.opacidade,
@@ -454,7 +467,7 @@ export class Folha {
     const d = pontos.map(([px, py], i) => `${i ? 'L' : 'M'}${px.toFixed(2)},${py.toFixed(2)}`).join(' ')
     this.pagina.drawSvgPath(d, {
       x: 0,
-      y: PAGINA.altura * PT,
+      y: this.altura * PT,
       scale: PT,
       borderColor: rgbDe(o.cor),
       borderWidth: o.esp ?? 2,
@@ -467,7 +480,7 @@ export class Folha {
     if (this._medindo) return
     this.pagina.drawCircle({
       x: x * PT,
-      y: (PAGINA.altura - y) * PT,
+      y: (this.altura - y) * PT,
       size: r * PT,
       color: rgbDe(o.fundo),
       borderColor: o.borda ? rgbDe(o.borda) : undefined,
@@ -483,7 +496,7 @@ export class Folha {
     // desenho do ícone "zap" (24 × 24), preenchido
     this.pagina.drawSvgPath('M13,2 L3,14 L12,14 L11,22 L21,10 L12,10 Z', {
       x: x * PT,
-      y: (PAGINA.altura - topo) * PT,
+      y: (this.altura - topo) * PT,
       scale: (s / 24) * PT,
       color: rgbDe(COR.risco),
     })
@@ -491,15 +504,24 @@ export class Folha {
 
   // ---- fim ----
 
-  /** rodapé de todas as páginas: o que é (esquerda) e "Página 1 de 3" (direita, com o aviso antes) */
+  /**
+   * Rodapé de todas as páginas: o que é (esquerda) e "Página 1 de 3" (direita, com o aviso antes). No formato
+   * contínuo vem logo depois do conteúdo, e a página é cortada ali (sem a sobra em branco embaixo).
+   */
   rodapes(esquerda: string, aviso?: string) {
     const paginas = this.doc.getPages()
     const atual = this.pagina
     const tam = 9
     paginas.forEach((p, i) => {
       this.pagina = p
-      const y = PAGINA.altura - MARGEM + 10
-      const direita = `${aviso ? `${aviso}  ·  ` : ''}Página ${i + 1} de ${paginas.length}`
+      const fimConteudo = i === paginas.length - 1 ? this.y : this.fimDaPagina[i]
+      const y = this.continuo ? fimConteudo + 24 : this.altura - MARGEM + 10
+      if (this.continuo) {
+        const alto = y + tam * 1.5 + MARGEM
+        p.setMediaBox(0, (this.altura - alto) * PT, A4[0], alto * PT)
+      }
+      const pagina = this.continuo && paginas.length === 1 ? '' : `Página ${i + 1} de ${paginas.length}`
+      const direita = [aviso, pagina].filter(Boolean).join('  ·  ')
       const livre = this.largura - this.medirTexto(direita, tam) - 16
       let esq = esquerda
       while (esq.length > 4 && this.medirTexto(esq, tam) > livre) esq = `${esq.slice(0, -2).trimEnd()}…`

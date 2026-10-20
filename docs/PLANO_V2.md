@@ -770,3 +770,12 @@ público) → `saidas/relatorios/areas_bairros.xlsx` (15 bairros com mais saída
 espaços públicos da base + concentrações de pedidos, link do mapa, colunas amarelas). Onde as áreas vão morar
 (arquivo no dashboard ou tabela no Supabase): decidir quando a planilha voltar.
 
+## PDF contínuo no celular (20/10/2026)
+Teste do usuário no celular (Compartilhar PDF funcionou, arquivo chegou): a folha A4 chegava "cortada" — Mensal com
+metade da página 1 em branco (o bloco de categorias/regiões não cabia e pulava inteiro). Decisão: no **celular** o PDF
+é uma **página contínua**, do tamanho do conteúdo, que rola como a tela; no **computador** continua A4 (é o que vai
+para a impressora — a lista de campo é impressa). `Folha.criar(titulo, 'continuo' | 'a4')`: desenha numa página alta
+e no rodapé corta a sobra (MediaBox); passou de 14.400 pt (limite dos leitores de PDF), abre outra página; a lista de
+campo não pula página por região no contínuo. Conferido: Mensal 1 página (595 × 1280 pt), histórico 1 página, Em
+aberto 1 página, lista de campo da cidade (323) em 2 páginas altas; computador segue A4 (28 folhas).
+

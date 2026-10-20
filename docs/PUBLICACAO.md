@@ -1,5 +1,13 @@
 # Publicação da v2 (plano decidido em 17/10/2026)
 
+> **20/10 — troca preparada** (workflow em `ETAPA: troca`, `FIM_LEGADO: '03/11/2026'`; usuário: "até 2 semanas,
+> talvez até antes — não é como se muita gente usasse"). Simulada em casa com o mesmo script do workflow e um servidor
+> igual ao Pages: raiz = painel novo; `/legado/` = antigo com aviso e fora dos buscadores (todas as 5 páginas — antes
+> o `noindex` só entrava nas da raiz); favoritos antigos redirecionam (`pages/mapa.html` → `#/mapa`, `qualidade` →
+> `#/prazo`, `tendencia` → `#/evolucao`, `relatorio.html` → `#/relatorios`); links de `/teste/` seguem para o mesmo
+> lugar no endereço principal. **Ordem importa:** criar a marca `site-antigo` ANTES do push (o workflow busca o antigo
+> nela; sem ela a publicação falha e o site fica como estava — é só rodar de novo depois).
+
 > **Estado (17/10, noite):** etapa `teste` no ar — `…/dashboard-seconser/teste/` = v2, raiz = site antigo. Pages já
 > em GitHub Actions e `v2` liberado no environment. Usuário testou no celular (Samsung A25): ok; pediu compartilhar
 > o relatório como PDF (o botão PDF abria o "salvar" do Android e Compartilhar mandava só o link) → **feito
