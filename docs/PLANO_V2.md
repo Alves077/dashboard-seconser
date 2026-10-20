@@ -741,3 +741,12 @@ a um (repetem a cada filtro/página), vidro fosco/cartão em gradiente/saudaçã
 - Conferido no Chrome: posição exata ao abrir e no fim da troca em todas, deslize medido quadro a quadro (203 → 48 px em
   ~12 quadros), foto no meio da troca (um marcador só), movimento reduzido pulando, celular 375 px, tema escuro.
 
+## "Hoje" na época da saída (20/10/2026)
+Commit do usuário no trabalho (`ae4c318`): opção **Hoje** no seletor "Em aberto que saíram para a rua" (Em aberto e
+Lista de campo); o cabeçalho diz "N saíram para a rua hoje" (sem "seguem em aberto"). Conferido em casa, dois ajustes:
+- **Hoje + "Só em atraso"** era sempre vazio (atraso = saiu há mais de 5 dias): com "Hoje" a chave some e o
+  `campo=atraso` que tiver ficado no link não vale.
+- **Antes da carga do dia**, "Hoje" mostrava lista vazia como se ninguém tivesse saído. Agora, sem nenhuma saída de hoje
+  e com a última carga de antes de hoje, o cabeçalho (tela e PDF) diz "Saídas de hoje: a carga de hoje ainda não
+  entrou (dados até 19/10); aparecem depois dela". Com carga de hoje, "0 saíram para a rua hoje" continua.
+

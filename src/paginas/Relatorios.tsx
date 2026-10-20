@@ -20,7 +20,7 @@ import { useBase, useDetalhes } from '@/dados/consultas'
 import { useSessao } from '@/dados/sessao'
 import { filtrarLugar, intervaloDo, noIntervalo, type Atalho, type Intervalo } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
-import { chaveMes, formatarDia, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
+import { chaveMes, diaDe, formatarDia, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
 import { numero } from '@/lib/formato'
 import { useHoje, useMidia } from '@/lib/ganchos'
 import type { PedidoPdf } from '@/relatorios-pdf'
@@ -151,7 +151,8 @@ function PaginaRelatorios() {
   useImpressaoClara()
   const [params, setParams] = useSearchParams()
   const aba: Aba = (['mensal', 'abertos', 'campo'] as const).find((a) => a === params.get('relatorio')) ?? 'mensal'
-  const soAtraso = params.get('campo') === 'atraso'
+  // "Hoje" com "Só em atraso" seria sempre vazio (atraso = saiu há mais de 5 dias): com "Hoje" a chave some e não vale
+  const soAtraso = params.get('campo') === 'atraso' && params.get('saida') !== 'hoje'
   // aba, mês, época, "só em atraso": o mesmo esmaecer da troca de filtro (antes trocava a folha seco)
   const trocar = (chave: string, valor: string | null) =>
     setParams(
@@ -192,10 +193,18 @@ function PaginaRelatorios() {
     () => (base && saida ? filtrarLugar(base.saidas, filtros).filter((s) => noIntervalo(s, saida, 'saida')).length : 0),
     [base, filtros, saida],
   )
+  // "Hoje" sem nenhuma saída e com a última carga de antes de hoje: a lista vazia não quer dizer que ninguém saiu —
+  // as saídas do dia só entram com a carga diária (feita no trabalho). Com saída de hoje na base, a carga já entrou.
+  const cargaAntiga = useMemo(() => {
+    const c = base?.atualizadoEm
+    return c ? diaDe(c.getFullYear(), c.getMonth(), c.getDate()) < hoje : false
+  }, [base, hoje])
   // "Hoje": está saindo agora, não faz sentido dizer quantos seguem em aberto (usuário, 20/10/2026)
   const rotuloSaida = (emAberto: number, soAtrasados = false) =>
     paramSaida === 'hoje' && saida
-      ? `${numero(saidasDaEpoca)} ${saidasDaEpoca === 1 ? 'saiu' : 'saíram'} para a rua hoje`
+      ? saidasDaEpoca === 0 && cargaAntiga && base?.atualizadoEm
+        ? `Saídas de hoje: a carga de hoje ainda não entrou (dados até ${base.atualizadoEm.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}); aparecem depois dela`
+        : `${numero(saidasDaEpoca)} ${saidasDaEpoca === 1 ? 'saiu' : 'saíram'} para a rua hoje`
       : quandoSaida
         ? `Dos ${numero(saidasDaEpoca)} que saíram para a rua ${quandoSaida}, ${numero(emAberto)} ${soAtrasados ? 'seguem em atraso' : 'seguem em aberto'}`
         : null
@@ -427,7 +436,7 @@ function PaginaRelatorios() {
           />
         )}
 
-        {aba === 'campo' && (
+        {aba === 'campo' && paramSaida !== 'hoje' && (
           <ToggleGroup
             aria-label="Quais serviços"
             value={[soAtraso ? 'atraso' : 'todos']}
