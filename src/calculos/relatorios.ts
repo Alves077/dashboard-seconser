@@ -335,6 +335,9 @@ export type RelatorioAbertos = ReturnType<typeof relatorioAbertos>
 // distância e não pelo nome da rua — avenida/estrada longa tem o mesmo nome a quilômetros. O pedido mais antigo
 // ainda sem grupo puxa todos a até 300 m dele (grupo de no máximo ~600 m de ponta a ponta, sem "corrente" que
 // atravessa o bairro); sem pino, junta pela rua. Nome do grupo: a rua mais comum nele ("… e arredores" se houver outras).
+// Ajustes de 20/10/2026 (mutirão de 75 saídas em Camboinhas): empate na espera começa pelo ponto mais denso, nome
+// sem repetir no bairro, pedido sozinho vai para o grupo da mesma rua se estiver perto. Próximo passo: áreas com
+// nome que a equipe usa (rascunho em saidas/relatorios/areas_bairros.xlsx, no projeto de dados).
 
 export interface GrupoCampo {
   nome: string
@@ -349,37 +352,87 @@ export interface BairroCampo {
 }
 
 const temPino = (it: ItemFila) => it.servico.lat !== null && it.servico.lng !== null
+const distancia = (a: ItemFila, b: ItemFila) => distanciaM(a.servico.lat!, a.servico.lng!, b.servico.lat!, b.servico.lng!)
+/** grupo que sobrou pequeno (até isto) é desfeito: cada pedido vai para o grupo de um vizinho próximo */
+const GRUPO_PEQUENO = 2
+/** …ou, sem vizinho a até 300 m, para o grupo da mesma rua a até isto */
+const JUNTAR_MESMA_RUA_M = 500
 
-function nomeDoGrupo(itens: ItemFila[], comPino: boolean): string {
-  const contagem = new Map<string, number>()
-  for (const it of itens) if (it.servico.rua) contagem.set(it.servico.rua, (contagem.get(it.servico.rua) ?? 0) + 1)
-  const [principal] = [...contagem].sort((a, b) => b[1] - a[1] || compararTexto(a[0], b[0]))[0] ?? ['Rua não identificada']
-  if (!comPino) return `${principal} (sem pino no mapa)`
-  return contagem.size > 1 ? `${principal} e arredores` : principal
+/**
+ * Nomes dos grupos de um bairro, sem repetir (antes, num mutirão em Camboinhas, dois grupos "Avenida Doutor Geraldo
+ * de Melo Ourivio e arredores"): cada grupo leva a rua mais comum nele que ainda não deu nome a outro grupo; se todas
+ * já deram, "(outro trecho)".
+ */
+function nomearGrupos(grupos: ItemFila[][]): GrupoCampo[] {
+  const usados = new Set<string>()
+  return grupos.map((itens) => {
+    const contagem = new Map<string, number>()
+    for (const it of itens) if (it.servico.rua) contagem.set(it.servico.rua, (contagem.get(it.servico.rua) ?? 0) + 1)
+    const ruas = [...contagem].sort((a, b) => b[1] - a[1] || compararTexto(a[0], b[0])).map(([r]) => r)
+    if (ruas.length === 0) ruas.push('Rua não identificada')
+    const livre = ruas.find((r) => !usados.has(r))
+    usados.add(livre ?? ruas[0])
+    if (!temPino(itens[0])) return { nome: `${livre ?? ruas[0]} (sem pino no mapa)`, itens }
+    const nome = livre ?? `${ruas[0]} (outro trecho)`
+    return { nome: contagem.size > 1 ? `${nome} e arredores` : nome, itens }
+  })
 }
 
 function porProximidade(lista: ItemFila[]): GrupoCampo[] {
-  const ordem = [...lista].sort((x, y) => y.dias - x.dias)
-  const usados = new Set<ItemFila>()
-  const grupos: GrupoCampo[] = []
-  for (const semente of ordem) {
-    if (usados.has(semente)) continue
-    usados.add(semente)
-    const itens = [semente]
-    for (const outro of ordem) {
-      if (usados.has(outro)) continue
-      const junto = temPino(semente)
-        ? temPino(outro) &&
-          distanciaM(semente.servico.lat!, semente.servico.lng!, outro.servico.lat!, outro.servico.lng!) <= RAIO_PERTO_M
-        : !temPino(outro) && outro.servico.rua === semente.servico.rua
-      if (junto) {
-        usados.add(outro)
-        itens.push(outro)
+  const perto = (a: ItemFila, b: ItemFila) =>
+    temPino(a) ? temPino(b) && distancia(a, b) <= RAIO_PERTO_M : !temPino(b) && a.servico.rua === b.servico.rua
+  // vizinhos de cada pedido, calculados uma vez (para achar o ponto mais denso)
+  const vizinhos = new Map(lista.map((a) => [a, lista.filter((b) => b !== a && perto(a, b))]))
+  const livres = new Set(lista)
+  const grupos: ItemFila[][] = []
+  while (livres.size > 0) {
+    // 1º o que espera há mais tempo (como sempre). Empate — mutirão, todos saíram no mesmo dia — : o que tem mais
+    // vizinhos ainda sem grupo. Antes o empate caía num pedido qualquer e os círculos de 300 m cortavam o bairro no meio.
+    let semente: ItemFila | null = null
+    let densidade = -1
+    for (const it of livres) {
+      const d = vizinhos.get(it)!.filter((v) => livres.has(v)).length
+      if (!semente || it.dias > semente.dias || (it.dias === semente.dias && d > densidade)) {
+        semente = it
+        densidade = d
       }
     }
-    grupos.push({ nome: nomeDoGrupo(itens, temPino(semente)), itens })
+    const itens = [semente!, ...vizinhos.get(semente!)!.filter((v) => livres.has(v)).sort((x, y) => y.dias - x.dias)]
+    for (const it of itens) livres.delete(it)
+    grupos.push(itens)
   }
-  return grupos
+  // grupo que sobrou pequeno (1 ou 2 pedidos) é desfeito se der: cada pedido vai para o grupo do vizinho mais perto
+  // a até 300 m (o círculo do outro grupo começou longe e não o alcançou — ex.: um pedido a 26 m de outro grupo) ou,
+  // sem isso, para o grupo da mesma rua a até 500 m (a Rua da Graça se partia em dois)
+  for (let i = grupos.length - 1; i >= 0; i--) {
+    if (grupos[i].length > GRUPO_PEQUENO) continue
+    const ficam: ItemFila[] = []
+    for (const it of grupos[i]) {
+      if (!temPino(it)) {
+        ficam.push(it)
+        continue
+      }
+      let destino: ItemFila[] | null = null
+      let perto = RAIO_PERTO_M
+      let mesmaRua: ItemFila[] | null = null
+      let pertoRua = JUNTAR_MESMA_RUA_M
+      for (const g of grupos) {
+        if (g === grupos[i] || g.length <= GRUPO_PEQUENO) continue
+        for (const outro of g) {
+          if (!temPino(outro)) continue
+          const d = distancia(it, outro)
+          if (d <= perto) [perto, destino] = [d, g]
+          if (it.servico.rua && outro.servico.rua === it.servico.rua && d <= pertoRua) [pertoRua, mesmaRua] = [d, g]
+        }
+      }
+      const alvo = destino ?? mesmaRua
+      if (alvo) alvo.push(it)
+      else ficam.push(it)
+    }
+    if (ficam.length) grupos[i] = ficam
+    else grupos.splice(i, 1)
+  }
+  return nomearGrupos(grupos)
 }
 
 export interface RegiaoCampo {

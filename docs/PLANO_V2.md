@@ -750,3 +750,23 @@ Lista de campo); o cabeçalho diz "N saíram para a rua hoje" (sem "seguem em ab
   e com a última carga de antes de hoje, o cabeçalho (tela e PDF) diz "Saídas de hoje: a carga de hoje ainda não
   entrou (dados até 19/10); aparecem depois dela". Com carga de hoje, "0 saíram para a rua hoje" continua.
 
+## Lista de campo: agrupamento no mutirão (20/10/2026)
+Problema (usuário, no trabalho): 75 saídas de Camboinhas no mesmo dia → 11 grupos, dois "Avenida Doutor Geraldo de
+Melo Ourivio e arredores", dois "Avenida Beira-Mar", Rua da Graça partida, um grupo de 18 pedidos em 11 ruas. Causa:
+todos com 0 dia de espera → o ponto de partida de cada grupo era um pedido qualquer e os círculos de 300 m cortavam o
+bairro. Três ajustes em `calculos/relatorios.ts` (porProximidade):
+1. Empate na espera → começa pelo pedido com mais vizinhos ainda sem grupo (o mais denso). Fora do empate, continua
+   o mais antigo primeiro.
+2. Nome sem repetir no bairro: a rua mais comum do grupo que ainda não deu nome a outro; se todas já deram,
+   "(outro trecho)".
+3. Grupo que sobra com 1–2 pedidos é desfeito: cada pedido vai para o grupo do vizinho mais perto a até 300 m (o
+   círculo do outro grupo começou longe — havia pedido a 26 m de outro grupo) ou, sem isso, para o grupo da mesma rua
+   a até 500 m.
+Resultado com o dado real: Camboinhas hoje 11 → 7 grupos, nenhum nome repetido; só a ponta leste da Beira-Mar (2
+pedidos a ~800 m) fica à parte. Fonseca, Barreto, Icaraí ("qualquer data") sem nome repetido, ordem do mais antigo.
+**Próximo (ideia do usuário):** áreas com o nome que a equipe usa nos bairros grandes, cada pedido na área mais
+próxima. Rascunho para a equipe: `tratamento_manual/areas_bairros.py` (projeto de dados, só leitura do Supabase
+público) → `saidas/relatorios/areas_bairros.xlsx` (15 bairros com mais saídas em 12 meses, até 10 sugestões cada:
+espaços públicos da base + concentrações de pedidos, link do mapa, colunas amarelas). Onde as áreas vão morar
+(arquivo no dashboard ou tabela no Supabase): decidir quando a planilha voltar.
+
