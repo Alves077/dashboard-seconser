@@ -15,13 +15,6 @@ import url700 from '@fontsource/inter/files/inter-latin-700-normal.woff?url'
 const PT = 0.75
 const A4: [number, number] = [595.28, 841.89]
 export const PAGINA = { largura: A4[0] / PT, altura: A4[1] / PT }
-/**
- * Formato "contínuo" (celular, usuário 20/10/2026: a folha A4 chegava "cortada", com metade em branco): uma página
- * só, do tamanho do conteúdo, que rola como uma tela. Desenha numa página alta e no fim corta a sobra de baixo.
- * 14.400 pt (200 polegadas) é o limite de tamanho de página dos leitores de PDF; passou disso, abre outra página.
- */
-const ALTURA_MAX_CONTINUO_PT = 14400
-export type Formato = 'a4' | 'continuo'
 /** 12 mm, como o @page da impressão */
 export const MARGEM = (12 / 25.4) * 96
 /** respiro entre o fim do conteúdo e o rodapé (que fica dentro da margem de baixo) */
@@ -49,6 +42,7 @@ export const COR = {
   atrasoTexto: '#b42323',
   risco: '#ec835a',
   s1: '#2a78d6',
+  s2: '#eb6834',
   s7: '#4a3aa7',
 }
 
@@ -184,20 +178,16 @@ export class Folha {
   readonly doc: PDFDocument
   private readonly fontes: Record<Peso, PDFFont>
   private readonly caracteres: Set<number>
-  /** página contínua (celular) em vez de folhas A4 */
-  readonly continuo: boolean
-  /** altura da página em px (A4, ou a página alta do formato contínuo antes do corte) */
-  private readonly altura: number
+  /** altura da folha A4 em px */
+  private readonly altura = PAGINA.altura
 
-  private constructor(doc: PDFDocument, fontes: Record<Peso, PDFFont>, caracteres: Set<number>, formato: Formato) {
+  private constructor(doc: PDFDocument, fontes: Record<Peso, PDFFont>, caracteres: Set<number>) {
     this.doc = doc
     this.fontes = fontes
     this.caracteres = caracteres
-    this.continuo = formato === 'continuo'
-    this.altura = this.continuo ? ALTURA_MAX_CONTINUO_PT / PT : PAGINA.altura
   }
 
-  static async criar(titulo: string, formato: Formato = 'a4'): Promise<Folha> {
+  static async criar(titulo: string): Promise<Folha> {
     const [bytes, doc] = await Promise.all([carregarFontes(), PDFDocument.create()])
     doc.registerFontkit(fontkit)
     const lista = await Promise.all(bytes.map((b) => doc.embedFont(b, { subset: true, features: SEM_FORMAS })))
@@ -207,7 +197,7 @@ export class Folha {
     doc.setCreator('Painel da DIP')
     doc.setProducer('Painel da DIP')
     doc.setLanguage('pt-BR')
-    const f = new Folha(doc, porPeso, new Set(lista[1].getCharacterSet()), formato)
+    const f = new Folha(doc, porPeso, new Set(lista[1].getCharacterSet()))
     f.novaPagina()
     return f
   }
@@ -233,7 +223,7 @@ export class Folha {
 
   novaPagina() {
     if (this.doc.getPageCount() > 0) this.fimDaPagina.push(this.y)
-    this.pagina = this.doc.addPage([A4[0], this.altura * PT])
+    this.pagina = this.doc.addPage(A4)
     this.y = this.topo
     this.aoVirar?.()
   }
@@ -476,6 +466,13 @@ export class Folha {
     })
   }
 
+  /** polígono preenchido (área de gráfico), pontos em px da página */
+  poligono(pontos: [number, number][], o: { fundo: string; opacidade?: number }) {
+    if (this._medindo || pontos.length < 3) return
+    const d = pontos.map(([px, py], i) => `${i ? 'L' : 'M'}${px.toFixed(2)},${py.toFixed(2)}`).join(' ') + ' Z'
+    this.pagina.drawSvgPath(d, { x: 0, y: this.altura * PT, scale: PT, color: rgbDe(o.fundo), opacity: o.opacidade })
+  }
+
   circulo(x: number, y: number, r: number, o: { fundo: string; borda?: string; esp?: number }) {
     if (this._medindo) return
     this.pagina.drawCircle({
@@ -504,24 +501,15 @@ export class Folha {
 
   // ---- fim ----
 
-  /**
-   * Rodapé de todas as páginas: o que é (esquerda) e "Página 1 de 3" (direita, com o aviso antes). No formato
-   * contínuo vem logo depois do conteúdo, e a página é cortada ali (sem a sobra em branco embaixo).
-   */
+  /** rodapé de todas as páginas: o que é (esquerda) e "Página 1 de 3" (direita, com o aviso antes) */
   rodapes(esquerda: string, aviso?: string) {
     const paginas = this.doc.getPages()
     const atual = this.pagina
     const tam = 9
     paginas.forEach((p, i) => {
       this.pagina = p
-      const fimConteudo = i === paginas.length - 1 ? this.y : this.fimDaPagina[i]
-      const y = this.continuo ? fimConteudo + 24 : this.altura - MARGEM + 10
-      if (this.continuo) {
-        const alto = y + tam * 1.5 + MARGEM
-        p.setMediaBox(0, (this.altura - alto) * PT, A4[0], alto * PT)
-      }
-      const pagina = this.continuo && paginas.length === 1 ? '' : `Página ${i + 1} de ${paginas.length}`
-      const direita = [aviso, pagina].filter(Boolean).join('  ·  ')
+      const y = this.altura - MARGEM + 10
+      const direita = [aviso, `Página ${i + 1} de ${paginas.length}`].filter(Boolean).join('  ·  ')
       const livre = this.largura - this.medirTexto(direita, tam) - 16
       let esq = esquerda
       while (esq.length > 4 && this.medirTexto(esq, tam) > livre) esq = `${esq.slice(0, -2).trimEnd()}…`

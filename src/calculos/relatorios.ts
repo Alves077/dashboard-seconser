@@ -69,6 +69,10 @@ export interface MesHistorico {
   media: number | null
   pctFora: number | null
   parcial: boolean
+  /** executados NO mês (pela data de retorno, de qualquer mês de saída) — gráfico saídas × retornos */
+  retornos: number
+  /** pendentes no último dia do mês (ou hoje, no mês em curso), de qualquer mês de saída — o estoque */
+  filaFim: number
 }
 
 export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, hoje: Dia) {
@@ -158,6 +162,8 @@ export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, ho
       if (!porMes.has(k)) porMes.set(k, [])
       porMes.get(k)!.push(s)
     }
+    const retornosNoMes = new Map<ChaveMes, number>()
+    for (const s of lugar) if (s.dataRetorno !== null) retornosNoMes.set(chaveMes(s.dataRetorno), (retornosNoMes.get(chaveMes(s.dataRetorno)) ?? 0) + 1)
     const atual = chaveMes(hoje)
     const serie: MesHistorico[] = [...porMes]
       .sort((a, b) => a[0] - b[0])
@@ -171,14 +177,12 @@ export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, ho
           media: qm.media,
           pctFora: qm.concluidos ? ((qm.concluidos - qm.noPrazo) / qm.concluidos) * 100 : null,
           parcial: k >= atual,
+          retornos: retornosNoMes.get(k) ?? 0,
+          filaFim: abertasNoDia(lugar, Math.min(fimDoMes(diaDaChave(k)), hoje)),
         }
       })
-    const ultimos3 = serie.slice(-3).map((m) => {
-      const ini = diaDaChave(m.mes)
-      const fimDia = Math.min(fimDoMes(ini), hoje)
-      const execNoMes = lugar.filter((s) => s.dataRetorno !== null && s.dataRetorno >= ini && s.dataRetorno <= fimDia).length
-      return { ...m, filaFim: abertasNoDia(lugar, fimDia), saldo: m.registrados - execNoMes }
-    })
+    // saldo do mês: saíram − executados no mês (vermelho na tabela quando a fila cresceu)
+    const ultimos3 = serie.slice(-3).map((m) => ({ ...m, saldo: m.registrados - m.retornos }))
     historico = {
       meses: serie.length,
       ultimoFechado: [...serie].reverse().find((m) => m.mes < atual && m.media !== null) ?? null,

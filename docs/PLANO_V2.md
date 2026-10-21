@@ -770,12 +770,34 @@ público) → `saidas/relatorios/areas_bairros.xlsx` (15 bairros com mais saída
 espaços públicos da base + concentrações de pedidos, link do mapa, colunas amarelas). Onde as áreas vão morar
 (arquivo no dashboard ou tabela no Supabase): decidir quando a planilha voltar.
 
-## PDF contínuo no celular (20/10/2026)
-Teste do usuário no celular (Compartilhar PDF funcionou, arquivo chegou): a folha A4 chegava "cortada" — Mensal com
-metade da página 1 em branco (o bloco de categorias/regiões não cabia e pulava inteiro). Decisão: no **celular** o PDF
-é uma **página contínua**, do tamanho do conteúdo, que rola como a tela; no **computador** continua A4 (é o que vai
-para a impressora — a lista de campo é impressa). `Folha.criar(titulo, 'continuo' | 'a4')`: desenha numa página alta
-e no rodapé corta a sobra (MediaBox); passou de 14.400 pt (limite dos leitores de PDF), abre outra página; a lista de
-campo não pula página por região no contínuo. Conferido: Mensal 1 página (595 × 1280 pt), histórico 1 página, Em
-aberto 1 página, lista de campo da cidade (323) em 2 páginas altas; computador segue A4 (28 folhas).
+## PDF: quebra de página com sentido (20/10/2026)
+Teste do usuário no celular (Compartilhar PDF funcionou): o problema era a página 1 com metade em branco — o bloco
+seguinte não cabia e pulava inteiro (pior no histórico completo). Uma tentativa de "página contínua" no celular foi
+desfeita no mesmo dia (usuário: A4 normal, em duas páginas se precisar, quebrando onde faz sentido). Regra em
+`relatorios-pdf/pecas.ts`:
+- bloco **pequeno** (até ~1/3 da página: indicadores, barra, gráfico, tabela curta) não quebra no meio — vai inteiro
+  para a página seguinte, e o que sobra é pequeno;
+- bloco **grande** (tabela longa) começa onde está e continua na página seguinte repetindo o cabeçalho, sem começar
+  com menos que título + cabeçalho + ~2 linhas;
+- **duas colunas** que não cabem no que resta, com mais de ~1/3 da página livre: uma embaixo da outra na largura toda;
+- **cartão** nunca começa só com o título no pé da página.
+Ocupação (dado real): Mensal set/26 2 páginas (92% e 59%), antes 57% na 1ª; histórico 82% / 85% / 60%. Pior caso: Em
+aberto de 3 para 2 páginas (95% e 75%). Lista de campo sem mudança (cada região numa folha, como a impressão).
+- **Imprimir = o mesmo PDF** (usuário: "a impressão eu tenho que ficar mexendo na escala"): o botão Imprimir gera o
+  PDF A4 e manda imprimir ele (quadro escondido; sem permissão, abre o PDF numa aba). Ctrl+P na página continua
+  imprimindo a tela.
+- **Histórico: gráfico "Saídas × retornos por mês"** (ideia do usuário): saídas pela data de saída, retornos pela data
+  da execução (de qualquer mês de saída) — linha azul acima da laranja = a fila cresceu no mês. Na tela e no PDF
+  (`MesHistorico.retornos`; `grafico()` do PDF aceita várias séries). Histórico real: 82% / 80% / 95%.
+- **Ajustes do histórico (usuário, mesma noite):** ordem — Evolução mensal e Saídas × retornos logo depois de "Últimos
+  meses" (as duas visões no tempo juntas), Distribuição por faixa depois delas; a Evolução mensal ficou só com o **% fora
+  do prazo** (tempo médio e % fora subiam e desciam juntos — redundantes; o tempo médio de cada mês segue na tabela);
+  Saídas × retornos ganhou a **fila no fim do mês** como área cinza por trás (mesma unidade e escala) e **bolinha ×
+  quadradinho** nos pontos para o papel em preto e branco (tracejado não: no painel quer dizer "mês em curso"); no PDF a
+  área vai sem contorno (no cinza se confundia com a linha de saídas). `GraficoTempo`/`LegendaTempo` ganharam
+  `marcador: 'quadrado'`. Histórico real: 96% / 90% / 69% (página 1 cheia).
+- **Depois (usuário):** Saídas × retornos ANTES da Evolução mensal (contagem mês a mês, junto da tabela de últimos
+  meses; qualidade depois). Preto e branco: o PDF continua colorido; a linha de saídas passou de azul para marinho
+  escuro (ink-2) — impressa em P&B vira quase preto contra o cinza médio do laranja (azul e laranja davam dois cinzas
+  parecidos; conferido simulando a impressão), com bolinha × quadradinho de reforço. Histórico real: página 1 cheia.
 

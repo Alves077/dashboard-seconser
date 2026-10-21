@@ -130,7 +130,17 @@ export function Relatorios() {
  * Botão que monta o PDF. O "Gerando…" fica só nele: com o estado na página, ligar e desligar o aviso
  * redesenhava a folha inteira (a lista de campo da cidade tem centenas de linhas) e atrasava o PDF.
  */
-function BotaoPdf({ aoTocar, disabled, children }: { aoTocar: () => Promise<void>; disabled: boolean; children: ReactNode }) {
+function BotaoPdf({
+  aoTocar,
+  disabled,
+  children,
+  variante = 'primario',
+}: {
+  aoTocar: () => Promise<void>
+  disabled: boolean
+  children: ReactNode
+  variante?: 'primario' | 'secundario'
+}) {
   const [gerando, setGerando] = useState(false)
   const tocar = async () => {
     setGerando(true)
@@ -141,7 +151,7 @@ function BotaoPdf({ aoTocar, disabled, children }: { aoTocar: () => Promise<void
     }
   }
   return (
-    <Botao variante="primario" onClick={tocar} disabled={disabled || gerando} aria-busy={gerando}>
+    <Botao variante={variante} onClick={tocar} disabled={disabled || gerando} aria-busy={gerando}>
       {gerando ? 'Gerando…' : children}
     </Botao>
   )
@@ -283,14 +293,11 @@ function PaginaRelatorios() {
       return false
     }
   }, [])
-  // celular: uma página contínua, que rola como a tela (a A4 chegava "cortada", usuário 20/10/2026); computador: A4,
-  // que é o que vai para a impressora (a lista de campo é impressa)
-  const formato = celular ? 'continuo' : 'a4'
   const pedidoPdf = (): PedidoPdf | null => {
     if (!cab) return null
-    if (aba === 'mensal' && mensal) return { tipo: 'mensal', cabecalho: cab, hoje, formato, r: mensal, obs }
-    if (aba === 'abertos' && abertos) return { tipo: 'abertos', cabecalho: cab, hoje, formato, r: abertos, detalhes: comEndereco }
-    if (aba === 'campo' && campo) return { tipo: 'campo', cabecalho: cab, hoje, formato, regioes: campo.regioes, detalhes: comEndereco }
+    if (aba === 'mensal' && mensal) return { tipo: 'mensal', cabecalho: cab, hoje, r: mensal, obs }
+    if (aba === 'abertos' && abertos) return { tipo: 'abertos', cabecalho: cab, hoje, r: abertos, detalhes: comEndereco }
+    if (aba === 'campo' && campo) return { tipo: 'campo', cabecalho: cab, hoje, regioes: campo.regioes, detalhes: comEndereco }
     return null
   }
   // "Relatório Mensal - setembro de 2026 - Leste.pdf"; Em aberto e Lista de campo levam a data (mudam todo dia)
@@ -325,6 +332,31 @@ function PaginaRelatorios() {
   const baixarPdf = async () => {
     const arquivo = await gerarArquivo()
     if (arquivo) baixar(arquivo)
+  }
+  // Imprimir = o mesmo PDF (usuário, 20/10/2026): antes imprimia a página do site, outro layout — escala para ajustar
+  // à mão e as quebras de página ruins. O PDF vai num quadro escondido e o navegador abre a janela de impressão dele;
+  // se o navegador não deixar, abre o PDF numa aba para imprimir dali. (Ctrl+P na página continua imprimindo a tela.)
+  const imprimirPdf = async () => {
+    const arquivo = await gerarArquivo()
+    if (!arquivo) return
+    const url = URL.createObjectURL(arquivo)
+    const quadro = document.createElement('iframe')
+    quadro.title = 'PDF para imprimir'
+    quadro.setAttribute('style', 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden')
+    quadro.onload = () => {
+      try {
+        quadro.contentWindow!.focus()
+        quadro.contentWindow!.print()
+      } catch {
+        window.open(url, '_blank')
+      }
+      window.setTimeout(() => {
+        quadro.remove()
+        URL.revokeObjectURL(url)
+      }, 60_000)
+    }
+    quadro.src = url
+    document.body.append(quadro)
   }
   const enviar = (arquivo: File) => navigator.share({ files: [arquivo], title: tituloCompartilhar })
   const compartilharPdf = async () => {
@@ -384,10 +416,10 @@ function PaginaRelatorios() {
                 <Link2 aria-hidden className="size-4" />
                 Copiar link
               </Botao>
-              <Botao variante="secundario" onClick={() => window.print()} disabled={!base}>
+              <BotaoPdf variante="secundario" aoTocar={imprimirPdf} disabled={!cab}>
                 <Printer aria-hidden className="size-4" />
                 Imprimir
-              </Botao>
+              </BotaoPdf>
               <BotaoPdf aoTocar={baixarPdf} disabled={!cab}>
                 <Download aria-hidden className="size-4" />
                 Baixar PDF

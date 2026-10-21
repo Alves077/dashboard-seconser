@@ -2,7 +2,7 @@
 // seção. Mudanças combinadas: categoria revisada, filtros de região/categoria/origem valendo, e a
 // evolução mensal em dois gráficos (o antigo tinha dois eixos no mesmo quadro).
 import { clsx } from 'clsx'
-import { GraficoTempo } from '@/componentes/graficos/GraficoTempo'
+import { GraficoTempo, LegendaTempo } from '@/componentes/graficos/GraficoTempo'
 import { FAIXAS_ESPERA } from '@/calculos/panorama'
 import type { GrupoMensal, RelatorioMensal } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
@@ -14,6 +14,11 @@ import { BarraFaixas, IdServico, NumeroFolha, Observacoes, Rolavel, SecaoFolha }
 // cores do antigo: ≤3 verde · 4–7 azul · 8–15 âmbar · >15 vermelho
 // azul um pouco mais escuro que o s1: o branco em cima dele ficava em 4,4:1
 const COR_FAIXA = ['var(--c-ok)', 'color-mix(in oklab, var(--c-s1) 82%, black)', 'var(--c-andamento)', 'var(--c-atraso)']
+// saídas × retornos: marinho escuro × laranja — no papel em preto e branco viram quase preto × cinza médio (azul e
+// laranja viravam dois cinzas parecidos); bolinha × quadradinho reforçam
+const COR_SAIDAS = 'var(--c-ink-2)'
+const COR_RETORNOS = 'var(--c-s2)'
+const COR_FILA = 'var(--c-ink-3)'
 const COR_ESPERA = ['var(--c-ok)', 'var(--c-andamento)', 'var(--c-risco)', 'var(--c-atraso)', 'color-mix(in oklab, var(--c-atraso) 70%, black)']
 
 /** Tempo médio: acima de 15 dias em vermelho, acima de 5 em âmbar (como no antigo) */
@@ -219,6 +224,56 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
         </SecaoFolha>
       )}
 
+      {/* histórico, logo depois de "Últimos meses" (a mesma contagem mês a mês; usuário, 20/10/2026 — a faixa de
+          execução, que é detalhe, foi para depois): as linhas se cruzando mostram quando a fila cresceu (saiu mais do que voltou) e quando baixou; o estoque (fila
+          no fim do mês) é a área cinza por trás — mesma unidade (serviços), mesma escala. Bolinha × quadradinho: o
+          papel em preto e branco distingue as duas linhas (tracejado não — no painel ele quer dizer "mês em curso") */}
+      {h && h.serie.length > 1 && (
+        <SecaoFolha titulo="Saídas × retornos por mês" cartao>
+          <LegendaTempo
+            className="mb-2"
+            itens={[
+              { nome: 'Saíram para a rua', cor: COR_SAIDAS, marcador: 'circulo' },
+              { nome: 'Retornos (executados no mês)', cor: COR_RETORNOS, marcador: 'quadrado' },
+              { nome: 'Na fila no fim do mês', cor: COR_FILA, area: true },
+            ]}
+          />
+          <GraficoTempo
+            altura={190}
+            intervalos={h.serie.map((x) => ({ rotulo: rotuloMes(x.mes), nome: rotuloMesLongo(x.mes), parcial: x.parcial }))}
+            series={[
+              { id: 'fila', nome: 'Na fila no fim do mês', cor: COR_FILA, valores: h.serie.map((x) => x.filaFim), estilo: 'area' },
+              { id: 'saidas', nome: 'Saíram para a rua', cor: COR_SAIDAS, valores: h.serie.map((x) => x.registrados), marcador: 'circulo' },
+              { id: 'retornos', nome: 'Retornos', cor: COR_RETORNOS, valores: h.serie.map((x) => x.retornos), marcador: 'quadrado' },
+            ]}
+            descricao="Saídas para a rua, retornos (executados) e fila no fim de cada mês"
+          />
+          <p className="mt-1.5 text-[10.5px] text-ink-3">
+            Saídas pela data em que o serviço saiu para a rua; retornos pela data da execução, de qualquer mês de saída. Saídas (bolinha)
+            acima dos retornos (quadradinho): saiu mais do que voltou, e a fila (área cinza) cresceu no mês.
+          </p>
+        </SecaoFolha>
+      )}
+
+      {/* qualidade no tempo, depois da quantidade (usuário, 20/10/2026). Antes eram dois gráficos aqui (tempo médio e % fora do prazo), mas
+          sobem e descem juntos: fica o % fora do prazo, a meta oficial (prazo de 5 dias), que um pedido de 300 dias não
+          distorce; o tempo médio de cada mês segue na tabela de últimos meses */}
+      {h && h.serie.length > 1 && (
+        <SecaoFolha titulo="Evolução mensal · fora do prazo" cartao>
+          <GraficoTempo
+            altura={170}
+            intervalos={h.serie.map((x) => ({ rotulo: rotuloMes(x.mes), nome: rotuloMesLongo(x.mes), parcial: x.parcial }))}
+            series={[{ id: 'fora', nome: 'Fora do prazo', cor: 'var(--c-atraso)', valores: h.serie.map((x) => x.pctFora) }]}
+            formatar={(v) => `${Math.round(v)}%`}
+            marcasFixas={[0, 25, 50, 75, 100]}
+            descricao="Parte dos concluídos fora do prazo por mês de registro"
+          />
+          <p className="mt-1.5 text-[10.5px] text-ink-3">
+            % dos concluídos que levaram mais de 5 dias, pelo mês de registro. O tempo médio de cada mês está em "Últimos meses".
+          </p>
+        </SecaoFolha>
+      )}
+
       {totalFaixas > 0 && (
         <SecaoFolha titulo="Distribuição por faixa · só concluídos" cartao>
           <BarraFaixas partes={FAIXAS.map((f, i) => ({ rotulo: f.rotulo, n: r.faixas[i], cor: COR_FAIXA[i], textoEscuro: i === 0 || i === 2 }))} total={totalFaixas} />
@@ -316,36 +371,6 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
         </SecaoFolha>
       </div>
 
-      {h && h.serie.length > 1 && (
-        <SecaoFolha titulo="Evolução mensal" cartao>
-          {/* o antigo tinha dois eixos no mesmo quadro: aqui, dois gráficos lado a lado */}
-          <div className="grid grid-cols-1 gap-x-6 gap-y-4 lg:grid-cols-2 print:grid-cols-2">
-            <div>
-              <p className="mb-1 text-[12px] font-medium text-ink">Tempo médio de execução · dias</p>
-              <GraficoTempo
-                altura={170}
-                intervalos={h.serie.map((x) => ({ rotulo: rotuloMes(x.mes), nome: rotuloMesLongo(x.mes), parcial: x.parcial }))}
-                series={[{ id: 'media', nome: 'Tempo médio', cor: 'var(--c-ink-2)', valores: h.serie.map((x) => x.media) }]}
-                formatar={(v) => decimal(v).replace(',0', '')}
-                referencia={{ valor: PRAZO_DIAS, rotulo: `prazo · ${PRAZO_DIAS} dias` }}
-                descricao="Tempo médio de execução por mês de registro"
-              />
-            </div>
-            <div>
-              <p className="mb-1 text-[12px] font-medium text-ink">Fora do prazo · % dos concluídos</p>
-              <GraficoTempo
-                altura={170}
-                intervalos={h.serie.map((x) => ({ rotulo: rotuloMes(x.mes), nome: rotuloMesLongo(x.mes), parcial: x.parcial }))}
-                series={[{ id: 'fora', nome: 'Fora do prazo', cor: 'var(--c-atraso)', valores: h.serie.map((x) => x.pctFora) }]}
-                formatar={(v) => `${Math.round(v)}%`}
-                marcasFixas={[0, 25, 50, 75, 100]}
-                descricao="Parte dos concluídos fora do prazo por mês de registro"
-              />
-            </div>
-          </div>
-          <p className="mt-1.5 text-[10.5px] text-ink-3">Serviços agrupados pelo mês de registro. Prazo de atendimento: 5 dias corridos.</p>
-        </SecaoFolha>
-      )}
 
       {h && h.maisAntigos.length > 0 && (
         <SecaoFolha titulo="Serviços mais antigos ainda em aberto" cartao>

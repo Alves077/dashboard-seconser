@@ -42,8 +42,25 @@ export function tituloSecao(f: Folha, x: number, titulo: string) {
 }
 
 /**
- * Seção da folha: margem de cima (menos no topo da página), título e conteúdo. `inteira`: não quebra no
- * meio (vai para a página seguinte se não couber); seções longas (listas) quebram entre linhas.
+ * Quebra de página com sentido (usuário, 20/10/2026: o Mensal saía com metade da página 1 em branco — o bloco
+ * seguinte não cabia e pulava inteiro). Bloco PEQUENO (até ~1/3 da página: indicadores, barra, gráfico, tabela de 3
+ * linhas) não quebra no meio: vai inteiro para a página seguinte, e o buraco que fica é pequeno. Bloco GRANDE (tabela
+ * longa) começa onde está e continua na página seguinte, repetindo o cabeçalho — só não começa com menos que o
+ * título, o cabeçalho e umas duas linhas.
+ */
+const BLOCO_PEQUENO = 0.35
+const COMECO_MINIMO = 23 + 8 + 30 + 50
+
+/** desenha `desenhar` (de altura `h`) aplicando a regra acima */
+function fluir(f: Folha, h: number, desenhar: () => void) {
+  if (h <= f.alturaUtil * BLOCO_PEQUENO) f.garantir(h)
+  else f.garantir(Math.min(h, COMECO_MINIMO))
+  desenhar()
+}
+
+/**
+ * Seção da folha: margem de cima (menos no topo da página), título e conteúdo, com a quebra de `fluir`.
+ * `inteira: true` força não quebrar (se couber numa página); `false` deixa quebrar mesmo pequena.
  */
 export function secao(
   f: Folha,
@@ -53,23 +70,24 @@ export function secao(
   conteudo: (x: number, w: number) => void,
   o: { cartao?: boolean; colado?: boolean; inteira?: boolean } = {},
 ) {
-  const { inteira = true } = o
   const corpo = () => {
     tituloSecao(f, x, titulo)
     if (o.cartao) cartao(f, x, w, conteudo)
     else conteudo(x, w)
   }
   if (!o.colado && f.y > MARGEM + 1) f.y += 20
-  if (inteira) f.inteiro(corpo)
-  else {
-    // o título nunca fica sozinho no pé da página
-    f.garantir(23 + 90)
+  if (o.inteira) f.inteiro(corpo)
+  else if (o.inteira === false) {
+    f.garantir(COMECO_MINIMO)
     corpo()
-  }
+  } else fluir(f, f.medir(corpo), corpo)
 }
 
 /** .cartao-folha: borda fina arredondada em volta (continua na página seguinte, se precisar) */
 export function cartao(f: Folha, x: number, w: number, conteudo: (x: number, w: number) => void) {
+  // o começo do cartão (título, cabeçalho da tabela, primeiras linhas) não fica sozinho no pé da página — antes
+  // "Por origem do pedido" ficava só com o título na página 1 e a tabela inteira na 2
+  if (!f.medindo) f.garantir(Math.min(f.medir(() => conteudo(x + 12, w - 24)) + 14, COMECO_MINIMO))
   const pagina0 = f.indicePagina
   const y0 = f.y
   f.y += 8
@@ -86,7 +104,11 @@ export function cartao(f: Folha, x: number, w: number, conteudo: (x: number, w: 
   }
 }
 
-/** Duas (ou mais) colunas lado a lado; se o bloco não couber numa página inteira, uma embaixo da outra */
+/**
+ * Duas (ou mais) colunas lado a lado. Se o bloco não couber no que resta da página e sobrar bastante espaço (mais de
+ * ~1/3), uma embaixo da outra na largura toda — cada parte começa ali e continua na página seguinte — em vez de pular
+ * o bloco inteiro e deixar meia página em branco. Bloco maior que uma página inteira: também uma embaixo da outra.
+ */
 export function colunas(f: Folha, x: number, w: number, partes: [number, (x: number, w: number) => void][], gap: number) {
   const total = partes.reduce((s, [fr]) => s + fr, 0)
   const livre = w - gap * (partes.length - 1)
@@ -99,10 +121,12 @@ export function colunas(f: Folha, x: number, w: number, partes: [number, (x: num
   })
   const alturas = posicoes.map((p) => f.medir(() => p.desenhar(p.x, p.w)))
   const alto = Math.max(...alturas)
-  if (alto > f.alturaUtil) {
+  const resta = f.fim - f.y
+  const empilhar = alto > f.alturaUtil || (!f.medindo && alto > resta && resta >= f.alturaUtil * BLOCO_PEQUENO)
+  if (empilhar) {
     posicoes.forEach((p, i) => {
       if (i > 0) f.y += gap
-      p.desenhar(x, w)
+      fluir(f, f.medir(() => p.desenhar(x, w)), () => p.desenhar(x, w))
     })
     return
   }
@@ -351,10 +375,11 @@ export function barraFaixas(f: Folha, x: number, w: number, partes: ParteFaixa[]
 
 export interface Grafico {
   rotulos: string[]
-  valores: (number | null)[]
+  /** uma ou mais linhas (saídas × retornos), na mesma escala; `area`: estoque por trás das linhas; `quadrado`: pontos
+   * quadrados (a outra linha fica com bolinhas — distingue no papel em preto e branco) */
+  series: { valores: (number | null)[]; cor: string; estilo?: 'linha' | 'area'; marcador?: 'circulo' | 'quadrado' }[]
   /** último mês ainda em curso: o trecho final tracejado e o ponto vazado */
   parcial: boolean
-  cor: string
   formatar: (v: number) => string
   marcasFixas?: number[]
   referencia?: { valor: number; rotulo: string }
@@ -365,13 +390,13 @@ const DIR = 12
 const TOPO = 12
 const BAIXO = 24
 
-/** GraficoTempo (uma série, sem interação): grade tracejada, linha, pontos e meses embaixo */
+/** GraficoTempo (sem interação): grade tracejada, linhas, pontos e meses embaixo */
 export function grafico(f: Folha, x: number, w: number, altura: number, g: Grafico) {
   const n = g.rotulos.length
   const y0 = f.y
   const passo = n > 1 ? (w - ESQ - DIR) / (n - 1) : 0
   const px = (i: number) => x + (n > 1 ? ESQ + i * passo : (ESQ + w - DIR) / 2)
-  const nums = g.valores.filter((v): v is number => v !== null)
+  const nums = g.series.flatMap((s) => s.valores.filter((v): v is number => v !== null))
   const marcas = g.marcasFixas ?? escala(Math.max(1, ...nums, g.referencia?.valor ?? 0) * 1.05)
   const topo = marcas[marcas.length - 1]
   const py = (v: number) => y0 + TOPO + (1 - v / topo) * (altura - TOPO - BAIXO)
@@ -388,29 +413,40 @@ export function grafico(f: Folha, x: number, w: number, altura: number, g: Grafi
 
   // até o corte a linha é cheia; o mês em curso sai tracejado
   const corte = g.parcial && n > 1 ? n - 1 : n
-  let atual: [number, number][] = []
-  for (let i = 0; i < corte; i++) {
-    const v = g.valores[i]
-    if (v === null) {
-      f.trilha(atual, { cor: g.cor })
-      atual = []
-    } else atual.push([px(i), py(v)])
+  // áreas primeiro (por trás das linhas), só o preenchimento claro até o zero: impresso em preto e branco, o contorno
+  // ficava do mesmo cinza da linha de saídas e se confundia com ela onde as duas se cruzam
+  for (const s of g.series.filter((x) => x.estilo === 'area')) {
+    const pts = s.valores.map((v, i) => (v === null ? null : ([px(i), py(v)] as [number, number]))).filter((p): p is [number, number] => p !== null)
+    if (pts.length < 2) continue
+    f.poligono([...pts, [pts[pts.length - 1][0], py(0)], [pts[0][0], py(0)]], { fundo: s.cor, opacidade: 0.2 })
   }
-  f.trilha(atual, { cor: g.cor })
-  if (corte < n) {
-    const resto: [number, number][] = []
-    for (let i = Math.max(0, corte - 1); i < n; i++) {
-      const v = g.valores[i]
-      if (v !== null) resto.push([px(i), py(v)])
+  for (const s of g.series.filter((x) => x.estilo !== 'area')) {
+    let atual: [number, number][] = []
+    for (let i = 0; i < corte; i++) {
+      const v = s.valores[i]
+      if (v === null) {
+        f.trilha(atual, { cor: s.cor })
+        atual = []
+      } else atual.push([px(i), py(v)])
     }
-    f.trilha(resto, { cor: g.cor, traco: [4, 4] })
+    f.trilha(atual, { cor: s.cor })
+    if (corte < n) {
+      const resto: [number, number][] = []
+      for (let i = Math.max(0, corte - 1); i < n; i++) {
+        const v = s.valores[i]
+        if (v !== null) resto.push([px(i), py(v)])
+      }
+      f.trilha(resto, { cor: s.cor, traco: [4, 4] })
+    }
+    if (n <= 40)
+      s.valores.forEach((v, i) => {
+        if (v === null) return
+        const aberto = i >= corte
+        const cores = { fundo: aberto ? COR.branco : s.cor, borda: aberto ? s.cor : COR.branco, esp: 1.5 }
+        if (s.marcador === 'quadrado') f.caixa(px(i) - 2.75, py(v) - 2.75, 5.5, 5.5, { ...cores, raio: 0.75 })
+        else f.circulo(px(i), py(v), 3, cores)
+      })
   }
-  if (n <= 40)
-    g.valores.forEach((v, i) => {
-      if (v === null) return
-      const aberto = i >= corte
-      f.circulo(px(i), py(v), 3, { fundo: aberto ? COR.branco : g.cor, borda: aberto ? g.cor : COR.branco, esp: 1.5 })
-    })
 
   // um rótulo de mês a cada ~52 px (sempre o último)
   const cada = Math.max(1, Math.ceil(52 / (passo || 52)))
@@ -420,6 +456,24 @@ export function grafico(f: Folha, x: number, w: number, altura: number, g: Grafi
     f.texto(r, px(i), 0, { tam: 10, cor: COR.ink3, alinhar, base: y0 + altura - 6 })
   })
   f.y = y0 + altura
+}
+
+/** Legenda de gráfico com mais de uma série (LegendaTempo): traço com o ponto (bolinha/quadradinho) ou quadrado da área */
+export function legendaLinhas(f: Folha, x: number, itens: { nome: string; cor: string; marcador?: 'circulo' | 'quadrado'; area?: boolean }[]) {
+  let xi = x
+  for (const it of itens) {
+    if (it.area) {
+      f.caixa(xi + 3, f.y + 4, 10, 10, { fundo: it.cor, opacidade: 0.18, raio: 3 })
+      f.caixa(xi + 3, f.y + 4, 10, 10, { borda: it.cor, raio: 3 })
+    } else {
+      f.caixa(xi, f.y + 7.5, 16, 3, { fundo: it.cor, raio: 1.5 })
+      if (it.marcador === 'quadrado') f.caixa(xi + 5.25, f.y + 6.25, 5.5, 5.5, { fundo: it.cor, raio: 0.75 })
+      else if (it.marcador === 'circulo') f.circulo(xi + 8, f.y + 9, 3, { fundo: it.cor })
+    }
+    f.texto(it.nome, xi + 22, f.y, { tam: 12, cor: COR.ink2 })
+    xi += 22 + f.medirTexto(it.nome, 12) + 20
+  }
+  f.y += 18 + 8
 }
 
 /** Nota miúda debaixo de uma tabela (text-[10.5px] text-ink-3 mt-1.5) */

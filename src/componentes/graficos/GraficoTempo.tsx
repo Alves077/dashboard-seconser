@@ -15,6 +15,9 @@ export interface SerieTempo {
   valores: (number | null)[]
   /** área de fundo (desenhada antes, por trás das linhas) */
   estilo?: 'linha' | 'area'
+  /** forma dos pontos: com duas linhas, uma bolinha e outra quadradinho — distingue no papel em preto e branco
+   * (tracejado não: no painel inteiro ele quer dizer "mês em curso") */
+  marcador?: 'circulo' | 'quadrado'
 }
 
 export interface IntervaloTempo {
@@ -159,7 +162,19 @@ export function GraficoTempo({
                 {emCurso && <path d={caminho(emCurso)} fill="none" stroke={s.cor} strokeWidth={eArea ? 1.5 : 2} strokeDasharray="4 4" strokeLinecap="round" />}
                 {!eArea &&
                   s.valores.map((v, i) =>
-                    v === null || (n > 40 && foco !== i) ? null : (
+                    v === null || (n > 40 && foco !== i) ? null : s.marcador === 'quadrado' ? (
+                      <rect
+                        key={i}
+                        x={x(i) - (foco === i ? 4 : 2.75)}
+                        y={y(v) - (foco === i ? 4 : 2.75)}
+                        width={foco === i ? 8 : 5.5}
+                        height={foco === i ? 8 : 5.5}
+                        rx={0.75}
+                        fill={aberto(i) ? 'var(--c-card)' : s.cor}
+                        stroke={aberto(i) ? s.cor : 'var(--c-card)'}
+                        strokeWidth={foco === i ? 2 : 1.5}
+                      />
+                    ) : (
                       <circle
                         key={i}
                         cx={x(i)}
@@ -274,18 +289,30 @@ export function LegendaTempo({
   itens,
   className,
 }: {
-  itens: { nome: string; cor: string; valor?: ReactNode; area?: boolean }[]
+  itens: { nome: string; cor: string; valor?: ReactNode; area?: boolean; marcador?: 'circulo' | 'quadrado' }[]
   className?: string
 }) {
   return (
     <ul className={clsx('flex flex-wrap gap-x-5 gap-y-1.5 text-xs text-ink-2', className)}>
       {itens.map((it) => (
         <li key={it.nome} className="flex items-center gap-1.5">
-          <span
-            aria-hidden
-            className={it.area ? 'size-2.5 rounded-[3px] border' : 'h-[3px] w-4 rounded-full'}
-            style={it.area ? { background: `color-mix(in oklab, ${it.cor} 18%, transparent)`, borderColor: it.cor } : { background: it.cor }}
-          />
+          {it.marcador ? (
+            // traço com o ponto no meio, igual ao gráfico (bolinha × quadradinho)
+            <svg aria-hidden width="18" height="10" viewBox="0 0 18 10" className="shrink-0">
+              <line x1="1" x2="17" y1="5" y2="5" stroke={it.cor} strokeWidth="2" strokeLinecap="round" />
+              {it.marcador === 'quadrado' ? (
+                <rect x="6.25" y="2.25" width="5.5" height="5.5" rx="0.75" fill={it.cor} />
+              ) : (
+                <circle cx="9" cy="5" r="3" fill={it.cor} />
+              )}
+            </svg>
+          ) : (
+            <span
+              aria-hidden
+              className={it.area ? 'size-2.5 rounded-[3px] border' : 'h-[3px] w-4 rounded-full'}
+              style={it.area ? { background: `color-mix(in oklab, ${it.cor} 18%, transparent)`, borderColor: it.cor } : { background: it.cor }}
+            />
+          )}
           {it.nome}
           {it.valor !== undefined && <span className="numeros font-medium text-ink">{it.valor}</span>}
         </li>

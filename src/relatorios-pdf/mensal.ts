@@ -6,7 +6,7 @@ import { CATEGORIA_RISCO, FAIXAS } from '@/dados/regras'
 import { formatarDia, formatarDiaCurto, rotuloMes } from '@/lib/datas'
 import { decimal, numero, pct } from '@/lib/formato'
 import { COR, type Folha, type Trecho } from './motor'
-import { barraFaixas, colunas, grafico, nota, secao, tabela, type Celula, type Coluna, type EstiloTabela, type LinhaTabela } from './pecas'
+import { barraFaixas, colunas, grafico, legendaLinhas, nota, secao, tabela, type Celula, type Coluna, type EstiloTabela, type LinhaTabela } from './pecas'
 
 // as mesmas cores da tela (Mensal.tsx), já resolvidas (o color-mix vira a cor final)
 const COR_FAIXA = [COR.ok, '#2263b1', COR.andamento, COR.atraso]
@@ -194,6 +194,54 @@ export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
       })
     })
 
+  // histórico: quantidade mês a mês (saídas × retornos, logo depois de "Últimos meses") e qualidade (% fora do
+  // prazo) — na mesma ordem da tela (Mensal.tsx). Saídas em marinho escuro: no papel em preto e branco, quase preto
+  if (h && h.serie.length > 1) {
+    const rotulos = h.serie.map((s) => rotuloMes(s.mes))
+    const parcial = h.serie[h.serie.length - 1].parcial
+    secao(
+      f,
+      x,
+      w,
+      'Saídas × retornos por mês',
+      (xi, wi) => {
+        legendaLinhas(f, xi, [
+          { nome: 'Saíram para a rua', cor: COR.ink2, marcador: 'circulo' },
+          { nome: 'Retornos (executados no mês)', cor: COR.s2, marcador: 'quadrado' },
+          { nome: 'Na fila no fim do mês', cor: COR.ink3, area: true },
+        ])
+        grafico(f, xi, wi, 190, {
+          rotulos,
+          series: [
+            { valores: h.serie.map((s) => s.filaFim), cor: COR.ink3, estilo: 'area' },
+            { valores: h.serie.map((s) => s.registrados), cor: COR.ink2 },
+            { valores: h.serie.map((s) => s.retornos), cor: COR.s2, marcador: 'quadrado' },
+          ],
+          parcial,
+          formatar: numero,
+        })
+        nota(
+          f,
+          xi,
+          wi,
+          'Saídas pela data em que o serviço saiu para a rua; retornos pela data da execução, de qualquer mês de saída. Saídas (bolinha) acima dos retornos (quadradinho): saiu mais do que voltou, e a fila (área cinza) cresceu no mês.',
+        )
+      },
+      { cartao: true },
+    )
+    secao(
+      f,
+      x,
+      w,
+      'Evolução mensal · fora do prazo',
+      (xi, wi) => {
+        grafico(f, xi, wi, 170, { rotulos, series: [{ valores: h.serie.map((s) => s.pctFora), cor: COR.atraso }], parcial, formatar: (v) => `${Math.round(v)}%`, marcasFixas: [0, 25, 50, 75, 100] })
+        nota(f, xi, wi, '% dos concluídos que levaram mais de 5 dias, pelo mês de registro. O tempo médio de cada mês está em "Últimos meses".')
+      },
+      { cartao: true },
+    )
+  }
+
   if (totalFaixas > 0)
     secao(
       f,
@@ -307,51 +355,6 @@ export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
     ],
     24,
   )
-
-  if (h && h.serie.length > 1)
-    secao(
-      f,
-      x,
-      w,
-      'Evolução mensal',
-      (xi, wi) => {
-        const rotulos = h.serie.map((s) => rotuloMes(s.mes))
-        const parcial = h.serie[h.serie.length - 1].parcial
-        colunas(
-          f,
-          xi,
-          wi,
-          [
-            [
-              1,
-              (xc, wc) => {
-                f.texto('Tempo médio de execução · dias', xc, f.y, { tam: 12, peso: 500 })
-                f.y += 18 + 4
-                grafico(f, xc, wc, 170, {
-                  rotulos,
-                  valores: h.serie.map((s) => s.media),
-                  parcial,
-                  cor: COR.ink2,
-                  formatar: (v) => decimal(v).replace(',0', ''),
-                  referencia: { valor: PRAZO_DIAS, rotulo: `prazo · ${PRAZO_DIAS} dias` },
-                })
-              },
-            ],
-            [
-              1,
-              (xc, wc) => {
-                f.texto('Fora do prazo · % dos concluídos', xc, f.y, { tam: 12, peso: 500 })
-                f.y += 18 + 4
-                grafico(f, xc, wc, 170, { rotulos, valores: h.serie.map((s) => s.pctFora), parcial, cor: COR.atraso, formatar: (v) => `${Math.round(v)}%`, marcasFixas: [0, 25, 50, 75, 100] })
-              },
-            ],
-          ],
-          24,
-        )
-        nota(f, xi, wi, 'Serviços agrupados pelo mês de registro. Prazo de atendimento: 5 dias corridos.')
-      },
-      { cartao: true },
-    )
 
   if (h && h.maisAntigos.length > 0)
     secao(

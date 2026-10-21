@@ -1,6 +1,7 @@
 # Publicação da v2 (plano decidido em 17/10/2026)
 
-> **20/10 — troca preparada** (workflow em `ETAPA: troca`, `FIM_LEGADO: '03/11/2026'`; usuário: "até 2 semanas,
+> **20/10 — troca NO AR** (publicação 22:53 UTC ok; conferido: raiz = v2, `/legado/` com aviso, redirecionamentos). Falta: Site URL no Supabase.
+> Antes: **troca preparada** (workflow em `ETAPA: troca`, `FIM_LEGADO: '03/11/2026'`; usuário: "até 2 semanas,
 > talvez até antes — não é como se muita gente usasse"). Simulada em casa com o mesmo script do workflow e um servidor
 > igual ao Pages: raiz = painel novo; `/legado/` = antigo com aviso e fora dos buscadores (todas as 5 páginas — antes
 > o `noindex` só entrava nas da raiz); favoritos antigos redirecionam (`pages/mapa.html` → `#/mapa`, `qualidade` →
