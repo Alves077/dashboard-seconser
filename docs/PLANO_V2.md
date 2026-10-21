@@ -801,3 +801,17 @@ aberto de 3 para 2 páginas (95% e 75%). Lista de campo sem mudança (cada regi�
   escuro (ink-2) — impressa em P&B vira quase preto contra o cinza médio do laranja (azul e laranja davam dois cinzas
   parecidos; conferido simulando a impressão), com bolinha × quadradinho de reforço. Histórico real: página 1 cheia.
 
+## Ficha: ordem para quem tem acesso e mapa maior (20/10/2026)
+Pedido do usuário: logado, o que importa (descrição, fotos, endereço) ficava lá embaixo; o mini mapa podia ampliar e
+mostrar os vizinhos.
+- **Com acesso:** Problema → **Descrição → Fotos** → Onde → Perto daqui → Quem pediu → Histórico. Em "Onde", o
+  **endereço completo** (com número) entra no lugar da rua sem número (usuário: "se já botei o endereço completo, não
+  vejo necessidade") — a seção "Endereço" separada saiu; bairro · região, espaço público e a nota de endereço
+  corrigido ficam ali. **Sem acesso:** igual a antes (o cartão "Restrito" no fim). `ParteRestrita onde="topo" | "fim"`.
+- **Mini mapa** (`mapa/MiniMapa.tsx`): os pedidos em aberto de "Perto daqui" (`useVizinhos`, a mesma conta da lista)
+  como pontos mais claros (tocar abre a ficha); botão do canto **amplia em tela cheia** ali mesmo (Dialog, arrastar e
+  roda do mouse liberados; tocar num vizinho fecha e abre a ficha dele). Abaixo, "Ver no mapa" como antes. ("Como
+  chegar", rota no Google Maps, foi feito e tirado a pedido do usuário — volta se as equipes usarem o painel na rua.)
+- Conferido: ordem com acesso (cenário pior) e sem login (dado real: 925835 com os 14 vizinhos), tela cheia no
+  computador e no celular (390 px), sem erro no console.
+

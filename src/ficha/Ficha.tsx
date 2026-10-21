@@ -152,11 +152,19 @@ const ITENS_RESTRITOS = [
   { icone: Images, nome: 'Fotos', largura: 'w-1/3' },
 ]
 
-/** Descrição, endereço e fotos — só para quem tem acesso */
-function ParteRestrita({ servico }: { servico: Servico }) {
+/**
+ * Descrição, endereço e fotos — só para quem tem acesso. Com acesso, a descrição e as fotos vêm logo depois do
+ * problema (é o que a equipe procura ao abrir a ficha; antes ficavam no fim, depois de mapa, vizinhos e histórico —
+ * usuário, 20/10/2026) e o endereço completo entra em "Onde". Sem acesso, o cartão "Restrito" fica no fim: primeiro o
+ * que a pessoa pode ver. `onde` diz de qual dos dois lugares o componente está sendo chamado.
+ */
+function ParteRestrita({ servico, onde }: { servico: Servico; onde: 'topo' | 'fim' }) {
   const { modo, usuario } = useSessao()
   const { data, acesso, erroRestrito, error: erroDetalhes, refetch: tentarDetalhes } = useDetalhes()
   const { setLoginAberto } = useInterface()
+
+  // no topo: carregando, erro ou o conteúdo; no fim: só o aviso de restrito (sem acesso)
+  if ((onde === 'topo') === (acesso === false && !erroRestrito)) return null
 
   if (erroRestrito)
     return (
@@ -167,7 +175,7 @@ function ParteRestrita({ servico }: { servico: Servico }) {
 
   if (acesso === undefined)
     return (
-      <Bloco titulo="Descrição e endereço">
+      <Bloco titulo="Descrição e fotos">
         <Esqueleto className="mb-2 h-4 w-full" />
         <Esqueleto className="h-4 w-2/3" />
       </Bloco>
@@ -210,14 +218,6 @@ function ParteRestrita({ servico }: { servico: Servico }) {
       <Bloco titulo="Descrição">
         <p className="text-sm leading-relaxed whitespace-pre-line text-ink">{d?.descricao ?? 'Sem descrição tratada.'}</p>
       </Bloco>
-      <Bloco titulo="Endereço">
-        <p className="text-sm text-ink">{d?.endereco ?? '—'}</p>
-        {/* o espaço público já aparece em "Onde": aqui só se for outro texto */}
-        {d?.local && d.local !== servico.local && <p className="mt-1 text-[13px] text-ink-2">Local: {d.local}</p>}
-        {d?.mudouLogradouro && (
-          <p className="mt-1 text-xs text-ink-3">Endereço corrigido no tratamento (diferente do aberto no Colab).</p>
-        )}
-      </Bloco>
       <Bloco titulo="Fotos">
         <Fotos chave={servico.chave} />
       </Bloco>
@@ -230,11 +230,10 @@ function ParteRestrita({ servico }: { servico: Servico }) {
  * na mesma ida. Pela distância e não pelo nome da rua — avenida/estrada longa tem o mesmo nome a quilômetros
  * (usuário, 17/10/2026). Sem pino, cai para a mesma rua e bairro. Público, como o resto da ficha fora do endereço.
  */
-function Perto({ servico }: { servico: Servico }) {
+/** Pedidos perto deste (até 300 m; sem pino, mesma rua e bairro): a lista "Perto daqui" e os pontos do mapa */
+function useVizinhos(servico: Servico) {
   const { data: base } = useBase()
   const hoje = useHoje()
-  const { abrir } = useFicha()
-  const [todos, setTodos] = useState(false)
   const comPino = servico.lat !== null && servico.lng !== null
   const { abertos, noAno } = useMemo(() => {
     const vizinhos: { s: Servico; m: number | null }[] = []
@@ -255,6 +254,14 @@ function Perto({ servico }: { servico: Servico }) {
       noAno: vizinhos.filter(({ s }) => s.saidas.some((x) => x.dataSaida > hoje - 365)).length + 1,
     }
   }, [base, servico, hoje, comPino])
+  return { abertos, noAno, comPino }
+}
+
+function Perto({ servico }: { servico: Servico }) {
+  const hoje = useHoje()
+  const { abrir } = useFicha()
+  const [todos, setTodos] = useState(false)
+  const { abertos, noAno, comPino } = useVizinhos(servico)
   const visiveis = todos ? abertos : abertos.slice(0, 5)
   const onde = comPino ? `até ${formatarDistancia(RAIO_PERTO_M)} daqui` : 'nesta rua'
   return (
@@ -305,6 +312,17 @@ function Perto({ servico }: { servico: Servico }) {
 function Conteudo({ servico }: { servico: Servico }) {
   const hoje = useHoje()
   const destino = useDestino()
+  const { abrir } = useFicha()
+  const { data: detalhes, acesso } = useDetalhes()
+  const det = acesso ? detalhes?.get(servico.chave) : undefined
+  const { abertos: vizinhos } = useVizinhos(servico)
+  const pontosPerto = useMemo(
+    () =>
+      vizinhos
+        .filter(({ s }) => s.lat !== null && s.lng !== null)
+        .map(({ s, saida }) => ({ chave: s.chave, lat: s.lat!, lng: s.lng!, situacao: situacao(saida, hoje), rotulo: `${s.idColab} · ${s.categoria ?? 'Sem categoria'}` })),
+    [vizinhos, hoje],
+  )
   // já no Mapa, o próprio mapa voa até o pino: o link "Ver no mapa" seria redundante
   const naPaginaMapa = useLocation().pathname === '/mapa'
   const atual = ultimaSaida(servico.saidas)
@@ -332,16 +350,23 @@ function Conteudo({ servico }: { servico: Servico }) {
       </header>
 
       <Bloco titulo="Problema">
-        <p className="text-[15px] font-medium text-ink">{servico.categoria ?? 'Sem categoria revisada'}</p>
+        <p className="text-sm font-medium text-ink">{servico.categoria ?? 'Sem categoria revisada'}</p>
         {servico.categoriaColab && servico.categoriaColab !== servico.categoria && (
           <p className="mt-0.5 text-xs text-ink-3">Aberto no Colab como “{servico.categoriaColab}”</p>
         )}
       </Bloco>
 
+      <ParteRestrita servico={servico} onde="topo" />
+
       <Bloco titulo="Onde">
-        {/* rua e espaço público são públicos (sem número da casa); o endereço completo segue só com acesso */}
-        {servico.rua && <p className="text-sm text-ink">{servico.rua}</p>}
-        <p className={servico.rua ? 'text-[13px] text-ink-2' : 'text-sm text-ink'}>
+        {/* com acesso: o endereço completo (com número) no lugar da rua — antes era outra seção, "Endereço", no fim.
+            Sem acesso: só a rua e o espaço público, que são públicos */}
+        {det?.endereco ? (
+          <p className="text-sm text-ink">{det.endereco}</p>
+        ) : (
+          servico.rua && <p className="text-sm text-ink">{servico.rua}</p>
+        )}
+        <p className={det?.endereco || servico.rua ? 'text-[13px] text-ink-2' : 'text-sm text-ink'}>
           {servico.bairro} <span className="text-ink-3">·</span> {servico.regiao}
         </p>
         {rotuloLugar(servico) && (
@@ -350,13 +375,25 @@ function Conteudo({ servico }: { servico: Servico }) {
             {rotuloLugar(servico)}
           </p>
         )}
+        {/* o espaço público já aparece acima: aqui só se o tratamento anotou outro texto */}
+        {det?.local && det.local !== servico.local && <p className="mt-1 text-[13px] text-ink-2">Local: {det.local}</p>}
+        {det?.mudouLogradouro && <p className="mt-1 text-xs text-ink-3">Endereço corrigido no tratamento (diferente do aberto no Colab).</p>}
         {servico.lat !== null && servico.lng !== null && (
-          <div className="mt-3 overflow-hidden rounded-lg border border-line">
-            <Suspense fallback={<Esqueleto className="h-48 w-full rounded-none" />}>
-              <MiniMapa lat={servico.lat} lng={servico.lng} situacao={sit} />
+          <div className="mt-3 rounded-lg border border-line">
+            <Suspense fallback={<Esqueleto className="h-48 w-full rounded-lg" />}>
+              <MiniMapa
+                lat={servico.lat}
+                lng={servico.lng}
+                situacao={sit}
+                titulo={`Serviço ${servico.idColab}`}
+                perto={pontosPerto}
+                aoAbrir={abrir}
+              />
             </Suspense>
           </div>
         )}
+        {/* "Como chegar" (rota no Google Maps: google.com/maps/dir/?api=1&destination=lat,lng) foi feito e tirado em
+            20/10/2026 — o usuário pede de volta se as equipes passarem a usar o painel na rua */}
         {servico.lat !== null && !naPaginaMapa && (
           <Link
             to={destino('/mapa', { servico: servico.chave })}
@@ -380,7 +417,7 @@ function Conteudo({ servico }: { servico: Servico }) {
         <Historico servico={servico} />
       </Bloco>
 
-      <ParteRestrita servico={servico} />
+      <ParteRestrita servico={servico} onde="fim" />
     </>
   )
 }
