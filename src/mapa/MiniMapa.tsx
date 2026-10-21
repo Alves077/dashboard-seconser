@@ -74,7 +74,7 @@ export default function MiniMapa(props: Props) {
         scrollWheelZoom={false}
         dragging={!matchMedia('(pointer: coarse)').matches}
         attributionControl
-        className="mapa-tema h-48 w-full rounded-lg"
+        className="mapa-tema h-56 w-full rounded-lg"
       >
         <FundoMapa />
         <Pinos {...props} grande={false} />

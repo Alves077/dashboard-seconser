@@ -815,3 +815,13 @@ mostrar os vizinhos.
 - Conferido: ordem com acesso (cenário pior) e sem login (dado real: 925835 com os 14 vizinhos), tela cheia no
   computador e no celular (390 px), sem erro no console.
 
+## Ficha: pilha revista (21/10/2026)
+Usuário achou a pilha "meio estranha"; revisão emil-design-eng, aplicada por inteiro:
+- gaveta de 40% para **45%** da largura (mín. 560 px);
+- **título = a categoria** (20 px) com o selo de situação ao lado; em cima, "Serviço 925835" (15 px, médio) · origem
+  (miúda); o bloco "Problema" e a categoria antiga do Colab ("Aberto no Colab como…") saíram;
+- **três zonas** com fio só entre elas — o quê (descrição, fotos) · onde (endereço, mapa, perto daqui) · contexto
+  (quem pediu e histórico **lado a lado** quando a gaveta tem ≥ 34rem, `@container`);
+- **rótulos** com fio escuro à esquerda, 11 px maiúsculo, semibold, `ink-2` (antes cinza-claro e fino);
+- fotos em **miniaturas de tamanho controlado** (`auto-fill, minmax(112px,1fr)`), mapa `h-56`, descrição até 68ch.
+

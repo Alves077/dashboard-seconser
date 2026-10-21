@@ -23,10 +23,24 @@ const MiniMapa = lazy(() => import('@/mapa/MiniMapa'))
 
 const ORIGEM_TIPO = { post: 'Aberto pela central / regional', event: 'Aberto pelo cidadão no Colab' }
 
-function Bloco({ titulo, children }: { titulo: string; children: ReactNode }) {
+/**
+ * Rótulo de seção da ficha: miúdo e maiúsculo, com fio escuro à esquerda (como o nome do bairro na lista de campo) e
+ * texto encorpado em ink-2 — um tom abaixo do conteúdo, para marcar a seção sem competir com ela. Antes era cinza-claro
+ * e fino, e as seções se confundiam (usuário, 21/10/2026). Sem cor: índigo é só ação.
+ */
+const Rotulo = ({ children }: { children: ReactNode }) => (
+  <h3 className="mb-2.5 border-l-2 border-ink pl-2 text-[11px] leading-tight font-semibold tracking-[0.5px] text-ink-2 uppercase">{children}</h3>
+)
+
+/**
+ * Seção da ficha. A pilha tem três zonas — o quê (descrição, fotos) · onde (endereço, mapa, perto daqui) · contexto
+ * (quem pediu, histórico) — e só a primeira seção de cada zona leva o fio de cima (`fio`); dentro da zona, só espaço.
+ * Antes eram 7–8 seções iguais, cada uma com o seu fio: parecia formulário (revisão emil-design-eng, 21/10/2026).
+ */
+function Bloco({ titulo, children, fio = true }: { titulo: string; children: ReactNode; fio?: boolean }) {
   return (
-    <section className="border-t border-line px-5 py-4">
-      <h3 className="mb-2 text-[11px] font-medium tracking-[0.4px] text-ink-3 uppercase">{titulo}</h3>
+    <section className={fio ? 'border-t border-line px-5 py-4' : 'px-5 pt-1 pb-4'}>
+      <Rotulo>{titulo}</Rotulo>
       {children}
     </section>
   )
@@ -72,6 +86,9 @@ function Historico({ servico }: { servico: Servico }) {
 }
 
 const MAX_MINIATURAS = 9
+/** quantas couberem com no mínimo 112 px (~120–170 px cada): foto é para reconhecer e tocar para ampliar — com 1/3
+ * da largura cada, na gaveta de 45% viravam quadros de ~270 px que empurravam "Onde" para fora da tela */
+const GRADE_FOTOS = 'grid grid-cols-[repeat(auto-fill,minmax(112px,1fr))] gap-2'
 
 /** Miniatura quadrada; foto que sumiu do Colab vira um quadro "indisponível" (não o ícone quebrado do navegador) */
 function Miniatura({ url }: { url: string }) {
@@ -101,7 +118,7 @@ function Fotos({ chave }: { chave: string }) {
   const [aberta, setAberta] = useState<number | null>(null)
   if (isLoading)
     return (
-      <div className="grid grid-cols-3 gap-2">
+      <div className={GRADE_FOTOS}>
         <Esqueleto className="aspect-square" />
         <Esqueleto className="aspect-square" />
       </div>
@@ -118,7 +135,7 @@ function Fotos({ chave }: { chave: string }) {
   const resto = data.length - mostradas.length
   return (
     <>
-      <ul className="grid grid-cols-3 gap-2">
+      <ul className={GRADE_FOTOS}>
         {mostradas.map((f, i) => {
           const ultima = resto > 0 && i === mostradas.length - 1
           return (
@@ -216,9 +233,10 @@ function ParteRestrita({ servico, onde }: { servico: Servico; onde: 'topo' | 'fi
   return (
     <>
       <Bloco titulo="Descrição">
-        <p className="text-sm leading-relaxed whitespace-pre-line text-ink">{d?.descricao ?? 'Sem descrição tratada.'}</p>
+        {/* até ~68 letras por linha: na gaveta larga a linha passava de 100 e cansava a leitura */}
+        <p className="max-w-[68ch] text-sm leading-relaxed whitespace-pre-line text-ink">{d?.descricao ?? 'Sem descrição tratada.'}</p>
       </Bloco>
-      <Bloco titulo="Fotos">
+      <Bloco titulo="Fotos" fio={false}>
         <Fotos chave={servico.chave} />
       </Bloco>
     </>
@@ -265,7 +283,7 @@ function Perto({ servico }: { servico: Servico }) {
   const visiveis = todos ? abertos : abertos.slice(0, 5)
   const onde = comPino ? `até ${formatarDistancia(RAIO_PERTO_M)} daqui` : 'nesta rua'
   return (
-    <Bloco titulo={comPino ? 'Perto daqui' : 'Nesta rua'}>
+    <Bloco titulo={comPino ? 'Perto daqui' : 'Nesta rua'} fio={false}>
       <p className="text-[13px] text-ink-2">
         {abertos.length === 0
           ? `Nenhum outro pedido em aberto ${onde}.`
@@ -330,12 +348,21 @@ function Conteudo({ servico }: { servico: Servico }) {
 
   return (
     <>
-      <header className="px-5 pt-5 pb-4">
-        <p className="text-xs text-ink-3">{ORIGEM_TIPO[servico.type]}</p>
-        <Drawer.Title className="numeros mt-0.5 text-[22px] font-light tracking-[-0.4px] text-ink">
-          Serviço {servico.idColab}
-        </Drawer.Title>
-        <div className="mt-2 flex flex-wrap items-center gap-2">
+      {/* o título é o assunto (a categoria), não o número: antes "Serviço 925835" em letra fina era o título e a categoria
+          vinha num bloco à parte, destacada no meio da pilha (usuário, 21/10/2026). O número segue em cima, para quem procura */}
+      <header className="px-5 pt-5 pb-4 pr-14">
+        {/* o número em 15 px (é por ele que a equipe procura e fala do pedido); a origem fica miúda ao lado */}
+        <p className="flex flex-wrap items-baseline gap-x-1.5 text-xs text-ink-3">
+          <span className="numeros text-[15px] font-medium text-ink-2">Serviço {servico.idColab}</span>
+          <span aria-hidden>·</span>
+          {ORIGEM_TIPO[servico.type]}
+        </p>
+        {/* categoria e situação na mesma linha (o selo quebra para baixo se o nome for longo). A categoria antiga do Colab
+            ("Aberto no Colab como …") saiu da ficha — usuário, 21/10/2026 */}
+        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-2">
+          <Drawer.Title className="text-[20px] leading-snug font-normal tracking-[-0.2px] text-ink">
+            {servico.categoria ?? 'Sem categoria revisada'}
+          </Drawer.Title>
           <SeloSituacao
             situacao={sit}
             texto={sit === 'ok' ? undefined : `${sit === 'atraso' ? 'Em atraso' : 'Em atendimento'} · ${dias(diasEmAberto(atual, hoje))}`}
@@ -348,13 +375,6 @@ function Conteudo({ servico }: { servico: Servico }) {
           )}
         </div>
       </header>
-
-      <Bloco titulo="Problema">
-        <p className="text-sm font-medium text-ink">{servico.categoria ?? 'Sem categoria revisada'}</p>
-        {servico.categoriaColab && servico.categoriaColab !== servico.categoria && (
-          <p className="mt-0.5 text-xs text-ink-3">Aberto no Colab como “{servico.categoriaColab}”</p>
-        )}
-      </Bloco>
 
       <ParteRestrita servico={servico} onde="topo" />
 
@@ -380,7 +400,7 @@ function Conteudo({ servico }: { servico: Servico }) {
         {det?.mudouLogradouro && <p className="mt-1 text-xs text-ink-3">Endereço corrigido no tratamento (diferente do aberto no Colab).</p>}
         {servico.lat !== null && servico.lng !== null && (
           <div className="mt-3 rounded-lg border border-line">
-            <Suspense fallback={<Esqueleto className="h-48 w-full rounded-lg" />}>
+            <Suspense fallback={<Esqueleto className="h-56 w-full rounded-lg" />}>
               <MiniMapa
                 lat={servico.lat}
                 lng={servico.lng}
@@ -406,16 +426,23 @@ function Conteudo({ servico }: { servico: Servico }) {
 
       {(servico.lat !== null || servico.rua) && <Perto key={servico.chave} servico={servico} />}
 
-      <Bloco titulo="Quem pediu">
-        <p className="text-sm text-ink">{servico.origem}</p>
-        {(servico.vereador || servico.origemDetalhe) && (
-          <p className="mt-0.5 text-[13px] text-ink-2">{servico.vereador ?? servico.origemDetalhe}</p>
-        )}
-      </Bloco>
-
-      <Bloco titulo={servico.saidas.length > 1 ? `Histórico · ${servico.saidas.length} saídas` : 'Histórico'}>
-        <Historico servico={servico} />
-      </Bloco>
+      {/* zona "contexto": curtos e secundários — lado a lado quando a gaveta tem largura (computador), um embaixo do outro
+          no celular; a medida é a largura da gaveta (@container no Drawer.Content), não a da tela */}
+      <section className="border-t border-line px-5 py-4">
+        <div className="grid gap-x-8 gap-y-5 @min-[34rem]:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)]">
+          <div>
+            <Rotulo>Quem pediu</Rotulo>
+            <p className="text-sm text-ink">{servico.origem}</p>
+            {(servico.vereador || servico.origemDetalhe) && (
+              <p className="mt-0.5 text-[13px] text-ink-2">{servico.vereador ?? servico.origemDetalhe}</p>
+            )}
+          </div>
+          <div>
+            <Rotulo>{servico.saidas.length > 1 ? `Histórico · ${servico.saidas.length} saídas` : 'Histórico'}</Rotulo>
+            <Historico servico={servico} />
+          </div>
+        </div>
+      </section>
 
       <ParteRestrita servico={servico} onde="fim" />
     </>
@@ -440,12 +467,12 @@ export function Ficha() {
               'overflow-y-auto overscroll-contain bg-card shadow-2 transition-transform duration-300 ease-gaveta data-ending-style:duration-200',
               'motion-reduce:transition-opacity motion-reduce:data-ending-style:opacity-0 motion-reduce:data-starting-style:opacity-0',
               lateral
-                ? 'h-full w-[min(max(560px,40vw),100vw)] border-l border-line pt-[env(safe-area-inset-top,0px)] [transform:translateX(var(--drawer-swipe-movement-x))] data-ending-style:[transform:translateX(100%)] data-starting-style:[transform:translateX(100%)]'
+                ? 'h-full w-[min(max(560px,45vw),100vw)] border-l border-line pt-[env(safe-area-inset-top,0px)] [transform:translateX(var(--drawer-swipe-movement-x))] data-ending-style:[transform:translateX(100%)] data-starting-style:[transform:translateX(100%)]'
                 : 'max-h-[88dvh] w-full rounded-t-2xl pb-[env(safe-area-inset-bottom,0px)] [transform:translateY(var(--drawer-swipe-movement-y))] data-ending-style:[transform:translateY(100%)] data-starting-style:[transform:translateY(100%)]',
             )}
           >
             {!lateral && <div aria-hidden className="mx-auto mt-2 h-1 w-10 rounded-full bg-line" />}
-            <Drawer.Content className="relative pb-6">
+            <Drawer.Content className="@container relative pb-6">
               <Drawer.Close
                 aria-label="Fechar ficha"
                 className="pressionavel absolute top-3 right-3 grid size-10 place-items-center rounded-full text-ink-2 hover:bg-realce-forte hover:text-ink"
