@@ -314,9 +314,23 @@ export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia, saida: Inter
   const vereadores = new Map<string, number>()
   for (const it of institucionais) if (it.servico.vereador) vereadores.set(it.servico.vereador, (vereadores.get(it.servico.vereador) ?? 0) + 1)
 
+  // época escolhida (7/30/90 dias, este ano, um mês; usuário, 21/10/2026): o relatório conta os que saíram nela e quantos
+  // seguem em aberto — "concentra N dos M em aberto na cidade" comparava a época com a fila inteira — e esconde o que a
+  // época não deixa acontecer (nos últimos 7 dias ninguém espera mais de 6: "16 a 30", "> 30 dias" dariam zero; em
+  // setembro, visto em 21/10, ninguém espera menos de 21: "Até 5 dias" daria zero e "em atraso" sempre 100%)
+  const epoca = saida
+    ? {
+        saiu: filtrarLugar(base.saidas, f).filter((s) => noIntervalo(s, saida, 'saida')).length,
+        /** a menor e a maior espera possíveis na época (de quem saiu no último e no primeiro dia dela) */
+        esperaMin: saida.ate === null ? 0 : Math.max(0, hoje - saida.ate),
+        esperaMax: saida.de === null ? Infinity : hoje - saida.de,
+      }
+    : null
+
   return {
     n,
     totalCidade: abertasCidade.length,
+    epoca,
     filtrado,
     /** quem "concentra" no texto de abertura: o bairro, a região ou o recorte */
     nome: f.bairro ?? f.regiao ?? 'O recorte',
@@ -335,10 +349,39 @@ export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia, saida: Inter
     origens: tabelaSimples(itens, (s) => s.origem),
     vereadores: [...vereadores].sort((a, b) => b[1] - a[1] || compararTexto(a[0], b[0])),
     antigos: [...itens].sort((a, b) => b.dias - a.dias || a.servico.idColab - b.servico.idColab).slice(0, filtrado ? 10 : 8),
+    // modo "Hoje" (o que saiu para a rua no dia; usuário, 21/10/2026): espera e atraso dão zero, então o relatório mostra
+    // o dia — quem está voltando à rua e quantos lugares foram atendidos. Sem "risco elétrico" (a categoria é mais o que
+    // poderia ser do que o que é — a chefia estranharia) e sem a lista do que saiu (é a Lista de campo; estoura em mutirão)
+    /** saídas de 2ª ida ou mais: serviço que voltou à rua */
+    voltando: itens.filter((it) => it.saida.ordem > 1).length,
+    /** quantos lugares do nível de baixo (bairros; ruas quando há um bairro escolhido) */
+    atendidos: new Set(itens.map((it) => (nivel === 'rua' ? it.servico.rua || '—' : it.servico.bairro))).size,
   }
 }
 
 export type RelatorioAbertos = ReturnType<typeof relatorioAbertos>
+
+/**
+ * Faixas de espera que a época deixa acontecer (índice em FAIXAS_ESPERA e rótulo): nos últimos 7 dias a espera vai
+ * até 6, então só "Até 5 dias" e "6 dias"; em setembro, visto em 21/10, de 21 a 50 — "21 a 30 dias" e "31 a 50 dias".
+ * As faixas das pontas levam o rótulo cortado no que a época permite.
+ */
+export function faixasDaEpoca(esperaMin: number, esperaMax: number) {
+  return FAIXAS_ESPERA.flatMap((fx, i) => {
+    const de = i === 0 ? 0 : FAIXAS_ESPERA[i - 1].max + 1
+    if (de > esperaMax || fx.max < esperaMin) return []
+    if (de >= esperaMin && fx.max <= esperaMax) return [{ i, rotulo: fx.rotulo as string }]
+    const a = Math.max(de, esperaMin)
+    const b = Math.min(fx.max, esperaMax)
+    return [{ i, rotulo: a === b ? `${a} dias` : b === Infinity ? `Mais de ${a - 1} dias` : `${a} a ${b} dias` }]
+  })
+}
+
+/** o que a época deixa variar: "em atraso" (passou de 5 dias) e "acima de 30 dias"; sem época, os dois */
+export function variaNaEpoca(ep: { esperaMin: number; esperaMax: number } | null) {
+  const varia = (limite: number) => !ep || (ep.esperaMin <= limite && ep.esperaMax > limite)
+  return { atraso: varia(PRAZO_DIAS), mais30: varia(30) }
+}
 
 // ── Lista de campo ─────────────────────────────────────────────────────────
 // Região (mais serviços primeiro) → bairro (ordem alfabética, para achar rápido) → grupos de pedidos PRÓXIMOS →

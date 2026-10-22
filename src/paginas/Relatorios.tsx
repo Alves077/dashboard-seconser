@@ -249,7 +249,13 @@ function PaginaRelatorios() {
       : aba === 'abertos' && abertos
         ? {
             titulo: `Serviços em Aberto · ${filtros.bairro ? `Bairro ${filtros.bairro}` : filtros.regiao ? `Região ${filtros.regiao}` : 'Niterói'}`,
-            subtitulo: soTexto([filtros.categoria, filtros.quem ?? filtros.origem, rotuloSaida(abertos.n)]).join(' · ') || undefined,
+            // com época, "Dos N que saíram…, M seguem em aberto" já abre o relatório: aqui só a época
+            subtitulo:
+              soTexto([
+                filtros.categoria,
+                filtros.quem ?? filtros.origem,
+                quandoSaida && paramSaida !== 'hoje' ? `Saíram para a rua ${quandoSaida}` : rotuloSaida(abertos.n),
+              ]).join(' · ') || undefined,
             meta: soTexto([geradoLongo, `${numero(abertos.n)} serviços em aberto`, dadosAte]),
           }
         : aba === 'campo' && campo
@@ -296,7 +302,7 @@ function PaginaRelatorios() {
   const pedidoPdf = (): PedidoPdf | null => {
     if (!cab) return null
     if (aba === 'mensal' && mensal) return { tipo: 'mensal', cabecalho: cab, hoje, r: mensal, obs }
-    if (aba === 'abertos' && abertos) return { tipo: 'abertos', cabecalho: cab, hoje, r: abertos, detalhes: comEndereco }
+    if (aba === 'abertos' && abertos) return { tipo: 'abertos', cabecalho: cab, hoje, r: abertos, detalhes: comEndereco, doDia: paramSaida === 'hoje', quando: quandoSaida }
     if (aba === 'campo' && campo) return { tipo: 'campo', cabecalho: cab, hoje, regioes: campo.regioes, detalhes: comEndereco }
     return null
   }
@@ -524,7 +530,7 @@ function PaginaRelatorios() {
           {aba === 'abertos' && abertos && (
             <>
               {cab && <CabecalhoFolha {...cab} />}
-              <RelatorioAbertosFolha r={abertos} detalhes={comEndereco} hoje={hoje} />
+              <RelatorioAbertosFolha r={abertos} detalhes={comEndereco} hoje={hoje} doDia={paramSaida === 'hoje'} quando={quandoSaida} />
             </>
           )}
           {aba === 'campo' && campo && (

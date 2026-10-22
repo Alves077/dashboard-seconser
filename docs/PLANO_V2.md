@@ -834,3 +834,33 @@ Usuário achou a pilha "meio estranha"; revisão emil-design-eng, aplicada por i
   lado a lado embaixo — no PDF e no Ctrl+P (antes as três espremidas em duas colunas, nomes e títulos quebrando).
 - Prévia com dado real: Região Leste (por bairro), Bairro Muriqui (por rua, 7 ruas), Camboinhas (10 ruas + "Demais (9 ruas)").
 
+## Em aberto: modo "Hoje" (21/10/2026)
+Com a época "Hoje", espera e atraso davam zero (atraso 0, espera 0 dia, barra 100% "até 5 dias", mais antigos com 0
+dia). O relatório vira o resumo do dia para a chefia, no mesmo esqueleto (`doDia` em Abertos.tsx e no PDF):
+- abertura "Hoje saíram 66 para a rua: Oceânica (32), Norte (11), Pendotiba (11) e mais 12 em outras 2 regiões." (no
+  nível da tabela; risco elétrico quando houver);
+- 5 indicadores: saíram hoje · risco elétrico · voltando à rua (2ª ida+) · institucionais · bairros (ou ruas) atendidos;
+- sem a barra de espera; distribuição só com quantidade e % (categoria e origem também);
+- lista final **"Saíram hoje"** por bairro (ordenada por rua), com endereço (logado) ou rua — sem "dias".
+- Em qualquer modo: com um lugar só, o cartão "Por região/bairro/rua" sai (seria uma linha igual ao total).
+- Consultadas: dataviz (barra por região descartada — duplica a tabela e vira barra de um pedaço; pizza também: um
+  pedaço de 87% e, impressa em P&B, fatias viram cinzas iguais) e emil-design-eng (mesmo esqueleto nos dois modos).
+- Prévia com dado real das saídas de 20/10 (cidade, Oceânica, Camboinhas).
+- Visto de passagem (não corrigido): a barra de cima do site passa ~26 px da tela em janelas de ~1.000 px.
+
+
+## Em aberto: as outras épocas (21/10/2026)
+Pedido do usuário ("lembra que tem diferenciação com base no filtro de período"): com 7/30/90 dias, este ano ou um mês,
+o relatório também muda (`epoca` no cálculo; `faixasDaEpoca` e `variaNaEpoca` em calculos/relatorios.ts):
+- abertura "Dos 476 que saíram para a rua nos últimos 7 dias, 372 seguem em aberto (78,2%) e 104 já tiveram retorno."
+  no lugar de "concentra N dos M em aberto na cidade" (comparava a época com a fila toda);
+- indicadores: Saíram · Seguem em aberto (% das saídas) no lugar de "Em aberto · % da cidade";
+- o que a época não deixa variar sai: "Em atraso" (mês fechado: sempre 100% → "Todos já passaram do prazo") e
+  "Acima de 30 dias" (até 30 dias: sempre zero; também a coluna "> 30 dias"); no lugar, "Mais antigo";
+- barra de espera só com as faixas possíveis, com o rótulo cortado nas pontas ("6 dias", "21 a 30 dias", "16 a 29 dias");
+- "Por mês de registro" só com mais de um mês; subtítulo do cabeçalho só com a época (a abertura já tem os números).
+- "Qualquer data" e "Hoje" não mudam. Prévias reais: cidade 7d, Oceânica 30d, cidade setembro, cidade este ano.
+- Ajustes do usuário (21/10/2026): **sem "risco elétrico"** no modo Hoje (indicador e frase — a categoria é mais o que
+  poderia ser do que o que é; a chefia estranharia): ficam 4 indicadores. **Sem a lista "Saíram hoje"** (a lista do dia é
+  a Lista de campo; num mutirão estourava): o modo Hoje termina na distribuição. Na época, o 2º indicador é "Em aberto"
+  (% das saídas) — "Seguem em aberto" quebrava em duas linhas e desalinhava a fileira.

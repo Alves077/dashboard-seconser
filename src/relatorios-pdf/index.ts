@@ -17,7 +17,7 @@ export type PedidoPdf = {
   hoje: Dia
 } & (
   | { tipo: 'mensal'; r: RelatorioMensal; obs: string }
-  | { tipo: 'abertos'; r: RelatorioAbertos; detalhes: Map<string, Detalhe> | null }
+  | { tipo: 'abertos'; r: RelatorioAbertos; detalhes: Map<string, Detalhe> | null; doDia?: boolean; quando?: string | null }
   | { tipo: 'campo'; regioes: RegiaoCampo[]; detalhes: Map<string, Detalhe> | null }
 )
 
@@ -25,7 +25,7 @@ export async function gerarPdf(p: PedidoPdf): Promise<Blob> {
   const f = await Folha.criar(p.cabecalho.titulo)
   cabecalho(f, p.cabecalho)
   if (p.tipo === 'mensal') desenharMensal(f, p.r, p.obs)
-  else if (p.tipo === 'abertos') desenharAbertos(f, p.r, p.detalhes, p.hoje)
+  else if (p.tipo === 'abertos') desenharAbertos(f, p.r, p.detalhes, p.hoje, p.doDia, p.quando)
   else desenharCampo(f, p.regioes, p.detalhes, p.hoje)
   // com endereço, o arquivo leva dado da parte restrita para fora do login: o rodapé avisa
   const comEndereco = p.tipo !== 'mensal' && p.detalhes !== null
