@@ -269,7 +269,9 @@ export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia, saida: Inter
     .map((s) => ({ saida: s, servico: s.servico, dias: hoje - s.dataSaida }))
   const n = itens.length
   const filtrado = !!(f.regiao || f.bairro || f.categoria || f.origem || f.quem || saida)
-  const porBairro = !!(f.regiao || f.bairro)
+  // a tabela de distribuição desce um nível em relação ao filtro: cidade → regiões, região → bairros, bairro → ruas
+  // (com um bairro só, "por bairro" virava uma linha igual ao total — usuário, 21/10/2026)
+  const nivel: 'regiao' | 'bairro' | 'rua' = f.bairro ? 'rua' : f.regiao ? 'bairro' : 'regiao'
 
   const atraso = itens.filter((it) => situacao(it.saida, hoje) === 'atraso').length
   const media = n ? itens.reduce((t, it) => t + it.dias, 0) / n : 0
@@ -283,19 +285,24 @@ export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia, saida: Inter
 
   const grupos = new Map<string, number[]>()
   for (const it of itens) {
-    const k = (porBairro ? it.servico.bairro : it.servico.regiao) || '—'
+    const k = (nivel === 'rua' ? it.servico.rua || 'Rua não identificada' : nivel === 'bairro' ? it.servico.bairro : it.servico.regiao) || '—'
     if (!grupos.has(k)) grupos.set(k, [])
     grupos.get(k)!.push(it.dias)
   }
-  const lugares: LinhaLugarAberto[] = [...grupos]
-    .sort((a, b) => b[1].length - a[1].length || compararTexto(a[0], b[0]))
-    .map(([nome, d]) => ({
-      nome,
-      abertos: d.length,
-      media: d.reduce((a, b) => a + b, 0) / d.length,
-      mais30: d.filter((x) => x > 30).length,
-      maisAntigo: Math.max(...d),
-    }))
+  const linha = (nome: string, d: number[]): LinhaLugarAberto => ({
+    nome,
+    abertos: d.length,
+    media: d.reduce((a, b) => a + b, 0) / d.length,
+    mais30: d.filter((x) => x > 30).length,
+    maisAntigo: Math.max(...d),
+  })
+  let lugares: LinhaLugarAberto[] = [...grupos].sort((a, b) => b[1].length - a[1].length || compararTexto(a[0], b[0])).map(([nome, d]) => linha(nome, d))
+  // ruas: um bairro pode ter dezenas, quase todas com 1 pedido — as 10 com mais pedidos e o resto somado
+  const MAX_RUAS = 10
+  if (nivel === 'rua' && lugares.length > MAX_RUAS + 1) {
+    const resto = [...grupos].sort((a, b) => b[1].length - a[1].length || compararTexto(a[0], b[0])).slice(MAX_RUAS)
+    lugares = [...lugares.slice(0, MAX_RUAS), linha(`Demais (${resto.length} ruas)`, resto.flatMap(([, d]) => d))]
+  }
 
   // mês de registro
   const porMes = new Map<ChaveMes, number>()
@@ -313,7 +320,7 @@ export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia, saida: Inter
     filtrado,
     /** quem "concentra" no texto de abertura: o bairro, a região ou o recorte */
     nome: f.bairro ?? f.regiao ?? 'O recorte',
-    porBairro,
+    nivel,
     atraso,
     media,
     maisAntigo,
@@ -322,7 +329,7 @@ export function relatorioAbertos(base: Base, f: Filtros, hoje: Dia, saida: Inter
     mais30,
     espera,
     lugares,
-    tres: lugares.slice(0, 3),
+    tres: lugares.filter((l) => !l.nome.startsWith('Demais (')).slice(0, 3),
     meses: [...porMes].sort((a, b) => a[0] - b[0]),
     categorias: tabelaSimples(itens, (s) => s.categoria ?? 'Sem categoria'),
     origens: tabelaSimples(itens, (s) => s.origem),

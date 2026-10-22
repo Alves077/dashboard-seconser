@@ -825,3 +825,12 @@ Usuário achou a pilha "meio estranha"; revisão emil-design-eng, aplicada por i
 - **rótulos** com fio escuro à esquerda, 11 px maiúsculo, semibold, `ink-2` (antes cinza-claro e fino);
 - fotos em **miniaturas de tamanho controlado** (`auto-fill, minmax(112px,1fr)`), mapa `h-56`, descrição até 68ch.
 
+## Em aberto: distribuição um nível abaixo do filtro e arranjo da tela no papel (21/10/2026)
+- A tabela de distribuição desce um nível: cidade → **regiões**, região → **bairros**, bairro → **ruas** (as 10 com
+  mais pedidos e "Demais (N ruas)" somadas, com nota só quando há essa linha). Antes, com um bairro só, "Por bairro"
+  era uma linha igual ao total. A frase de abertura acompanha ("As três ruas com mais pendências…"). `relatorioAbertos`
+  devolve `nivel` ('regiao' | 'bairro' | 'rua') no lugar de `porBairro`.
+- Papel igual à tela (usuário achou a tela mais agradável): "Por região/bairro/rua" na largura toda e categoria + origem
+  lado a lado embaixo — no PDF e no Ctrl+P (antes as três espremidas em duas colunas, nomes e títulos quebrando).
+- Prévia com dado real: Região Leste (por bairro), Bairro Muriqui (por rua, 7 ruas), Camboinhas (10 ruas + "Demais (9 ruas)").
+

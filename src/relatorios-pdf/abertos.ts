@@ -18,6 +18,13 @@ const MESES_NO_RESUMO = 12
 /** a partir de quantas letras um texto da tabela de mais antigos pode quebrar linha */
 const LONGO = 24
 
+/** nome do nível da tabela de distribuição (um abaixo do filtro) e a frase "os três … com mais pendências" */
+const NIVEL = {
+  regiao: { grupo: 'Região', tres: 'As três regiões' },
+  bairro: { grupo: 'Bairro', tres: 'Os três bairros' },
+  rua: { grupo: 'Rua', tres: 'As três ruas' },
+} as const
+
 /** espera acima de 30 dias em vermelho, acima de 15 em âmbar */
 const corDias = (v: number) => (v > 30 ? COR.atrasoTexto : v > 15 ? COR.andamentoTexto : undefined)
 const dias = (v: number, peso: 400 | 600 = 400): Celula => ({ trechos: [{ t: `${decimal(v)}d`, peso, cor: corDias(v) }] })
@@ -71,7 +78,7 @@ export function desenharAbertos(f: Folha, r: RelatorioAbertos, detalhes: Map<str
     f.paragrafo('Nenhum serviço em aberto com esses filtros.', x, w, { tam: 13, cor: COR.ink2, alinhar: 'centro' })
     return
   }
-  const grupo = r.porBairro ? 'Bairro' : 'Região'
+  const { grupo, tres } = NIVEL[r.nivel]
   const somaTres = r.tres.reduce((t, l) => t + l.abertos, 0)
   const ultimosMeses = r.meses.slice(-MESES_NO_RESUMO)
   const antes = r.meses.slice(0, -MESES_NO_RESUMO).reduce((t, [, n]) => t + n, 0)
@@ -85,7 +92,7 @@ export function desenharAbertos(f: Folha, r: RelatorioAbertos, detalhes: Map<str
     forte(numero(r.atraso)),
     { t: ' já passaram do prazo de 5 dias e a espera média é de ' },
     forte(`${decimal(r.media)} dias`),
-    { t: `. ${r.porBairro ? 'Os três bairros' : 'As três regiões'} com mais pendências (${r.tres.map((l) => l.nome).join(', ')}) somam ` },
+    { t: `. ${tres} com mais pendências (${r.tres.map((l) => l.nome).join(', ')}) somam ` },
     forte(numero(somaTres)),
     { t: ` serviços (${pct(somaTres, r.n)}). Por mês de registro: ` },
   )
@@ -136,58 +143,65 @@ export function desenharAbertos(f: Folha, r: RelatorioAbertos, detalhes: Map<str
     x,
     w,
     'Distribuição',
-    (xi, wi) =>
+    // "por região/bairro/rua" na largura toda e categoria + origem lado a lado embaixo, como na tela (antes as três
+    // espremidas em duas colunas: nomes e títulos quebrando — usuário, 21/10/2026, achou a tela mais agradável)
+    (xi, wi) => {
+      cartao(f, xi, wi, (xd, wd) => {
+        tituloCartao(f, xd, `Por ${grupo.toLowerCase()}`)
+        tabela(
+          f,
+          xd,
+          wd,
+          [{ titulo: grupo, quebra: true }, ...['Abertos', '%', 'Espera média', '> 30 dias', 'Mais antigo'].map((t): Coluna => ({ titulo: t, alinhar: 'centro' }))],
+          [
+            ...r.lugares.map((l) => ({
+              celulas: [
+                { trechos: [{ t: l.nome, peso: 500 as const }] },
+                numero(l.abertos),
+                pct(l.abertos, r.n),
+                dias(l.media),
+                l.mais30 ? numero(l.mais30) : '—',
+                { trechos: [{ t: `${numero(l.maisAntigo)}d`, peso: 600 as const, cor: corDias(l.maisAntigo) }] },
+              ],
+            })),
+            { tipo: 'total' as const, celulas: ['Total', numero(r.n), '100%', `${decimal(r.media)}d`, numero(r.mais30), `${numero(r.maisAntigo)}d`] },
+          ],
+          ESTILO,
+        )
+        nota(
+          f,
+          xd,
+          wd,
+          `Espera contada do registro do serviço até ${formatarDia(hoje)}.${r.lugares.some((l) => l.nome.startsWith('Demais (')) ? ' Ruas com mais pedidos em aberto; as demais somadas na última linha.' : ''}`,
+        )
+      })
+      f.y += 16
       colunas(
         f,
         xi,
         wi,
         [
           [
-            1.15,
+            1,
             (xc, wc) =>
               cartao(f, xc, wc, (xd, wd) => {
-                tituloCartao(f, xd, `Por ${grupo.toLowerCase()}`)
-                tabela(
-                  f,
-                  xd,
-                  wd,
-                  [{ titulo: grupo, quebra: true }, ...['Abertos', '%', 'Espera média', '> 30 dias', 'Mais antigo'].map((t): Coluna => ({ titulo: t, alinhar: 'centro' }))],
-                  [
-                    ...r.lugares.map((l) => ({
-                      celulas: [
-                        { trechos: [{ t: l.nome, peso: 500 as const }] },
-                        numero(l.abertos),
-                        pct(l.abertos, r.n),
-                        dias(l.media),
-                        l.mais30 ? numero(l.mais30) : '—',
-                        { trechos: [{ t: `${numero(l.maisAntigo)}d`, peso: 600 as const, cor: corDias(l.maisAntigo) }] },
-                      ],
-                    })),
-                    { tipo: 'total' as const, celulas: ['Total', numero(r.n), '100%', `${decimal(r.media)}d`, numero(r.mais30), `${numero(r.maisAntigo)}d`] },
-                  ],
-                  ESTILO,
-                )
-                nota(f, xd, wd, `Espera contada do registro do serviço até ${formatarDia(hoje)}.`)
+                tituloCartao(f, xd, 'Por categoria')
+                tabelaSimples(f, xd, wd, 'Categoria', r.categorias, r.n)
               }),
           ],
           [
             1,
-            (xc, wc) => {
-              cartao(f, xc, wc, (xd, wd) => {
-                tituloCartao(f, xd, 'Por categoria')
-                tabelaSimples(f, xd, wd, 'Categoria', r.categorias, r.n)
-              })
-              f.y += 12
+            (xc, wc) =>
               cartao(f, xc, wc, (xd, wd) => {
                 tituloCartao(f, xd, 'Por origem do pedido')
                 tabelaSimples(f, xd, wd, 'Origem', r.origens, r.n)
                 if (r.vereadores.length > 0) nota(f, xd, wd, `Vereadores: ${r.vereadores.map(([v, n]) => `${v} (${n})`).join(', ')}.`)
-              })
-            },
+              }),
           ],
         ],
         20,
-      ),
+      )
+    },
   )
 
   secao(

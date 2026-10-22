@@ -69,9 +69,16 @@ const MESES_NO_RESUMO = 12
 /** a partir de quantas letras um texto da tabela de mais antigos pode quebrar linha */
 const LONGO = 24
 
+/** nome do nível da tabela de distribuição (um abaixo do filtro) e a frase "os três … com mais pendências" */
+const NIVEL = {
+  regiao: { grupo: 'Região', tres: 'As três regiões' },
+  bairro: { grupo: 'Bairro', tres: 'Os três bairros' },
+  rua: { grupo: 'Rua', tres: 'As três ruas' },
+} as const
+
 export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbertos; detalhes: Map<string, Detalhe> | null; hoje: Dia }) {
   if (r.n === 0) return <p className="py-10 text-center text-[13px] text-ink-2">Nenhum serviço em aberto com esses filtros.</p>
-  const grupo = r.porBairro ? 'Bairro' : 'Região'
+  const { grupo, tres } = NIVEL[r.nivel]
   const somaTres = r.tres.reduce((t, l) => t + l.abertos, 0)
   // mês a mês só os 12 mais recentes; o resto vira "antes de …" (com anos de fila virava um parágrafo de ~100 meses)
   const ultimosMeses = r.meses.slice(-MESES_NO_RESUMO)
@@ -94,7 +101,7 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
           </>
         )}{' '}
         <strong className="font-semibold text-ink">{numero(r.atraso)}</strong> já passaram do prazo de 5 dias e a espera média é de{' '}
-        <strong className="font-semibold text-ink">{decimal(r.media)} dias</strong>. {r.porBairro ? 'Os três bairros' : 'As três regiões'} com mais
+        <strong className="font-semibold text-ink">{decimal(r.media)} dias</strong>. {tres} com mais
         pendências ({r.tres.map((l) => l.nome).join(', ')}) somam <strong className="font-semibold text-ink">{numero(somaTres)}</strong> serviços (
         {pct(somaTres, r.n)}). Por mês de registro:{' '}
         {antes > 0 && (
@@ -143,9 +150,9 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
       </SecaoFolha>
 
       <SecaoFolha titulo="Distribuição">
-        {/* tela: "por bairro" na largura toda e categoria + origem lado a lado embaixo (em duas colunas as tabelas
-            não cabiam: vazavam da folha ou ganhavam barra de rolagem); papel: as duas colunas de sempre (1 página) */}
-        <div className="grid grid-cols-1 gap-x-5 gap-y-4 max-sm:[&>*]:min-w-0 print:grid-cols-[1.15fr_1fr]">
+        {/* "por região/bairro/rua" na largura toda e categoria + origem lado a lado embaixo — na tela e no papel (antes o
+            papel espremia as três em duas colunas: nomes e títulos quebrando; usuário, 21/10/2026, achou a tela mais agradável) */}
+        <div className="grid grid-cols-1 gap-x-5 gap-y-4 max-sm:[&>*]:min-w-0">
           <div className="cartao-folha">
             <p className="mb-1 text-[12px] font-semibold text-ink">Por {grupo.toLowerCase()}</p>
             <Rolavel>
@@ -184,9 +191,12 @@ export function RelatorioAbertosFolha({ r, detalhes, hoje }: { r: RelatorioAbert
                 </tfoot>
               </table>
             </Rolavel>
-            <p className="mt-1.5 text-[10.5px] text-ink-3">Espera contada do registro do serviço até {formatarDia(hoje)}.</p>
+            <p className="mt-1.5 text-[10.5px] text-ink-3">
+              Espera contada do registro do serviço até {formatarDia(hoje)}.
+              {r.lugares.some((l) => l.nome.startsWith('Demais (')) && ' Ruas com mais pedidos em aberto; as demais somadas na última linha.'}
+            </p>
           </div>
-          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:[&>*]:min-w-0 print:flex print:flex-col">
+          <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:gap-x-5 lg:[&>*]:min-w-0 print:grid print:grid-cols-2 print:gap-x-5">
             <div className="cartao-folha">
               <p className="mb-1 text-[12px] font-semibold text-ink">Por categoria</p>
               <TabelaSimples titulo="Categoria" linhas={r.categorias} total={r.n} />
