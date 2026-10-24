@@ -11,17 +11,10 @@ import { faixasDaEpoca, origemTexto, variaNaEpoca, type LinhaSimplesAberto, type
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, rotuloMes, type Dia } from '@/lib/datas'
-import { decimal, numero, pct } from '@/lib/formato'
+import { decimal, diasEsperaCurto, numero, pct } from '@/lib/formato'
+import { COR_ESPERA, TEXTO_ESCURO_ESPERA } from '@/lib/cores'
 import { BarraFaixas, IdServico, Rolavel, SecaoFolha } from './Folha'
 
-// cores do script: verde · dourado · âmbar escuro · vermelho · vermelho escuro
-const COR_ESPERA = [
-  'var(--c-ok)',
-  'var(--c-andamento)',
-  'color-mix(in oklab, var(--c-andamento) 55%, var(--c-atraso))',
-  'var(--c-atraso)',
-  'color-mix(in oklab, var(--c-atraso) 65%, black)',
-]
 
 /** Espera: acima de 30 dias em vermelho, acima de 15 em âmbar (como no script) */
 const corDias = (v: number) => (v > 30 ? 'text-atraso-texto' : v > 15 ? 'text-andamento-texto' : undefined)
@@ -224,8 +217,8 @@ export function RelatorioAbertosFolha({
           {(!ep || !varia.atraso || !mostra30) && (
             <Kpi
               rotulo="Mais antigo"
-              valor={numero(r.maisAntigo)}
-              unidade="d"
+              valor={diasEsperaCurto(r.maisAntigo)}
+              unidade={r.maisAntigo === 0 ? undefined : 'd'}
               apoio={r.registroMaisAntigo === null ? '' : `desde ${formatarDia(r.registroMaisAntigo)}`}
               cor="var(--c-s7)"
             />
@@ -245,7 +238,7 @@ export function RelatorioAbertosFolha({
         </div>
         <BarraFaixas
           comPct={false}
-          partes={faixas.map(({ i, rotulo }) => ({ rotulo, n: r.espera[i], cor: COR_ESPERA[i], textoEscuro: i < 3, nota: i === 0 ? 'dentro do prazo' : undefined }))}
+          partes={faixas.map(({ i, rotulo }) => ({ rotulo, n: r.espera[i], cor: COR_ESPERA[i], textoEscuro: TEXTO_ESCURO_ESPERA(i), nota: i === 0 ? 'dentro do prazo' : undefined }))}
           total={r.n}
         />
       </SecaoFolha>
@@ -285,7 +278,7 @@ export function RelatorioAbertosFolha({
                         <>
                           <td className={clsx('num', corDias(l.media))}>{decimal(l.media)}d</td>
                           {mostra30 && <td className="num">{l.mais30 ? numero(l.mais30) : '—'}</td>}
-                          <td className={clsx('num font-semibold', corDias(l.maisAntigo))}>{numero(l.maisAntigo)}d</td>
+                          <td className={clsx('num font-semibold', corDias(l.maisAntigo))}>{diasEsperaCurto(l.maisAntigo, 'd')}</td>
                         </>
                       )}
                     </tr>
@@ -300,7 +293,7 @@ export function RelatorioAbertosFolha({
                       <>
                         <td className="num border-t border-ink/30">{decimal(r.media)}d</td>
                         {mostra30 && <td className="num border-t border-ink/30">{numero(r.mais30)}</td>}
-                        <td className="num border-t border-ink/30">{numero(r.maisAntigo)}d</td>
+                        <td className="num border-t border-ink/30">{diasEsperaCurto(r.maisAntigo, 'd')}</td>
                       </>
                     )}
                   </tr>
@@ -358,7 +351,7 @@ export function RelatorioAbertosFolha({
                   <td className="centro">{servico.categoria ?? 'Sem categoria'}</td>
                   <td className={clsx('centro', origemTexto(servico).length > LONGO && 'quebra')}>{origemTexto(servico)}</td>
                   <td className="num">{formatarDia(saida.dataSaida)}</td>
-                  <td className="num font-semibold text-atraso-texto">{numero(dias)}</td>
+                  <td className="num font-semibold text-atraso-texto">{diasEsperaCurto(dias)}</td>
                 </tr>
               ))}
             </tbody>

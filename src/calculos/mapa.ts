@@ -22,7 +22,7 @@ export const OPCOES_MOSTRAR: { id: Mostrar; rotulo: string; usaPeriodo: boolean 
 const NITEROI = { latMin: -23.0, latMax: -22.82, lngMin: -43.15, lngMax: -42.95 }
 export const CENTRO_NITEROI: [number, number] = [-22.91, -43.085]
 
-export const coordenadaValida = (lat: number | null, lng: number | null): boolean =>
+const coordenadaValida = (lat: number | null, lng: number | null): boolean =>
   lat !== null &&
   lng !== null &&
   lat >= NITEROI.latMin &&

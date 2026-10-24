@@ -12,7 +12,7 @@ import { normalizarBusca } from '@/lib/formato'
 const VAZIAS = new Set(['de', 'da', 'do', 'das', 'dos', 'e'])
 
 /** "Av. Ernani do Amaral-Peixoto, 120" → "av ernani do amaral peixoto 120" */
-export function normalizarTexto(s: string): string {
+function normalizarTexto(s: string): string {
   return normalizarBusca(s)
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()

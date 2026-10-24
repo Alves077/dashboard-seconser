@@ -14,7 +14,7 @@ import { CATEGORIA_RISCO, diasEmAberto, diasExecucao, noPrazo, prazo, rotuloLuga
 import { useSessao } from '@/dados/sessao'
 import type { Saida, Servico } from '@/dados/tipos'
 import { formatarDia } from '@/lib/datas'
-import { dias, plural } from '@/lib/formato'
+import { diasEspera, diasLevou, plural } from '@/lib/formato'
 import { useDestino, useFicha, useHoje, useMidia } from '@/lib/ganchos'
 import { distanciaM, formatarDistancia, RAIO_PERTO_M } from '@/lib/geo'
 import { VisualizadorFotos } from './VisualizadorFotos'
@@ -54,6 +54,7 @@ function Historico({ servico }: { servico: Servico }) {
       {servico.saidas.map((s: Saida) => {
         const sit = situacao(s, hoje)
         const exec = diasExecucao(s)
+        const espera = diasEmAberto(s, hoje)
         return (
           <li key={s.ordem} className="relative">
             <span
@@ -69,12 +70,13 @@ function Historico({ servico }: { servico: Servico }) {
             <p className="numeros mt-0.5 text-[13px] text-ink-2">
               {exec !== null ? (
                 <>
-                  Executado em {formatarDia(s.dataRetorno)} — {dias(exec)}
+                  Executado em {formatarDia(s.dataRetorno)} — {exec === 0 ? 'no ' : ''}
+                  {diasLevou(exec)}
                   {noPrazo(s) ? ', no prazo' : ', fora do prazo'}
                 </>
               ) : (
                 <>
-                  Em aberto há {dias(diasEmAberto(s, hoje))} · prazo {formatarDia(prazo(s))}
+                  Em aberto {espera === 0 ? 'desde hoje' : `há ${diasEspera(espera)}`} · prazo {formatarDia(prazo(s))}
                 </>
               )}
             </p>
@@ -312,7 +314,7 @@ function Perto({ servico }: { servico: Servico }) {
                     {s.regiao !== servico.regiao && ` (${s.regiao})`}
                   </span>
                 </span>
-                <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(diasEmAberto(saida, hoje))} />
+                <SeloSituacao situacao={situacao(saida, hoje)} texto={diasEspera(diasEmAberto(saida, hoje))} />
               </button>
             </li>
           ))}
@@ -365,7 +367,7 @@ function Conteudo({ servico }: { servico: Servico }) {
           </Drawer.Title>
           <SeloSituacao
             situacao={sit}
-            texto={sit === 'ok' ? undefined : `${sit === 'atraso' ? 'Em atraso' : 'Em atendimento'} · ${dias(diasEmAberto(atual, hoje))}`}
+            texto={sit === 'ok' ? undefined : `${sit === 'atraso' ? 'Em atraso' : 'Em atendimento'} · ${diasEspera(diasEmAberto(atual, hoje))}`}
           />
           {servico.categoria === CATEGORIA_RISCO && sit !== 'ok' && <SeloRisco />}
           {servico.led && (

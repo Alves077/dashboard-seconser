@@ -30,7 +30,7 @@ export type Atalho =
   | '12m'
   | 'este-ano'
 
-export const ATALHOS: { id: Atalho; rotulo: string }[] = [
+const ATALHOS: { id: Atalho; rotulo: string }[] = [
   { id: 'tudo', rotulo: 'Todo o período' },
   { id: '7d', rotulo: 'Últimos 7 dias' },
   { id: '30d', rotulo: 'Últimos 30 dias' },
@@ -65,7 +65,7 @@ export interface Filtros {
 }
 
 /** Padrão ao abrir: últimos 30 dias (Panorama = "como estamos agora"; decisão de 12/10/2026) */
-export const PERIODO_PADRAO: Periodo = { tipo: 'atalho', atalho: '30d' }
+const PERIODO_PADRAO: Periodo = { tipo: 'atalho', atalho: '30d' }
 
 export const ehPeriodoPadrao = (p: Periodo) => p.tipo === 'atalho' && p.atalho === '30d'
 

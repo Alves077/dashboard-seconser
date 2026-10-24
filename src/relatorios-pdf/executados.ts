@@ -6,7 +6,7 @@ import { PRAZO_DIAS } from '@/config'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDiaNoAno, type Dia } from '@/lib/datas'
-import { decimal, numero, pct } from '@/lib/formato'
+import { decimal, diasLevou, diasLevouCurto, metadeEm, numero, pct } from '@/lib/formato'
 import { ESTILO, kpis, tituloCartao } from './abertos'
 import { COR, type Folha, type Trecho } from './motor'
 import { barraFaixas, cartao, colunas, nota, secao, tabela, type Coluna, type EstiloTabela, type LinhaTabela } from './pecas'
@@ -21,9 +21,6 @@ const NIVEL = {
 const COR_EXEC = [COR.ok, COR.okTexto, COR.andamento, '#e77c28', COR.atraso]
 const TEXTO_ESCURO = [true, false, true, true, false]
 
-/** "3 dias", "1 dia", "2,5 dias" */
-const diasTexto = (d: number) => `${Number.isInteger(d) ? numero(d) : decimal(d)} ${d === 1 ? 'dia' : 'dias'}`
-const diasCurto = (d: number) => `${Number.isInteger(d) ? numero(d) : decimal(d)}d`
 
 /** a lista: larguras fixas, para as tabelas das regiões ficarem alinhadas uma embaixo da outra */
 const ESTILO_LISTA: EstiloTabela = { ...ESTILO, fixa: true }
@@ -56,9 +53,9 @@ export function desenharExecutados(
     forte(numero(r.foraPrazo)),
     { t: ` com mais de ${PRAZO_DIAS} dias. Da saída à execução, ` },
     forte(`${decimal(r.media)} dias`),
-    { t: ' em média; metade em até ' },
-    forte(diasTexto(r.mediana)),
-    { t: '.' },
+    ...(r.mediana === 0
+      ? [{ t: ' em média; metade ' }, forte('no mesmo dia'), { t: '.' }]
+      : [{ t: ' em média; metade em até ' }, forte(diasLevou(r.mediana)), { t: '.' }]),
   ]
   if (r.lugares.length > 1) trechos.push({ t: ` ${tres} com mais execuções: ${r.tres.map((l) => `${l.nome} (${numero(l.executados)})`).join(', ')}.` })
   const linhas = f.quebrar(trechos, w - 27, 12)
@@ -73,7 +70,7 @@ export function desenharExecutados(
       { rotulo: 'Executados', valor: numero(r.n), apoio: quando, cor: COR.ok },
       { rotulo: 'No prazo', valor: numero(r.noPrazo), apoio: `${pct(r.noPrazo, r.n)} · até ${PRAZO_DIAS} dias`, cor: COR.ok },
       { rotulo: 'Fora do prazo', valor: numero(r.foraPrazo), apoio: `${pct(r.foraPrazo, r.n)} · mais de ${PRAZO_DIAS} dias`, cor: COR.atraso },
-      { rotulo: 'Tempo médio', valor: decimal(r.media), unidade: 'd', apoio: `metade em até ${diasTexto(r.mediana)}`, cor: COR.ink3 },
+      { rotulo: 'Tempo médio', valor: decimal(r.media), unidade: 'd', apoio: metadeEm(r.mediana), cor: COR.ink3 },
     ]),
   )
 
@@ -114,10 +111,10 @@ export function desenharExecutados(
             ...(total ? [pct(l.executados, r.n)] : []),
             pct(l.noPrazo, l.executados),
             `${decimal(l.media)}d`,
-            ...(total ? [diasCurto(l.mediana)] : []),
+            ...(total ? [diasLevouCurto(l.mediana, 'd')] : []),
           ],
         })),
-        ...(total ? [{ tipo: 'total' as const, celulas: ['Total', numero(r.n), '100%', pct(r.noPrazo, r.n), `${decimal(r.media)}d`, diasCurto(r.mediana)] }] : []),
+        ...(total ? [{ tipo: 'total' as const, celulas: ['Total', numero(r.n), '100%', pct(r.noPrazo, r.n), `${decimal(r.media)}d`, diasLevouCurto(r.mediana, 'd')] }] : []),
       ],
       ESTILO,
     )
@@ -163,11 +160,12 @@ export function desenharExecutados(
 
   const colunasLista: Coluna[] = [
     { titulo: 'Serviço', fracao: 0.13, quebra: true },
-    { titulo: 'Categoria', esq: true, quebra: true, fracao: 0.2 },
+    { titulo: 'Categoria', esq: true, quebra: true, fracao: 0.17 },
     { titulo: detalhes ? 'Endereço' : 'Rua', esq: true, quebra: true },
     { titulo: 'Saída', fracao: 0.09, alinhar: 'centro' },
     { titulo: 'Execução', fracao: 0.1, alinhar: 'centro' },
-    { titulo: 'Dias', fracao: 0.07, alinhar: 'centro' },
+    // 10%: cabe "mesmo dia" numa linha
+    { titulo: 'Dias', fracao: 0.1, alinhar: 'centro' },
   ]
   secao(
     f,
@@ -198,7 +196,7 @@ export function desenharExecutados(
                 (detalhes ? (e => (e ? enderecoCurto(e) : null))(detalhes.get(servico.chave)?.endereco) : servico.rua) ?? '—',
                 formatarDiaNoAno(saida.dataSaida, hoje),
                 formatarDiaNoAno(saida.dataRetorno!, hoje),
-                { trechos: [{ t: numero(dias), ...(dias > PRAZO_DIAS ? { peso: 500 as const, cor: COR.atrasoTexto } : {}) }] },
+                { trechos: [{ t: diasLevouCurto(dias), ...(dias > PRAZO_DIAS ? { peso: 500 as const, cor: COR.atrasoTexto } : {}) }] },
               ],
             })),
           ])

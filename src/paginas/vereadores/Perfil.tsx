@@ -18,7 +18,7 @@ import { CATEGORIA_RISCO, SEM_VEREADOR, situacao } from '@/dados/regras'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { chaveMes, formatarDia, rotuloMes, rotuloMesLongo } from '@/lib/datas'
-import { decimal, dias, enxuto, numero, pct, plural } from '@/lib/formato'
+import { decimal, diasEspera, diasLevou, numero, pct, plural } from '@/lib/formato'
 import { direcaoDaTroca, useDestino, useFicha, useHoje } from '@/lib/ganchos'
 import { gavetaCartao, gavetaLista } from '@/lib/gaveta'
 import { LinhaBarra, LISTA_BARRAS } from '@/paginas/panorama/Quebras'
@@ -238,13 +238,13 @@ function EmAberto({ p }: { p: PerfilVereador }) {
                     </span>
                     {/* celular: selos embaixo, para o nome da categoria caber (como no Panorama) */}
                     <span className="mt-1 flex flex-wrap gap-1.5 sm:hidden">
-                      <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} />
+                      <SeloSituacao situacao={situacao(saida, hoje)} texto={diasEspera(d)} />
                       {ehIndicacao(servico) && <SeloIndicacao />}
                     </span>
                   </span>
                   {ehIndicacao(servico) && <SeloIndicacao className="max-sm:hidden" />}
                   {servico.categoria === CATEGORIA_RISCO && <SeloRisco className="max-sm:hidden" />}
-                  <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} className="max-sm:hidden" />
+                  <SeloSituacao situacao={situacao(saida, hoje)} texto={diasEspera(d)} className="max-sm:hidden" />
                   <ChevronRight aria-hidden className="size-4 shrink-0 text-ink-3 transition-transform duration-150 group-hover:translate-x-0.5" />
                 </button>
               </li>
@@ -320,7 +320,7 @@ export function Perfil({ p, quem, aoVoltar }: { p: PerfilVereador; quem: string;
           nota={
             p.tempoMediano === null
               ? 'nada executado no período'
-              : `média · mediana ${enxuto(p.tempoMediano)} ${p.tempoMediano === 1 ? 'dia' : 'dias'}${p.tempoProvisorio ? ' · provisório (muitos ainda em aberto)' : ''}`
+              : `média · mediana ${diasLevou(p.tempoMediano)}${p.tempoProvisorio ? ' · provisório (muitos ainda em aberto)' : ''}`
           }
         />
         <Numero

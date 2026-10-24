@@ -9,7 +9,7 @@ import { Fragment } from 'react'
 import { CATEGORIA_RISCO, enderecoCurto, rotuloLugar, situacao } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, formatarDiaNoAno, type Dia } from '@/lib/datas'
-import { dias, numero } from '@/lib/formato'
+import { diasEspera, diasEsperaCurto, numero } from '@/lib/formato'
 import { IdServico } from './Folha'
 
 export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCampo[]; detalhes: Map<string, Detalhe> | null; hoje: Dia }) {
@@ -50,7 +50,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                             <span className="text-[12px]">
                               <IdServico servico={servico} ordem={saida.ordem} />
                             </span>
-                            <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} />
+                            <SeloSituacao situacao={situacao(saida, hoje)} texto={diasEspera(d)} />
                           </div>
                           <p className="mt-1.5 text-[13px] text-ink">
                             {servico.categoria === CATEGORIA_RISCO && <span aria-hidden>⚡ </span>}
@@ -109,7 +109,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                               )}
                               {/* sem o ano só quando é deste ano: "20/12" de um pedido de 301 dias deixava o ano em dúvida */}
                               <td className="num">{formatarDiaNoAno(saida.dataSaida, hoje)}</td>
-                              <td className={`num ${atraso ? 'font-medium text-atraso-texto' : ''}`}>{numero(dias)}</td>
+                              <td className={`num ${atraso ? 'font-medium text-atraso-texto' : ''}`}>{diasEsperaCurto(dias)}</td>
                               {/* para escrever à mão */}
                               <td className="retorno">
                                 <span className="block h-5 border-b border-ink-3/60" />

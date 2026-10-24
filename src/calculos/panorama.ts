@@ -125,7 +125,7 @@ export function indicadores(saidas: Saida[], hoje: Dia): Indicadores {
 }
 
 /** Mês a mês (últimos 12 + o corrente, parcial), para as mini-linhas dos indicadores */
-export function serieMensal(saidas: Saida[], por: ContarPor, hoje: Dia) {
+function serieMensal(saidas: Saida[], por: ContarPor, hoje: Dia) {
   const ultimo = chaveMes(hoje)
   const primeiro = chaveMes(somarMeses(inicioDoMes(hoje), -12))
   const grupos = new Map<ChaveMes, Saida[]>()

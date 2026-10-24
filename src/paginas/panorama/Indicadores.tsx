@@ -5,7 +5,7 @@ import { desdeProvisorio } from '@/componentes/graficos/MiniLinha'
 import { mesesDoPeriodo } from '@/filtros/filtros'
 import type { Indicadores as CalcIndicadores, Panorama } from '@/calculos/panorama'
 import { partesDoPrazo } from './FrasePrazo'
-import { decimal, enxuto, numero, pctCurto } from '@/lib/formato'
+import { decimal, diasLevou, numero, pctCurto, variacao } from '@/lib/formato'
 import { rotuloMes } from '@/lib/datas'
 
 /** "provisório: 57% ainda em aberto" na nota do tempo médio */
@@ -24,7 +24,6 @@ export const notaNoPrazo = (i: CalcIndicadores) => {
     .join(' · ')
 }
 
-const variacao = (a: number | null, b: number | null) => (a === null || b === null || b === 0 ? null : ((a - b) / b) * 100)
 
 export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; comparacao: string | null; porRetorno: boolean }) {
   const { atual, previo, serie } = p
@@ -67,7 +66,7 @@ export function Indicadores({ p, comparacao, porRetorno }: { p: Panorama; compar
         rotulo="Tempo médio"
         valor={decimal(atual.tempoMedio)}
         sufixo={atual.tempoMedio === null ? undefined : 'dias'}
-        nota={atual.tempoMediano === null ? 'sem execução no período' : `mediana: ${enxuto(atual.tempoMediano)} ${atual.tempoMediano === 1 ? 'dia' : 'dias'}${provisorio(atual)}`}
+        nota={atual.tempoMediano === null ? 'sem execução no período' : `mediana: ${diasLevou(atual.tempoMediano)}${provisorio(atual)}`}
         // provisório: comparar com o anterior enganaria (a média ainda vai subir)
         delta={atual.provisorio ? null : variacao(atual.tempoMedio, previo?.tempoMedio ?? null)}
         deltaBom="descer"

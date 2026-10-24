@@ -3,6 +3,7 @@
 // evolução mensal em dois gráficos (o antigo tinha dois eixos no mesmo quadro).
 import { clsx } from 'clsx'
 import { GraficoTempo, LegendaTempo } from '@/componentes/graficos/GraficoTempo'
+import { COR_ESPERA, TEXTO_ESCURO_ESPERA } from '@/lib/cores'
 import { FAIXAS_ESPERA } from '@/calculos/panorama'
 import type { GrupoMensal, RelatorioMensal } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
@@ -19,7 +20,6 @@ const COR_FAIXA = ['var(--c-ok)', 'color-mix(in oklab, var(--c-s1) 82%, black)',
 const COR_SAIDAS = 'var(--c-ink-2)'
 const COR_RETORNOS = 'var(--c-s2)'
 const COR_FILA = 'var(--c-ink-3)'
-const COR_ESPERA = ['var(--c-ok)', 'var(--c-andamento)', 'var(--c-risco)', 'var(--c-atraso)', 'color-mix(in oklab, var(--c-atraso) 70%, black)']
 
 /** Tempo médio: acima de 15 dias em vermelho, acima de 5 em âmbar (como no antigo) */
 function Media({ v }: { v: number | null }) {
@@ -156,7 +156,7 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
               prazo
             </p>
           </div>
-          <BarraFaixas partes={FAIXAS_ESPERA.map((f, i) => ({ rotulo: f.rotulo, n: h.fila.espera[i], cor: COR_ESPERA[i], textoEscuro: i < 3 }))} total={h.fila.total} />
+          <BarraFaixas partes={FAIXAS_ESPERA.map((f, i) => ({ rotulo: f.rotulo, n: h.fila.espera[i], cor: COR_ESPERA[i], textoEscuro: TEXTO_ESCURO_ESPERA(i) }))} total={h.fila.total} />
           {h.fila.acima150 > 0 && <p className="mt-1.5 text-[10.5px] text-ink-3">{numero(h.fila.acima150)} acima de 150 dias.</p>}
         </SecaoFolha>
       )}

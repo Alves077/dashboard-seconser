@@ -16,7 +16,7 @@ const num = (v: unknown): number | null => {
 const bool = (v: unknown): boolean => v === true || v === 1 || v === '1' || v === 'true' || v === 't'
 
 /** serviço sem bairro/região no banco (o nome que aparece no site) */
-export const SEM_BAIRRO = 'Sem bairro'
+const SEM_BAIRRO = 'Sem bairro'
 export const SEM_REGIAO = 'Sem região'
 
 export const chaveServico = (idColab: number, type: string) => `${idColab}-${type}`

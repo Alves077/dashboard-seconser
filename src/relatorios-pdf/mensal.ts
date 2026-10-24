@@ -5,12 +5,12 @@ import { PRAZO_DIAS } from '@/config'
 import { CATEGORIA_RISCO, FAIXAS } from '@/dados/regras'
 import { formatarDia, formatarDiaCurto, rotuloMes } from '@/lib/datas'
 import { decimal, numero, pct } from '@/lib/formato'
+import { COR_ESPERA_PDF, TEXTO_ESCURO_ESPERA } from '@/lib/cores'
 import { COR, type Folha, type Trecho } from './motor'
 import { barraFaixas, colunas, grafico, legendaLinhas, nota, secao, tabela, type Celula, type Coluna, type EstiloTabela, type LinhaTabela } from './pecas'
 
 // as mesmas cores da tela (Mensal.tsx), já resolvidas (o color-mix vira a cor final)
 const COR_FAIXA = [COR.ok, '#2263b1', COR.andamento, COR.atraso]
-const COR_ESPERA = [COR.ok, COR.andamento, COR.risco, COR.atraso, '#922929']
 
 const ESTILO: EstiloTabela = { tam: 12, padX: 6, padY: 5, ultimaSemFio: true }
 
@@ -145,7 +145,7 @@ export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
         f.texto(`${numero(h.fila.total)} serviços pendentes, por tempo de espera`, xi, f.y, { tam: 12.5, peso: 500 })
         f.texto(direita, xi + wi, f.y + 1.5, { tam: 11, cor: COR.ink2, alinhar: 'dir' })
         f.y += 12.5 * 1.5 + 8
-        barraFaixas(f, xi, wi, FAIXAS_ESPERA.map((fx, i) => ({ rotulo: fx.rotulo, n: h.fila.espera[i], cor: COR_ESPERA[i], textoEscuro: i < 3 })), h.fila.total)
+        barraFaixas(f, xi, wi, FAIXAS_ESPERA.map((fx, i) => ({ rotulo: fx.rotulo, n: h.fila.espera[i], cor: COR_ESPERA_PDF[i], textoEscuro: TEXTO_ESCURO_ESPERA(i) })), h.fila.total)
         if (h.fila.acima150 > 0) nota(f, xi, wi, `${numero(h.fila.acima150)} acima de 150 dias.`)
       },
       { cartao: true },

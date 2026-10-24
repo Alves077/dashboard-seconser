@@ -11,11 +11,11 @@ import { Card } from '@/componentes/ui/Card'
 import { SeloSituacao } from '@/componentes/ui/SeloSituacao'
 import { calcularMapa, OPCOES_MOSTRAR, type Contagem, type DadosMapa, type Mostrar } from '@/calculos/mapa'
 import { useBase } from '@/dados/consultas'
-import { CATEGORIA_RISCO } from '@/dados/regras'
+import { CATEGORIA_RISCO, textoDiasSelo } from '@/dados/regras'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { formatarDiaNoAno } from '@/lib/datas'
-import { dias, numero, pct } from '@/lib/formato'
+import { numero, pct } from '@/lib/formato'
 import { useFicha, useHoje, useMidia } from '@/lib/ganchos'
 import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 
@@ -184,7 +184,7 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
                       <span className="shrink-0">saiu {formatarDiaNoAno(p.saida.dataSaida, hoje)}</span>
                     </span>
                   </span>
-                  <SeloSituacao situacao={p.situacao} texto={dias(p.dias)} />
+                  <SeloSituacao situacao={p.situacao} texto={textoDiasSelo(p.situacao, p.dias)} />
                   <ChevronRight aria-hidden className="size-4 shrink-0 text-ink-3" />
                 </button>
               </li>

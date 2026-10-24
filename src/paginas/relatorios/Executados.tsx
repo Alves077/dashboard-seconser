@@ -12,7 +12,7 @@ import { PRAZO_DIAS } from '@/config'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDiaNoAno, type Dia } from '@/lib/datas'
-import { decimal, numero, pct } from '@/lib/formato'
+import { decimal, diasLevou, diasLevouCurto, metadeEm, numero, pct } from '@/lib/formato'
 import { Kpi } from './Abertos'
 import { BarraFaixas, IdServico, Rolavel, SecaoFolha } from './Folha'
 
@@ -36,8 +36,6 @@ const COR_EXEC = [
 ]
 const TEXTO_ESCURO = [true, false, true, true, false]
 
-/** "3 dias", "1 dia", "2,5 dias" (mediana de lista par) */
-const diasTexto = (d: number) => `${Number.isInteger(d) ? numero(d) : decimal(d)} ${d === 1 ? 'dia' : 'dias'}`
 
 /**
  * executados, % no prazo e tempo médio; só na do lugar (`comTotal`, na largura toda), também o % do total, a mediana e a
@@ -66,7 +64,7 @@ function TabelaExecutados({ titulo, linhas, r, comTotal = false }: { titulo: str
               {comTotal && <td className="num">{pct(l.executados, r.n)}</td>}
               <td className="num">{pct(l.noPrazo, l.executados)}</td>
               <td className="num">{decimal(l.media)}d</td>
-              {comTotal && <td className="num">{Number.isInteger(l.mediana) ? numero(l.mediana) : decimal(l.mediana)}d</td>}
+              {comTotal && <td className="num">{diasLevouCurto(l.mediana, 'd')}</td>}
             </tr>
           ))}
         </tbody>
@@ -78,7 +76,7 @@ function TabelaExecutados({ titulo, linhas, r, comTotal = false }: { titulo: str
               <td className="num border-t border-ink/30">100%</td>
               <td className="num border-t border-ink/30">{pct(r.noPrazo, r.n)}</td>
               <td className="num border-t border-ink/30">{decimal(r.media)}d</td>
-              <td className="num border-t border-ink/30">{Number.isInteger(r.mediana) ? numero(r.mediana) : decimal(r.mediana)}d</td>
+              <td className="num border-t border-ink/30">{diasLevouCurto(r.mediana, 'd')}</td>
             </tr>
           </tfoot>
         )}
@@ -119,8 +117,17 @@ export function RelatorioExecutadosFolha({
       <p className="mb-4 rounded-r-md border-l-[3px] border-ok bg-page px-3 py-2 text-[12px] leading-relaxed text-ink-2">
         {Quando} {um ? 'foi executado' : 'foram executados'} <strong className={forte}>{numero(r.n)}</strong> {um ? 'serviço' : 'serviços'}:{' '}
         <strong className={forte}>{numero(r.noPrazo)} no prazo</strong> ({pct(r.noPrazo, r.n)}) e <strong className={forte}>{numero(r.foraPrazo)}</strong> com
-        mais de {PRAZO_DIAS} dias. Da saída à execução, <strong className={forte}>{decimal(r.media)} dias</strong> em média; metade em até{' '}
-        <strong className={forte}>{diasTexto(r.mediana)}</strong>.
+        mais de {PRAZO_DIAS} dias. Da saída à execução, <strong className={forte}>{decimal(r.media)} dias</strong> em média;{' '}
+        {r.mediana === 0 ? (
+          <>
+            metade <strong className={forte}>no mesmo dia</strong>
+          </>
+        ) : (
+          <>
+            metade em até <strong className={forte}>{diasLevou(r.mediana)}</strong>
+          </>
+        )}
+        .
         {r.lugares.length > 1 && (
           <>
             {' '}
@@ -134,7 +141,7 @@ export function RelatorioExecutadosFolha({
           <Kpi rotulo="Executados" valor={numero(r.n)} apoio={quando} cor="var(--c-ok)" />
           <Kpi rotulo="No prazo" valor={numero(r.noPrazo)} apoio={`${pct(r.noPrazo, r.n)} · até ${PRAZO_DIAS} dias`} cor="var(--c-ok)" />
           <Kpi rotulo="Fora do prazo" valor={numero(r.foraPrazo)} apoio={`${pct(r.foraPrazo, r.n)} · mais de ${PRAZO_DIAS} dias`} cor="var(--c-atraso)" />
-          <Kpi rotulo="Tempo médio" valor={decimal(r.media)} unidade="d" apoio={`metade em até ${diasTexto(r.mediana)}`} cor="var(--c-ink-3)" />
+          <Kpi rotulo="Tempo médio" valor={decimal(r.media)} unidade="d" apoio={metadeEm(r.mediana)} cor="var(--c-ink-3)" />
         </div>
       </SecaoFolha>
 
@@ -229,7 +236,7 @@ export function RelatorioExecutadosFolha({
                           <td className="quebra">{enderecoDaLista(servico, detalhes)}</td>
                           <td className="num">{formatarDiaNoAno(saida.dataSaida, hoje)}</td>
                           <td className="num">{formatarDiaNoAno(saida.dataRetorno!, hoje)}</td>
-                          <td className={clsx('num', dias > PRAZO_DIAS && 'font-medium text-atraso-texto')}>{numero(dias)}</td>
+                          <td className={clsx('num', dias > PRAZO_DIAS && 'font-medium text-atraso-texto')}>{diasLevouCurto(dias)}</td>
                         </tr>
                       ))}
                     </Fragment>

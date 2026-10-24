@@ -7,12 +7,11 @@ import { faixasDaEpoca, origemTexto, variaNaEpoca, type LinhaSimplesAberto, type
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, rotuloMes, type Dia } from '@/lib/datas'
-import { decimal, numero, pct } from '@/lib/formato'
+import { decimal, diasEsperaCurto, numero, pct } from '@/lib/formato'
+import { COR_ESPERA_PDF, TEXTO_ESCURO_ESPERA } from '@/lib/cores'
 import { COR, type Folha, type Trecho } from './motor'
 import { barraFaixas, cartao, colunas, nota, secao, tabela, type Celula, type Coluna, type EstiloTabela } from './pecas'
 
-// as mesmas cores da tela (Abertos.tsx), com o color-mix já resolvido
-const COR_ESPERA = [COR.ok, COR.andamento, '#e77c28', COR.atraso, '#872727']
 
 /** .folha-compacta: tabela menor, numa linha só (menos o que pode quebrar); célula de duas linhas centra as outras na altura */
 export const ESTILO: EstiloTabela = { tam: 10.5, padX: 5, padY: 3, ultimaSemFio: true, meio: true }
@@ -172,7 +171,7 @@ export function desenharAbertos(
       { rotulo: 'Espera média', valor: decimal(r.media), unidade: 'd', apoio: 'desde o registro', cor: COR.ink3 },
       ...(mostra30 ? [{ rotulo: 'Acima de 30 dias', valor: numero(r.mais30), apoio: `${pct(r.mais30, r.n)} da fila`, cor: COR.atraso }] : []),
       ...(!ep || !varia.atraso || !mostra30
-        ? [{ rotulo: 'Mais antigo', valor: numero(r.maisAntigo), unidade: 'd', apoio: r.registroMaisAntigo === null ? '' : `desde ${formatarDia(r.registroMaisAntigo)}`, cor: COR.s7 }]
+        ? [{ rotulo: 'Mais antigo', valor: diasEsperaCurto(r.maisAntigo), unidade: r.maisAntigo === 0 ? undefined : 'd', apoio: r.registroMaisAntigo === null ? '' : `desde ${formatarDia(r.registroMaisAntigo)}`, cor: COR.s7 }]
         : []),
       { rotulo: 'Institucionais', valor: numero(r.institucionais), apoio: 'regional, vereador etc.', cor: COR.s1 },
     ]),
@@ -191,7 +190,7 @@ export function desenharAbertos(
         f,
         xi,
         wi,
-        faixas.map(({ i, rotulo }) => ({ rotulo, n: r.espera[i], cor: COR_ESPERA[i], textoEscuro: i < 3, nota: i === 0 ? 'dentro do prazo' : undefined })),
+        faixas.map(({ i, rotulo }) => ({ rotulo, n: r.espera[i], cor: COR_ESPERA_PDF[i], textoEscuro: TEXTO_ESCURO_ESPERA(i), nota: i === 0 ? 'dentro do prazo' : undefined })),
         r.n,
         false,
       )
@@ -231,13 +230,13 @@ export function desenharAbertos(
                   : [
                       dias(l.media),
                       ...(mostra30 ? [l.mais30 ? numero(l.mais30) : '—'] : []),
-                      { trechos: [{ t: `${numero(l.maisAntigo)}d`, peso: 600 as const, cor: corDias(l.maisAntigo) }] },
+                      { trechos: [{ t: diasEsperaCurto(l.maisAntigo, 'd'), peso: 600 as const, cor: corDias(l.maisAntigo) }] },
                     ]),
               ],
             })),
             {
               tipo: 'total' as const,
-              celulas: ['Total', numero(r.n), '100%', ...(doDia ? [] : [`${decimal(r.media)}d`, ...(mostra30 ? [numero(r.mais30)] : []), `${numero(r.maisAntigo)}d`])],
+              celulas: ['Total', numero(r.n), '100%', ...(doDia ? [] : [`${decimal(r.media)}d`, ...(mostra30 ? [numero(r.mais30)] : []), diasEsperaCurto(r.maisAntigo, 'd')])],
             },
           ],
           ESTILO,
@@ -311,7 +310,7 @@ export function desenharAbertos(
               servico.categoria ?? 'Sem categoria',
               origem.length > LONGO ? origem : { trechos: [{ t: origem.replace(/ /g, '\u00a0') }] },
               formatarDia(saida.dataSaida),
-              { trechos: [{ t: numero(d), peso: 600, cor: COR.atrasoTexto }] },
+              { trechos: [{ t: diasEsperaCurto(d), peso: 600, cor: COR.atrasoTexto }] },
             ],
           }
         }),

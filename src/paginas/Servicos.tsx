@@ -23,7 +23,7 @@ import { enderecoCurto, rotuloLugar } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { useFiltros } from '@/filtros/useFiltros'
 import { formatarDia } from '@/lib/datas'
-import { dias, normalizarBusca, numero, plural } from '@/lib/formato'
+import { diasEspera, normalizarBusca, numero, plural } from '@/lib/formato'
 import { useEntradaSuave, useHoje } from '@/lib/ganchos'
 import { IdServico } from './relatorios/Folha'
 
@@ -73,7 +73,7 @@ function Situacao({ l }: { l: LinhaServico }) {
   return (
     <SeloSituacao
       situacao={l.situacao}
-      texto={l.situacao === 'ok' ? undefined : `${l.situacao === 'atraso' ? 'Em atraso' : 'Em atendimento'} · ${l.dias === 0 ? 'hoje' : dias(l.dias)}`}
+      texto={l.situacao === 'ok' ? undefined : `${l.situacao === 'atraso' ? 'Em atraso' : 'Em atendimento'} · ${diasEspera(l.dias)}`}
     />
   )
 }

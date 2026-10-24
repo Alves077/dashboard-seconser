@@ -39,7 +39,7 @@ export function cabecalho(f: Folha, c: Cabecalho) {
 }
 
 /** Título de seção (h3 da folha): miúdo, em maiúsculas, espaçado */
-export function tituloSecao(f: Folha, x: number, titulo: string) {
+function tituloSecao(f: Folha, x: number, titulo: string) {
   f.texto(titulo.toUpperCase(), x, f.y, { tam: 10, peso: 600, cor: COR.ink3, espaco: 0.8 })
   f.y += 15 + 8
 }

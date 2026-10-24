@@ -16,7 +16,7 @@ import { compararTexto } from '@/lib/formato'
 
 export const ORIGEM_VEREADOR = 'Vereador'
 /** Detalhe da origem das indicações legislativas (no Colab: tag 3067; aqui pelo rótulo do tratamento) */
-export const INDICACAO_LEGISLATIVA = 'Indicação legislativa'
+const INDICACAO_LEGISLATIVA = 'Indicação legislativa'
 
 export interface LinhaVereador {
   nome: string

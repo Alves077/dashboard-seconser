@@ -4,7 +4,7 @@ import type { RegiaoCampo } from '@/calculos/relatorios'
 import { CATEGORIA_RISCO, enderecoCurto, rotuloLugar, situacao } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDiaNoAno, type Dia } from '@/lib/datas'
-import { numero } from '@/lib/formato'
+import { diasEsperaCurto, numero } from '@/lib/formato'
 import { COR, MARGEM, type Folha } from './motor'
 import { tabela, type Coluna, type LinhaTabela } from './pecas'
 
@@ -68,7 +68,7 @@ export function desenharCampo(f: Folha, regioes: RegiaoCampo[], detalhes: Map<st
               },
               ...(detalhes ? [{ trechos: [{ t: d?.endereco ? enderecoCurto(d.endereco) : '—' }], abaixo: lugar }] : []),
               formatarDiaNoAno(saida.dataSaida, hoje),
-              { trechos: [{ t: numero(dias), ...(atraso ? { peso: 500 as const, cor: COR.atrasoTexto } : {}) }] },
+              { trechos: [{ t: diasEsperaCurto(dias), ...(atraso ? { peso: 500 as const, cor: COR.atrasoTexto } : {}) }] },
               { trechos: [], retorno: true },
             ],
           })

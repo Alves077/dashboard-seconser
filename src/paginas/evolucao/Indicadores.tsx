@@ -5,10 +5,9 @@ import { Indicador } from '@/componentes/ui/Indicador'
 import type { Evolucao } from '@/calculos/evolucao'
 import { PRAZO_DIAS } from '@/config'
 import { formatarDiaCurto } from '@/lib/datas'
-import { decimal, numero } from '@/lib/formato'
+import { decimal, numero, variacao } from '@/lib/formato'
 import { useFiltros } from '@/filtros/useFiltros'
 
-const variacao = (a: number, b: number | null | undefined) => (b === null || b === undefined || b === 0 ? null : ((a - b) / b) * 100)
 
 export function Indicadores({ e, comparacao }: { e: Evolucao; comparacao: string | null }) {
   const porSaida = useFiltros().filtros.contarPor === 'saida'

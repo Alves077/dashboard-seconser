@@ -1,6 +1,7 @@
 // Regras de negócio das saídas — as mesmas da vw_servicos (MySQL e Supabase) e do site antigo.
 import { PRAZO_DIAS } from '@/config'
 import type { Dia } from '@/lib/datas'
+import { diasEspera, diasLevou } from '@/lib/formato'
 import type { Saida, Servico, Situacao } from './tipos'
 
 /** Saída + 5 dias corridos */
@@ -12,6 +13,11 @@ export function prazo(s: Saida): Dia {
 export function situacao(s: Saida, hoje: Dia): Situacao {
   if (s.dataRetorno !== null) return 'ok'
   return prazo(s) < hoje ? 'atraso' : 'andamento'
+}
+
+/** Os dias no selo da situação: executado → quanto levou ("mesmo dia", "3 dias"); em aberto → há quanto espera ("hoje") */
+export function textoDiasSelo(sit: Situacao, n: number): string {
+  return sit === 'ok' ? diasLevou(n) : diasEspera(n)
 }
 
 export function emAberto(s: Saida): boolean {

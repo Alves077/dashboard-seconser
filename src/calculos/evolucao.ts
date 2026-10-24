@@ -42,7 +42,7 @@ export interface Bloco {
 const DIAS_SEMANA = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb']
 const diaDaSemana = (d: Dia) => (((d + 4) % 7) + 7) % 7 // 01/01/1970 foi uma quinta
 
-export function escolherPasso(dias: number): Passo {
+function escolherPasso(dias: number): Passo {
   if (dias <= 14) return 'dia'
   if (dias <= 190) return 'semana'
   return 'mes'

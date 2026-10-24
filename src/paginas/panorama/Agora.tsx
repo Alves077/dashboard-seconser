@@ -9,13 +9,12 @@ import { CATEGORIA_RISCO, situacao } from '@/dados/regras'
 import { ehPeriodoPadrao } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
 import { formatarDia, type Dia } from '@/lib/datas'
-import { corRegiao } from '@/lib/cores'
-import { compararTexto, dias, numero, pct, plural } from '@/lib/formato'
+import { corRegiao, COR_ESPERA } from '@/lib/cores'
+import { compararTexto, diasEspera, numero, pct, plural } from '@/lib/formato'
 import { direcaoDaTroca, useFicha } from '@/lib/ganchos'
 import { gavetaCartao, gavetaLista, trocarComEsmaecer, trocarComTransicao } from '@/lib/gaveta'
 import { LinhaBarra, LISTA_BARRAS } from './Quebras'
 
-const COR_ESPERA = ['bg-o1', 'bg-o2', 'bg-o3', 'bg-o4', 'bg-o5']
 
 const faixaDe = (d: number) => FAIXAS_ESPERA.findIndex((f) => d <= f.max)
 
@@ -53,10 +52,9 @@ function BarraEspera({
               title={`${FAIXAS_ESPERA[i].rotulo}: ${numero(n)} (${pct(n, total)}) — toque para ver só estes`}
               className={clsx(
                 'h-full cursor-pointer transition-opacity duration-150 ease-out hover:opacity-85',
-                COR_ESPERA[i],
                 apagada(i) && 'opacity-30',
               )}
-              style={{ flexGrow: n }}
+              style={{ flexGrow: n, background: COR_ESPERA[i] }}
             />
           ) : null,
         )}
@@ -82,7 +80,7 @@ function BarraEspera({
             >
               {/* o rótulo quebra linha em vez de cortar ("Mais de ..." em tela estreita ou com zoom) */}
               <span className="flex items-center justify-center gap-1.5 text-xs leading-tight text-ink-2">
-                <span aria-hidden className={clsx('size-2.5 shrink-0 rounded-sm', COR_ESPERA[i])} />
+                <span aria-hidden className="size-2.5 shrink-0 rounded-sm" style={{ background: COR_ESPERA[i] }} />
                 <span>{f.rotulo}</span>
               </span>
               <span className="numeros mt-0.5 block text-[15px] font-medium text-ink">
@@ -307,10 +305,10 @@ export function Agora({ agora, hoje }: { agora: ReturnType<typeof calcularAgora>
                         <span className="shrink-0">saiu em {formatarDia(saida.dataSaida)}</span>
                       </span>
                       {/* celular: selo embaixo, para o nome da categoria caber */}
-                      <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} className="mt-1 sm:hidden" />
+                      <SeloSituacao situacao={situacao(saida, hoje)} texto={diasEspera(d)} className="mt-1 sm:hidden" />
                     </span>
                     {servico.categoria === CATEGORIA_RISCO && <SeloRisco className="max-sm:hidden" />}
-                    <SeloSituacao situacao={situacao(saida, hoje)} texto={dias(d)} className="max-sm:hidden" />
+                    <SeloSituacao situacao={situacao(saida, hoje)} texto={diasEspera(d)} className="max-sm:hidden" />
                     <ChevronRight aria-hidden className="size-4 shrink-0 text-ink-3 transition-transform duration-150 group-hover:translate-x-0.5" />
                   </button>
                 </li>

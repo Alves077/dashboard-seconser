@@ -935,3 +935,16 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
 - **Navegação do celular com no máximo 5** (skills mobile-native/emil): sem login, as 5 de sempre; a equipe tem
   Panorama, Mapa, Serviços, Relatórios e "Mais" (Prazo, Evolução, Vereadores) — numa delas o "Mais" fica marcado com o
   nome e o ícone dela. Itens de 75 px em 375 px (eram 51).
+- **"0 dias" fora do site** (usuário, 24/10/2026): `diasEspera` (0 → "hoje": selos de quem está aberto no Mapa, Lista
+  de campo, Panorama, Vereadores, Ficha, Serviços; "Em aberto desde hoje" na ficha) e `diasLevou` (0 → "mesmo dia":
+  medianas do Panorama/Prazo/perfil, selos de executados no Mapa/perfil, "Executado em … — no mesmo dia" na ficha,
+  "metade no mesmo dia" e a coluna Mediana dos Executados, tela e PDF), em lib/formato.ts. Médias (0,0d) e colunas
+  "Dias" das listas seguem número.
+- **Limpeza (24/10, depois da revisão):** regra do zero toda em lib/formato.ts (`diasEspera`, `diasLevou`,
+  `diasEsperaCurto`, `diasLevouCurto`, `metadeEm`) + `textoDiasSelo` (regras.ts); colunas "Dias" e "Mais antigo" sem 0.
+  **Uma paleta só para as faixas de espera** (`COR_ESPERA` / `COR_ESPERA_PDF` / `TEXTO_ESCURO_ESPERA` em lib/cores.ts):
+  verde (prazo) → âmbar → laranja → vermelho → vermelho escuro, no Panorama, Mensal e Em aberto, tela e PDF (eram três:
+  o Panorama usava a escala azul o1–o5; o Mensal, o laranja do risco). `variacao` em lib/formato.ts (era copiada em 3
+  indicadores). Sem `export` o que só o próprio arquivo usa (serieMensal, escolherPasso, coordenadaValida, tituloSecao,
+  normalizarTexto, enxuto, ATALHOS, PERIODO_PADRAO, SEM_BAIRRO, INDICACAO_LEGISLATIVA). Análise de sem uso
+  (scratchpad `sem_uso.mjs`): nenhum código morto; tokens o1/o2/o4/o5 sobram no CSS (paleta do DESIGN.md, mantidos).

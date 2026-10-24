@@ -7,9 +7,8 @@ import { mesesDoPeriodo } from '@/filtros/filtros'
 import { notaNoPrazo } from '@/paginas/panorama/Indicadores'
 import type { Prazo } from '@/calculos/prazo'
 import { rotuloMes } from '@/lib/datas'
-import { decimal, enxuto, numero, pctCurto } from '@/lib/formato'
+import { decimal, diasLevou, numero, pctCurto, variacao } from '@/lib/formato'
 
-const variacao = (a: number | null, b: number | null) => (a === null || b === null || b === 0 ? null : ((a - b) / b) * 100)
 const diferenca = (a: number | null, b: number | null | undefined) => (a === null || b === null || b === undefined ? null : a - b)
 
 export function Indicadores({ p, comparacao }: { p: Prazo; comparacao: string | null }) {
@@ -45,7 +44,7 @@ export function Indicadores({ p, comparacao }: { p: Prazo; comparacao: string | 
         nota={
           atual.tempoMediano === null
             ? 'sem execução no período'
-            : `mediana: ${enxuto(atual.tempoMediano)} ${atual.tempoMediano === 1 ? 'dia' : 'dias'}${atual.provisorio ? ` · provisório: ${pctCurto(atual.abertas, atual.saidas)} ainda em aberto` : ''}`
+            : `mediana: ${diasLevou(atual.tempoMediano)}${atual.provisorio ? ` · provisório: ${pctCurto(atual.abertas, atual.saidas)} ainda em aberto` : ''}`
         }
         // provisório: comparar com o anterior enganaria (a média ainda vai subir)
         delta={atual.provisorio ? null : variacao(atual.tempoMedio, previo?.tempoMedio ?? null)}
