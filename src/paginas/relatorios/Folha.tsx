@@ -103,7 +103,8 @@ export function IdServico({ servico, ordem }: { servico: Servico; ordem?: number
         <Info aria-hidden className="size-3" />
       </button>
       <span className="numeros hidden font-semibold print:inline">{servico.idColab}</span>
-      {ordem !== undefined && ordem > 1 && <span className="ml-1 text-[10px] font-normal text-ink-3">({ordem}ª ida)</span>}
+      {/* embaixo do número (usuário, 24/10/2026): na mesma linha alargava a coluna e desalinhava os números */}
+      {ordem !== undefined && ordem > 1 && <span className="block text-[10px] font-normal text-ink-3">{ordem}ª ida</span>}
     </>
   )
 }

@@ -4,6 +4,7 @@
 // e sem lista no fim (a do dia é a Lista de campo). Outra época: abertura e indicadores de quem saiu nela, sem as faixas de espera e o
 // "> 30 dias" que ela não deixa acontecer (como na tela).
 import { faixasDaEpoca, origemTexto, variaNaEpoca, type LinhaSimplesAberto, type RelatorioAbertos } from '@/calculos/relatorios'
+import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, rotuloMes, type Dia } from '@/lib/datas'
 import { decimal, numero, pct } from '@/lib/formato'
@@ -14,7 +15,7 @@ import { barraFaixas, cartao, colunas, nota, secao, tabela, type Celula, type Co
 const COR_ESPERA = [COR.ok, COR.andamento, '#e77c28', COR.atraso, '#872727']
 
 /** .folha-compacta: tabela menor, numa linha só (menos o que pode quebrar) */
-const ESTILO: EstiloTabela = { tam: 10.5, padX: 5, padY: 3, ultimaSemFio: true }
+export const ESTILO: EstiloTabela = { tam: 10.5, padX: 5, padY: 3, ultimaSemFio: true }
 
 const MESES_NO_RESUMO = 12
 /** a partir de quantas letras um texto da tabela de mais antigos pode quebrar linha */
@@ -31,8 +32,8 @@ const NIVEL = {
 const corDias = (v: number) => (v > 30 ? COR.atrasoTexto : v > 15 ? COR.andamentoTexto : undefined)
 const dias = (v: number, peso: 400 | 600 = 400): Celula => ({ trechos: [{ t: `${decimal(v)}d`, peso, cor: corDias(v) }] })
 
-/** Indicador do script: rótulo, barrinha de cor ao lado do número e uma linha de apoio */
-function kpis(f: Folha, x: number, w: number, itens: { rotulo: string; valor: string; unidade?: string; apoio: string; cor: string }[]) {
+/** Indicador do script: rótulo, barrinha de cor ao lado do número e uma linha de apoio (também nos Executados) */
+export function kpis(f: Folha, x: number, w: number, itens: { rotulo: string; valor: string; unidade?: string; apoio: string; cor: string }[]) {
   const vao = 6
   const wi = (w - vao * (itens.length - 1)) / itens.length
   const montados = itens.map((it) => ({
@@ -70,7 +71,7 @@ function tabelaSimples(f: Folha, x: number, w: number, titulo: string, linhas: L
 }
 
 /** título dentro do cartão (text-[12px] font-semibold mb-1) */
-function tituloCartao(f: Folha, x: number, texto: string) {
+export function tituloCartao(f: Folha, x: number, texto: string) {
   f.texto(texto, x, f.y, { tam: 12, peso: 600 })
   f.y += 18 + 4
 }
@@ -304,7 +305,7 @@ export function desenharAbertos(
           return {
             celulas: [
               { trechos: [{ t: String(servico.idColab), peso: 600 }] },
-              ...(detalhes ? [detalhes.get(servico.chave)?.endereco ?? '—'] : []),
+              ...(detalhes ? [(e => (e ? enderecoCurto(e) : '—'))(detalhes.get(servico.chave)?.endereco)] : []),
               // só texto LONGO quebra (como na tela); o resto fica numa linha
               servico.bairro.length > LONGO ? servico.bairro : { trechos: [{ t: servico.bairro.replace(/ /g, '\u00a0') }] },
               servico.categoria ?? 'Sem categoria',

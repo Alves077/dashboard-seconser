@@ -2,7 +2,7 @@
 // seção com título, cartão, tabela, barra de faixas e gráfico ao longo do tempo. Medidas em px de CSS.
 import { escala } from '@/componentes/graficos/GraficoTempo'
 import { numero, pct } from '@/lib/formato'
-import { COR, MARGEM, type Alinhar, type Folha, type Trecho } from './motor'
+import { COR, MARGEM, type Alinhar, type Folha, type Peso, type Trecho } from './motor'
 
 export interface Cabecalho {
   titulo: string
@@ -197,7 +197,7 @@ function larguras(f: Folha, w: number, colunas: Coluna[], linhas: LinhaTabela[],
   const min = colunas.map(() => 0)
   const max = colunas.map(() => 0)
   // só o espaço comum separa palavras: o espaço que não quebra (NBSP) segura o nome numa linha
-  const medirPalavras = (s: string, tam: number, peso: 400 | 500 | 600 = 400, espaco = 0) =>
+  const medirPalavras = (s: string, tam: number, peso: Peso = 400, espaco = 0) =>
     Math.max(0, ...s.split(/ +/).map((p) => f.medirTexto(p, tam, peso, espaco)))
   colunas.forEach((c, i) => {
     const t = c.titulo.toUpperCase()
@@ -212,7 +212,10 @@ function larguras(f: Folha, w: number, colunas: Coluna[], linhas: LinhaTabela[],
       const abaixo = c.abaixo ? f.medirTexto(c.abaixo, TAM_ABAIXO) : 0
       const cheia = Math.max(inteira, abaixo)
       max[i] = Math.max(max[i], cheia)
-      const menor = colunas[i].quebra ? Math.max(medirPalavras(textoDe(c), e.tam, 400), c.abaixo ? medirPalavras(c.abaixo, TAM_ABAIXO) : 0) : cheia
+      // a palavra medida no peso em que vai ser desenhada: medida em 400 e desenhada em 500, "Associação" não cabia e
+      // partia no meio ("Associaçã / o")
+      const peso = Math.max(l.tipo === 'total' ? 600 : 400, ...c.trechos.map((t) => t.peso ?? 400)) as Peso
+      const menor = colunas[i].quebra ? Math.max(medirPalavras(textoDe(c), e.tam, peso), c.abaixo ? medirPalavras(c.abaixo, TAM_ABAIXO) : 0) : cheia
       min[i] = Math.max(min[i], menor)
     })
   }
@@ -227,7 +230,10 @@ function larguras(f: Folha, w: number, colunas: Coluna[], linhas: LinhaTabela[],
   return mn.map((v, i) => v + ((w - somaMin) * (mx[i] - mn[i])) / (somaMax - somaMin))
 }
 
-/** .tabela-folha: cabeçalho miúdo em maiúsculas, fio fino entre as linhas; na página seguinte repete o cabeçalho */
+/**
+ * .tabela-folha: cabeçalho miúdo em maiúsculas, fio fino entre as linhas; na página seguinte repete o cabeçalho e, no
+ * meio de um grupo, o nome dele ("Camboinhas · continuação") — senão as linhas do topo ficavam sem dizer de onde são
+ */
 export function tabela(f: Folha, x: number, w: number, colunas: Coluna[], linhas: LinhaTabela[], e: EstiloTabela) {
   const lh = e.lh ?? 1.5
   const ws = larguras(f, w, colunas, linhas, e)
@@ -272,13 +278,28 @@ export function tabela(f: Folha, x: number, w: number, colunas: Coluna[], linhas
 
   f.garantir(altCab + (montadas[0]?.alt ?? 0) + (montadas[0]?.l.tipo === 'grupo' ? (montadas[1]?.alt ?? 0) : 0))
   desenharCabecalho()
+  /** o grupo em que se está e a linha que vai ser desenhada (para saber, ao virar a página, se é no meio do grupo) */
+  let grupoAtual: Trecho[] | null = null
+  let kAtual = 0
+  const desenharContinuacao = () => {
+    if (!grupoAtual || montadas[kAtual]?.l.tipo === 'grupo') return
+    const ls = f.quebrar([grupoAtual[0], { t: ' · continuação', peso: 400, cor: COR.ink3 }], w - 2 * e.padX, 11, 600)
+    const alt = 8 + ls.length * 11 * lh + e.padY
+    f.caixa(x, f.y, w, alt, { fundo: COR.page })
+    f.desenharLinhas(ls, x + e.padX, f.y + 8, w - 2 * e.padX, { tam: 11, peso: 600, lh })
+    f.linha(x, f.y + alt - 0.5, x + w, f.y + alt - 0.5)
+    f.y += alt
+  }
   const antes = f.aoVirar
   f.aoVirar = () => {
     antes?.()
     desenharCabecalho()
+    desenharContinuacao()
   }
 
   montadas.forEach((m, k) => {
+    kAtual = k
+    if (m.l.tipo === 'grupo') grupoAtual = m.l.trechos
     // o subtítulo do grupo nunca fica sozinho no pé da página
     f.garantir(m.alt + (m.l.tipo === 'grupo' ? (montadas[k + 1]?.alt ?? 0) : 0))
     const y = f.y

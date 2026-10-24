@@ -1,12 +1,12 @@
-// Relatórios — "O que levo para a reunião / para a rua?". Três folhas A4 (na tela e na impressão,
+// Relatórios — "O que levo para a reunião / para a rua?". Quatro folhas A4 (na tela e na impressão,
 // que o navegador salva em PDF): o relatório mensal / histórico completo (o mesmo do site antigo, com
-// o seu seletor de mês), os serviços em aberto e a lista de campo. Aba e mês ficam na URL
+// o seu seletor de mês), os serviços em aberto, os executados e a lista de campo. Aba e mês ficam na URL
 // (?relatorio=…&mes=…), dá para mandar o link. Valem os filtros de região, bairro, categoria e origem.
 // O link pede login; para quem não tem conta, o PDF de verdade (src/relatorios-pdf, montado aqui no
 // navegador): baixar no computador, compartilhar o arquivo no celular (decisão do usuário, 17/10/2026).
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
-import { ClipboardList, Download, FileText, Link2, ListTodo, LogIn, Printer, Share2 } from 'lucide-react'
+import { ClipboardList, Download, FileText, Link2, ListChecks, ListTodo, LogIn, Printer, Share2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
@@ -15,26 +15,28 @@ import { useInterface } from '@/componentes/layout/interface'
 import { Botao } from '@/componentes/ui/Botao'
 import { Card } from '@/componentes/ui/Card'
 import { Selecao } from '@/componentes/ui/Selecao'
-import { listaCampo, mesesDoRelatorio, relatorioAbertos, relatorioMensal } from '@/calculos/relatorios'
+import { listaCampo, mesesDoRelatorio, relatorioAbertos, relatorioExecutados, relatorioMensal } from '@/calculos/relatorios'
 import { useBase, useDetalhes } from '@/dados/consultas'
 import { useSessao } from '@/dados/sessao'
 import { filtrarLugar, intervaloDo, noIntervalo, type Atalho, type Intervalo } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
-import { chaveMes, diaDe, formatarDia, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
+import { chaveMes, diaDe, formatarDia, formatarDiaCurto, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
 import { numero } from '@/lib/formato'
 import { useHoje, useMidia } from '@/lib/ganchos'
 import type { PedidoPdf } from '@/relatorios-pdf'
 import { RelatorioAbertosFolha } from './relatorios/Abertos'
 import { ListaCampoFolha } from './relatorios/Campo'
+import { RelatorioExecutadosFolha } from './relatorios/Executados'
 import { CabecalhoFolha, Folha, useImpressaoClara } from './relatorios/Folha'
 import { RelatorioMensalFolha } from './relatorios/Mensal'
 import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 
-type Aba = 'mensal' | 'abertos' | 'campo'
+type Aba = 'mensal' | 'abertos' | 'executados' | 'campo'
 
 const ABAS: { id: Aba; nome: string; icone: typeof FileText; descricao: string }[] = [
   { id: 'mensal', nome: 'Mensal', icone: FileText, descricao: 'Para reunião e prestação de contas: o relatório de um mês fechado ou o histórico completo. Escolha o mês aqui (o período do filtro não vale nesta aba).' },
   { id: 'abertos', nome: 'Em aberto', icone: ListTodo, descricao: 'A fila de hoje da cidade, de uma região ou de um bairro (escolha nos filtros). Para ver só os que saíram para a rua numa época, escolha aqui (o período do filtro não vale nesta aba).' },
+  { id: 'executados', nome: 'Executados', icone: ListChecks, descricao: 'Os serviços que voltaram da rua executados numa época, por região e bairro, com os dias da saída à execução. A época se escolhe aqui (o período do filtro não vale nesta aba).' },
   { id: 'campo', nome: 'Lista de campo', icone: ClipboardList, descricao: 'Para levar à rua: os abertos por região e bairro, juntando os que estão perto um do outro (até 300 m), mais antigos primeiro, com espaço para anotar o retorno. A época da saída se escolhe aqui (o período do filtro não vale nesta aba).' },
 ]
 
@@ -49,6 +51,33 @@ const ATALHOS_SAIDA: { id: Atalho | 'hoje'; texto: string }[] = [
   { id: '90d', texto: 'Nos últimos 90 dias' },
   { id: 'este-ano', texto: 'Este ano' },
 ]
+
+// Executados (pedido do usuário, 21/10/2026): época pela data de execução, seletor próprio. Padrão: últimos 7 dias —
+// sem "qualquer data" nem ano (seriam milhares de linhas). No lugar de "Hoje"/"Ontem", o ÚLTIMO DIA COM EXECUÇÃO
+// (usuário, 24/10/2026): as execuções só entram com a carga (feita no trabalho), e "hoje" vivia vazio.
+// Na URL: ?execucao=ultimo | 30d | m202608 ; sem o parâmetro = últimos 7 dias.
+const ATALHOS_EXECUCAO: { id: 'ultimo' | '7d' | '30d'; texto: string }[] = [
+  { id: 'ultimo', texto: 'Último dia com execução' },
+  { id: '7d', texto: 'Nos últimos 7 dias' },
+  { id: '30d', texto: 'Nos últimos 30 dias' },
+]
+/** meses de execução no seletor (os mais recentes) */
+const MESES_EXECUCAO = 12
+
+/** "hoje", "ontem" ou "em 22/10" */
+const quandoDia = (d: Dia, hoje: Dia) => (d === hoje ? 'hoje' : d === hoje - 1 ? 'ontem' : `em ${formatarDiaCurto(d)}`)
+
+function intervaloDaExecucao(valor: string | null, hoje: Dia, ultimo: Dia | null): { intervalo: Intervalo; quando: string } {
+  if (valor === 'ultimo' && ultimo !== null)
+    return { intervalo: { de: ultimo, ate: ultimo, parcial: ultimo === hoje, rotulo: formatarDia(ultimo) }, quando: quandoDia(ultimo, hoje) }
+  if (valor === '30d') return { intervalo: intervaloDo({ tipo: 'atalho', atalho: '30d' }, hoje), quando: 'nos últimos 30 dias' }
+  const mes = /^m(\d{6})$/.exec(valor ?? '')
+  if (mes) {
+    const intervalo = intervaloDo({ tipo: 'mes', mes: +mes[1] }, hoje)
+    return { intervalo, quando: `em ${intervalo.rotulo}` }
+  }
+  return { intervalo: intervaloDo({ tipo: 'atalho', atalho: '7d' }, hoje), quando: 'nos últimos 7 dias' }
+}
 
 function intervaloDaSaida(valor: string | null, hoje: Dia): Intervalo | null {
   if (valor === 'hoje') return { de: hoje, ate: hoje, parcial: true, rotulo: 'Hoje' }
@@ -108,7 +137,7 @@ export function Relatorios() {
             texto={
               usuario
                 ? 'Sua conta não tem acesso a esta parte. Fale com o administrador.'
-                : 'Entre com a sua conta para imprimir o relatório mensal, os serviços em aberto e a lista de campo.'
+                : 'Entre com a sua conta para imprimir o relatório mensal, os serviços em aberto, os executados e a lista de campo.'
             }
             acao={
               !usuario &&
@@ -160,7 +189,7 @@ function BotaoPdf({
 function PaginaRelatorios() {
   useImpressaoClara()
   const [params, setParams] = useSearchParams()
-  const aba: Aba = (['mensal', 'abertos', 'campo'] as const).find((a) => a === params.get('relatorio')) ?? 'mensal'
+  const aba: Aba = (['mensal', 'abertos', 'executados', 'campo'] as const).find((a) => a === params.get('relatorio')) ?? 'mensal'
   // "Hoje" com "Só em atraso" seria sempre vazio (atraso = saiu há mais de 5 dias): com "Hoje" a chave some e não vale
   const soAtraso = params.get('campo') === 'atraso' && params.get('saida') !== 'hoje'
   // aba, mês, época, "só em atraso": o mesmo esmaecer da troca de filtro (antes trocava a folha seco)
@@ -190,6 +219,16 @@ function PaginaRelatorios() {
   const [obs, setObs] = useObservacao(JSON.stringify([mes ?? 'tudo', escopo]))
 
   const paramSaida = params.get('saida')
+  const paramExecucao = params.get('execucao')
+  const comLista = params.get('lista') === '1'
+  // o último dia com execução, com os filtros de lugar (num bairro pode ser outro dia que na cidade)
+  const ultimoExecutado = useMemo(() => {
+    if (!base) return null
+    let ultimo: Dia | null = null
+    for (const s of filtrarLugar(base.saidas, filtros)) if (s.dataRetorno !== null && (ultimo === null || s.dataRetorno > ultimo)) ultimo = s.dataRetorno
+    return ultimo
+  }, [base, filtros])
+  const execucao = useMemo(() => intervaloDaExecucao(paramExecucao, hoje, ultimoExecutado), [paramExecucao, hoje, ultimoExecutado])
   const saida = useMemo(() => intervaloDaSaida(paramSaida, hoje), [paramSaida, hoje])
   // meses que ainda têm pedido em aberto (os mais recentes primeiro)
   const mesesAbertos = useMemo(
@@ -219,10 +258,23 @@ function PaginaRelatorios() {
         ? `Dos ${numero(saidasDaEpoca)} que saíram para a rua ${quandoSaida}, ${numero(emAberto)} ${soAtrasados ? 'seguem em atraso' : 'seguem em aberto'}`
         : null
 
+  // meses com execução (os mais recentes primeiro)
+  const mesesExecucao = useMemo(
+    () =>
+      base
+        ? [...new Set(base.saidas.filter((s) => s.dataRetorno !== null).map((s) => chaveMes(s.dataRetorno!)))].sort((a, b) => b - a).slice(0, MESES_EXECUCAO)
+        : [],
+    [base],
+  )
+
   const mensal = useMemo(() => (base && aba === 'mensal' ? relatorioMensal(base, filtros, mes, hoje) : null), [base, filtros, hoje, aba, mes])
   const abertos = useMemo(
     () => (base && aba === 'abertos' ? relatorioAbertos(base, filtros, hoje, saida) : null),
     [base, filtros, hoje, aba, saida],
+  )
+  const executados = useMemo(
+    () => (base && aba === 'executados' ? relatorioExecutados(base, filtros, execucao.intervalo) : null),
+    [base, filtros, aba, execucao],
   )
   const campo = useMemo(
     () => (base && aba === 'campo' ? listaCampo(base, filtros, hoje, soAtraso, saida) : null),
@@ -258,6 +310,12 @@ function PaginaRelatorios() {
               ]).join(' · ') || undefined,
             meta: soTexto([geradoLongo, `${numero(abertos.n)} serviços em aberto`, dadosAte]),
           }
+        : aba === 'executados' && executados
+          ? {
+              titulo: `Serviços Executados · ${filtros.bairro ? `Bairro ${filtros.bairro}` : filtros.regiao ? `Região ${filtros.regiao}` : 'Niterói'}`,
+              subtitulo: soTexto([filtros.categoria, filtros.quem ?? filtros.origem, `Executados ${execucao.quando}`, comLista ? null : 'Resumo']).join(' · '),
+              meta: soTexto([geradoLongo, `${numero(executados.n)} ${executados.n === 1 ? 'serviço executado' : 'serviços executados'}`, dadosAte]),
+            }
         : aba === 'campo' && campo
           ? {
               titulo: `Lista de campo · ${escopo}`,
@@ -272,7 +330,7 @@ function PaginaRelatorios() {
   const tituloCompartilhar =
     aba === 'mensal'
       ? `Relatório ${mes === null ? 'histórico' : rotuloMesLongo(mes)} · ${escopo}`
-      : `${aba === 'abertos' ? 'Serviços em aberto' : 'Lista de campo'} · ${escopo}`
+      : `${aba === 'abertos' ? 'Serviços em aberto' : aba === 'executados' ? `Serviços executados ${execucao.quando}` : 'Lista de campo'} · ${escopo}`
   const compartilhar = async () => {
     try {
       await navigator.share({ title: tituloCompartilhar, text: `${tituloCompartilhar} — painel da DIP (entrar com a conta)`, url: window.location.href })
@@ -303,6 +361,8 @@ function PaginaRelatorios() {
     if (!cab) return null
     if (aba === 'mensal' && mensal) return { tipo: 'mensal', cabecalho: cab, hoje, r: mensal, obs }
     if (aba === 'abertos' && abertos) return { tipo: 'abertos', cabecalho: cab, hoje, r: abertos, detalhes: comEndereco, doDia: paramSaida === 'hoje', quando: quandoSaida }
+    if (aba === 'executados' && executados)
+      return { tipo: 'executados', cabecalho: cab, hoje, r: executados, detalhes: comEndereco, quando: execucao.quando, comLista }
     if (aba === 'campo' && campo) return { tipo: 'campo', cabecalho: cab, hoje, regioes: campo.regioes, detalhes: comEndereco }
     return null
   }
@@ -437,7 +497,7 @@ function PaginaRelatorios() {
           aria-label="Relatório"
           value={[aba]}
           onValueChange={(v) => v[0] && trocar('relatorio', v[0] === 'mensal' ? null : (v[0] as string))}
-          className="relative mt-4 grid grid-cols-3 gap-1 rounded-xl border border-line bg-card p-1 sm:inline-grid sm:w-auto"
+          className="relative mt-4 grid grid-cols-4 gap-1 rounded-xl border border-line bg-card p-1 sm:inline-grid sm:w-auto"
         >
           <MarcadorChave className="bg-acao" />
           {ABAS.map(({ id, nome, icone: Icone }) => (
@@ -463,7 +523,47 @@ function PaginaRelatorios() {
           />
         )}
 
-        {aba !== 'mensal' && (
+        {aba === 'executados' && (
+          <Selecao
+            rotulo="Executados"
+            className="mt-3 w-full max-w-64"
+            opcoes={[
+              ...ATALHOS_EXECUCAO.filter((a) => a.id !== 'ultimo' || ultimoExecutado !== null).map((a) => ({
+                valor: a.id,
+                texto: a.id === 'ultimo' && ultimoExecutado !== null ? `${a.texto} (${formatarDiaCurto(ultimoExecutado)})` : a.texto,
+              })),
+              ...mesesExecucao.map((k) => ({ valor: `m${k}`, texto: `Em ${rotuloMesLongo(k)}` })),
+            ]}
+            value={paramExecucao && (ATALHOS_EXECUCAO.some((a) => a.id === paramExecucao) || /^m\d{6}$/.test(paramExecucao)) ? paramExecucao : '7d'}
+            onChange={(e) => trocar('execucao', e.target.value === '7d' ? null : e.target.value)}
+          />
+        )}
+
+        {/* resumo (uma página, para o dia a dia) ou com a lista de todos (pode dar dezenas de páginas; usuário, 24/10/2026) */}
+        {aba === 'executados' && (
+          <ToggleGroup
+            aria-label="O que mostrar"
+            value={[comLista ? 'lista' : 'resumo']}
+            onValueChange={(v) => v[0] && trocar('lista', v[0] === 'lista' ? '1' : null)}
+            className="relative mt-3 flex h-9 w-fit items-center rounded-full border border-line bg-page p-0.5"
+          >
+            <MarcadorChave className="bg-card shadow-1" />
+            {[
+              { v: 'resumo', t: 'Só o resumo' },
+              { v: 'lista', t: `Com a lista${executados ? ` (${numero(executados.n)})` : ''}` },
+            ].map((o) => (
+              <Toggle
+                key={o.v}
+                value={o.v}
+                className="opcao-chave h-full rounded-full px-3 text-xs text-ink-2 data-pressed:font-medium data-pressed:text-ink"
+              >
+                {o.t}
+              </Toggle>
+            ))}
+          </ToggleGroup>
+        )}
+
+        {(aba === 'abertos' || aba === 'campo') && (
           <Selecao
             rotulo="Em aberto que saíram para a rua"
             className="mt-3 w-full max-w-64"
@@ -531,6 +631,12 @@ function PaginaRelatorios() {
             <>
               {cab && <CabecalhoFolha {...cab} />}
               <RelatorioAbertosFolha r={abertos} detalhes={comEndereco} hoje={hoje} doDia={paramSaida === 'hoje'} quando={quandoSaida} />
+            </>
+          )}
+          {aba === 'executados' && executados && (
+            <>
+              {cab && <CabecalhoFolha {...cab} />}
+              <RelatorioExecutadosFolha r={executados} detalhes={comEndereco} hoje={hoje} quando={execucao.quando} comLista={comLista} />
             </>
           )}
           {aba === 'campo' && campo && (

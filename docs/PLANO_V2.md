@@ -864,3 +864,31 @@ o relatório também muda (`epoca` no cálculo; `faixasDaEpoca` e `variaNaEpoca`
   poderia ser do que o que é; a chefia estranharia): ficam 4 indicadores. **Sem a lista "Saíram hoje"** (a lista do dia é
   a Lista de campo; num mutirão estourava): o modo Hoje termina na distribuição. Na época, o 2º indicador é "Em aberto"
   (% das saídas) — "Seguem em aberto" quebrava em duas linhas e desalinhava a fileira.
+
+## Relatórios: aba "Executados" (24/10/2026)
+Pedido do usuário (21/10): uma listagem dos serviços fechados. `relatorioExecutados` (calculos/relatorios.ts),
+`Executados.tsx` e `relatorios-pdf/executados.ts`:
+- época pela data de execução, seletor próprio (`?execucao=`): **Último dia com execução (dd/mm)** · últimos 7 dias
+  (padrão) · últimos 30 dias · meses. Sem "Hoje"/"Ontem" (as execuções só entram com a carga: viviam vazios) e sem
+  "qualquer data"/ano (milhares de linhas). O último dia respeita os filtros de lugar; a frase diz "hoje", "ontem" ou "em 22/10".
+- abertura ("Nos últimos 7 dias foram executados 401: 209 no prazo (52,1%) e 192 com mais de 5 dias. Da saída à execução,
+  21,7 dias em média. Regiões com mais execuções…"), 4 indicadores (executados · no prazo · fora do prazo · tempo médio),
+  distribuição um nível abaixo do filtro (executados, %, % no prazo, tempo médio).
+- **"Só o resumo" (padrão, uma página) / "Com a lista (N)"** (`?lista=1`): a lista por região (cartão) → bairro (linha de
+  grupo, alfabética) → execução mais recente primeiro; colunas serviço (2ª ida), categoria, endereço (ou rua), saída,
+  execução, dias (vermelho > 5). Cidade 7 dias com lista ≈ 12 páginas — por isso o resumo é o padrão.
+- PDF: a tabela repete o nome do grupo ao virar a página ("Camboinhas · continuação") — vale também na Lista de campo.
+- Conferido com o banco (servico_saidas): 22/10 = 127 (68 no prazo); 18–24/10 = 401 (209 no prazo).
+- Resumo com **categoria e origem** lado a lado (usuário, 24/10: sobrava meia página) — executados, % no prazo, tempo
+  médio; o "%" do total só na tabela do lugar (na metade da folha, 4 colunas de número espremiam os nomes). Vereadores na nota.
+  Consultadas dataviz (KPI row + tabelas é a forma certa: 11 categorias passam de ~7 classes, gráfico não ajudaria;
+  P&B) e emil-design-eng (mesmo esqueleto do Em aberto; rótulos de uma linha; "Com a lista (N)" já avisa o tamanho).
+- PDF (pecas.ts, vale para todos): a palavra da coluna que quebra é medida no peso em que é desenhada — medida em 400 e
+  desenhada em 500, "Associação" partia ("Associaçã / o").
+- Ajustes de 24/10 (usuário): **média e mediana** (frase "…21,7 dias em média; metade em até 5 dias", apoio do indicador,
+  coluna "Mediana" na tabela do lugar); **barra "Tempo até a execução"** com as faixas da página Prazo (até 3 · 4–5 no
+  prazo; 6–15 · 16–30 · > 30), cores com luminância diferente entre vizinhas (P&B); lugar com **6 + "Demais"** no nível
+  de rua e de bairro (Norte, 11 bairros, ia para a 2ª página); **"2ª ida" embaixo do número** (IdServico e `abaixo` no PDF —
+  vale em todas as listas); **endereço curto** nas listas dos relatórios (`enderecoCurto` em dados/regras.ts: tira
+  " - Bairro, Niterói - RJ, CEP, Brasil", ", Niterói - RJ", CEP solto; só o fim — "Rua Pau Brasil" fica). A ficha segue
+  com o endereço inteiro. Resumo em 1 página conferido nas 5 regiões, em Camboinhas e na cidade (30 dias, dado real).

@@ -8,6 +8,7 @@
 // quantos seguem em aberto, e somem as faixas de espera e o "> 30 dias" que a época não deixa acontecer.
 import { clsx } from 'clsx'
 import { faixasDaEpoca, origemTexto, variaNaEpoca, type LinhaSimplesAberto, type RelatorioAbertos } from '@/calculos/relatorios'
+import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, rotuloMes, type Dia } from '@/lib/datas'
 import { decimal, numero, pct } from '@/lib/formato'
@@ -25,8 +26,8 @@ const COR_ESPERA = [
 /** Espera: acima de 30 dias em vermelho, acima de 15 em âmbar (como no script) */
 const corDias = (v: number) => (v > 30 ? 'text-atraso-texto' : v > 15 ? 'text-andamento-texto' : undefined)
 
-/** Indicador do script: rótulo, barrinha de cor ao lado do número e uma linha de apoio */
-function Kpi({ rotulo, valor, unidade, apoio, cor }: { rotulo: string; valor: string; unidade?: string; apoio: string; cor: string }) {
+/** Indicador do script: rótulo, barrinha de cor ao lado do número e uma linha de apoio (também nos Executados) */
+export function Kpi({ rotulo, valor, unidade, apoio, cor }: { rotulo: string; valor: string; unidade?: string; apoio: string; cor: string }) {
   return (
     <div className="rounded-md border border-line px-2.5 py-2">
       <p className="text-[9.5px] font-semibold tracking-[0.05em] text-ink-3 uppercase">{rotulo}</p>
@@ -350,7 +351,7 @@ export function RelatorioAbertosFolha({
                   <td>
                     <IdServico servico={servico} />
                   </td>
-                  {detalhes && <td className="quebra">{detalhes.get(servico.chave)?.endereco ?? '—'}</td>}
+                  {detalhes && <td className="quebra">{(e => (e ? enderecoCurto(e) : '—'))(detalhes.get(servico.chave)?.endereco)}</td>}
                   {/* numa linha só (compacto, como o PDF do script); só texto LONGO quebra — bairro que veio do Colab,
                       associação, promotoria —, que antes espremia o endereço e jogava "Registro" e "Dias" para fora */}
                   <td className={clsx('centro', servico.bairro.length > LONGO && 'quebra')}>{servico.bairro}</td>

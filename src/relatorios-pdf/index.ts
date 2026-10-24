@@ -1,11 +1,12 @@
 // PDF dos relatórios montado no próprio navegador, a partir dos mesmos dados da folha na tela — para
 // compartilhar o arquivo (WhatsApp, e-mail) com quem não tem conta no painel (o link pede login).
 // Carregado sob demanda (import dinâmico em Relatorios.tsx): pdf-lib + fontes só descem quando alguém usa.
-import type { RegiaoCampo, RelatorioAbertos, RelatorioMensal } from '@/calculos/relatorios'
+import type { RegiaoCampo, RelatorioAbertos, RelatorioExecutados, RelatorioMensal } from '@/calculos/relatorios'
 import type { Detalhe } from '@/dados/tipos'
 import type { Dia } from '@/lib/datas'
 import { desenharAbertos } from './abertos'
 import { desenharCampo } from './campo'
+import { desenharExecutados } from './executados'
 import { desenharMensal } from './mensal'
 import { Folha } from './motor'
 import { cabecalho, type Cabecalho } from './pecas'
@@ -18,6 +19,7 @@ export type PedidoPdf = {
 } & (
   | { tipo: 'mensal'; r: RelatorioMensal; obs: string }
   | { tipo: 'abertos'; r: RelatorioAbertos; detalhes: Map<string, Detalhe> | null; doDia?: boolean; quando?: string | null }
+  | { tipo: 'executados'; r: RelatorioExecutados; detalhes: Map<string, Detalhe> | null; quando: string; comLista: boolean }
   | { tipo: 'campo'; regioes: RegiaoCampo[]; detalhes: Map<string, Detalhe> | null }
 )
 
@@ -26,6 +28,7 @@ export async function gerarPdf(p: PedidoPdf): Promise<Blob> {
   cabecalho(f, p.cabecalho)
   if (p.tipo === 'mensal') desenharMensal(f, p.r, p.obs)
   else if (p.tipo === 'abertos') desenharAbertos(f, p.r, p.detalhes, p.hoje, p.doDia, p.quando)
+  else if (p.tipo === 'executados') desenharExecutados(f, p.r, p.detalhes, p.hoje, p.quando, p.comLista)
   else desenharCampo(f, p.regioes, p.detalhes, p.hoje)
   // com endereço, o arquivo leva dado da parte restrita para fora do login: o rodapé avisa
   const comEndereco = p.tipo !== 'mensal' && p.detalhes !== null

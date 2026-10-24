@@ -1,6 +1,6 @@
 // Cálculos dos Relatórios. O mensal/histórico espelha o relatório do site antigo; os de abertos e a
 // lista de campo partem da fila de hoje (não dependem do período).
-import { CATEGORIA_RISCO, diasExecucao, FAIXAS, faixa, media, situacao } from '@/dados/regras'
+import { CATEGORIA_RISCO, diasExecucao, FAIXAS, faixa, media, mediana, situacao } from '@/dados/regras'
 import type { Base, Saida, Servico } from '@/dados/tipos'
 import { PRAZO_DIAS } from '@/config'
 import { filtrarLugar, noIntervalo, type Filtros, type Intervalo } from '@/filtros/filtros'
@@ -8,6 +8,7 @@ import { distanciaM, RAIO_PERTO_M } from '@/lib/geo'
 import { compararTexto } from '@/lib/formato'
 import { chaveMes, diaDaChave, fimDoMes, somarMeses, type ChaveMes, type Dia } from '@/lib/datas'
 import { calcularAgora, FAIXAS_ESPERA, type ItemFila } from './panorama'
+import { FAIXAS_EXEC } from './prazo'
 
 // ── Relatório mensal / histórico completo (espelho do relatorio.js do site antigo) ───────────
 // Unidade: saídas para a rua (1 linha da planilha), pela data de saída. "Abertos" e "em atraso" são a
@@ -382,6 +383,135 @@ export function variaNaEpoca(ep: { esperaMin: number; esperaMax: number } | null
   const varia = (limite: number) => !ep || (ep.esperaMin <= limite && ep.esperaMax > limite)
   return { atraso: varia(PRAZO_DIAS), mais30: varia(30) }
 }
+
+// ── Serviços executados ─────────────────────────────────────────────────────
+// Pedido do usuário (21/10/2026): uma lista dos fechados. Unidade: saídas com retorno numa época (seletor da própria
+// aba, pela data de execução); dias = da saída à execução (prazo de 5 dias, como no Prazo). Serviço reaberto que voltou
+// de novo conta de novo (cada ida é uma execução), marcado "(2ª ida)".
+
+export interface ItemExecutado {
+  saida: Saida
+  servico: Servico
+  /** da saída à execução */
+  dias: number
+}
+
+export interface LinhaLugarExecutado {
+  nome: string
+  executados: number
+  noPrazo: number
+  media: number
+  /** metade foi executada em até isto (a média sobe com poucos pedidos muito antigos executados de uma vez) */
+  mediana: number
+}
+
+export interface BairroExecutado {
+  nome: string
+  itens: ItemExecutado[]
+}
+
+export interface RegiaoExecutado {
+  nome: string
+  total: number
+  bairros: BairroExecutado[]
+}
+
+export function relatorioExecutados(base: Base, f: Filtros, periodo: Intervalo) {
+  const itens: ItemExecutado[] = filtrarLugar(base.saidas, f)
+    .filter((s) => noIntervalo(s, periodo, 'retorno'))
+    .map((s) => ({ saida: s, servico: s.servico, dias: s.dataRetorno! - s.dataSaida }))
+  const n = itens.length
+  const dentro = (it: ItemExecutado) => it.dias <= PRAZO_DIAS
+  // um nível abaixo do filtro, como no Em aberto: cidade → regiões, região → bairros, bairro → ruas
+  const nivel: 'regiao' | 'bairro' | 'rua' = f.bairro ? 'rua' : f.regiao ? 'bairro' : 'regiao'
+
+  const grupos = new Map<string, ItemExecutado[]>()
+  for (const it of itens) {
+    const k = (nivel === 'rua' ? it.servico.rua || 'Rua não identificada' : nivel === 'bairro' ? it.servico.bairro : it.servico.regiao) || '—'
+    if (!grupos.has(k)) grupos.set(k, [])
+    grupos.get(k)!.push(it)
+  }
+  const linha = (nome: string, l: ItemExecutado[]): LinhaLugarExecutado => ({
+    nome,
+    executados: l.length,
+    noPrazo: l.filter(dentro).length,
+    media: l.reduce((t, it) => t + it.dias, 0) / l.length,
+    mediana: mediana(l.map((it) => it.dias)) ?? 0,
+  })
+  const ordenados = [...grupos].sort((a, b) => b[1].length - a[1].length || compararTexto(a[0], b[0]))
+  let lugares = ordenados.map(([nome, l]) => linha(nome, l))
+  // ruas e bairros: os 6 com mais execuções e o resto somado — para o resumo caber numa página com a barra de faixas
+  // (um bairro com 10 ruas, ou a região Norte com 11 bairros, jogava categoria e origem para a 2ª página)
+  const MAX_LUGARES = 6
+  if (nivel !== 'regiao' && lugares.length > MAX_LUGARES + 1) {
+    const resto = ordenados.slice(MAX_LUGARES)
+    lugares = [...lugares.slice(0, MAX_LUGARES), linha(`Demais (${resto.length} ${nivel === 'rua' ? 'ruas' : 'bairros'})`, resto.flatMap(([, l]) => l))]
+  }
+
+  // a lista: região (mais executados primeiro) → bairro (ordem alfabética, para achar rápido) → execução mais recente
+  // primeiro, e no mesmo dia pela rua
+  const porRegiao = new Map<string, Map<string, ItemExecutado[]>>()
+  for (const it of itens) {
+    const r = it.servico.regiao || 'Sem região'
+    if (!porRegiao.has(r)) porRegiao.set(r, new Map())
+    const bs = porRegiao.get(r)!
+    if (!bs.has(it.servico.bairro)) bs.set(it.servico.bairro, [])
+    bs.get(it.servico.bairro)!.push(it)
+  }
+  const regioes: RegiaoExecutado[] = [...porRegiao]
+    .map(([nome, bs]) => ({
+      nome,
+      total: [...bs.values()].reduce((t, l) => t + l.length, 0),
+      bairros: [...bs]
+        .sort((a, b) => compararTexto(a[0], b[0]))
+        .map(([nomeB, l]) => ({
+          nome: nomeB,
+          itens: [...l].sort(
+            (a, b) =>
+              b.saida.dataRetorno! - a.saida.dataRetorno! ||
+              compararTexto(a.servico.rua ?? '', b.servico.rua ?? '') ||
+              a.servico.idColab - b.servico.idColab,
+          ),
+        })),
+    }))
+    .sort((a, b) => b.total - a.total || compararTexto(a.nome, b.nome))
+
+  // categoria e origem (usuário, 24/10/2026: o resumo tinha meia página vazia): as 6 maiores e o resto em "Demais (n)",
+  // como no Em aberto; origem pelo tipo (Cidadão, Regional, Vereador…), com os vereadores numa nota
+  const porChave = (chave: (s: Servico) => string, limite = 6): LinhaLugarExecutado[] => {
+    const g = new Map<string, ItemExecutado[]>()
+    for (const it of itens) {
+      const k = chave(it.servico) || '—'
+      if (!g.has(k)) g.set(k, [])
+      g.get(k)!.push(it)
+    }
+    let ls = [...g].sort((a, b) => b[1].length - a[1].length || compararTexto(a[0], b[0]))
+    if (ls.length > limite + 1) ls = [...ls.slice(0, limite), [`Demais (${ls.length - limite})`, ls.slice(limite).flatMap(([, l]) => l)]]
+    return ls.map(([nome, l]) => linha(nome, l))
+  }
+  const vereadores = new Map<string, number>()
+  for (const it of itens) if (it.servico.origem === 'Vereador' && it.servico.vereador) vereadores.set(it.servico.vereador, (vereadores.get(it.servico.vereador) ?? 0) + 1)
+
+  const noPrazo = itens.filter(dentro).length
+  return {
+    n,
+    nivel,
+    categorias: porChave((s) => s.categoria ?? 'Sem categoria'),
+    origens: porChave((s) => s.origem),
+    vereadores: [...vereadores].sort((a, b) => b[1] - a[1] || compararTexto(a[0], b[0])),
+    noPrazo,
+    foraPrazo: n - noPrazo,
+    media: n ? itens.reduce((t, it) => t + it.dias, 0) / n : 0,
+    mediana: mediana(itens.map((it) => it.dias)) ?? 0,
+    /** quantos em cada faixa de dias da saída à execução, na ordem de FAIXAS_EXEC (as da página Prazo) */
+    faixas: FAIXAS_EXEC.map((fx, i) => itens.filter((it) => it.dias <= fx.max && (i === 0 || it.dias > FAIXAS_EXEC[i - 1].max)).length),
+    lugares,
+    tres: lugares.filter((l) => !l.nome.startsWith('Demais (')).slice(0, 3),
+    regioes,
+  }
+}
+
+export type RelatorioExecutados = ReturnType<typeof relatorioExecutados>
 
 // ── Lista de campo ─────────────────────────────────────────────────────────
 // Região (mais serviços primeiro) → bairro (ordem alfabética, para achar rápido) → grupos de pedidos PRÓXIMOS →

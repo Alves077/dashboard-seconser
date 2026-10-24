@@ -6,7 +6,7 @@
 import { SeloSituacao } from '@/componentes/ui/SeloSituacao'
 import type { RegiaoCampo } from '@/calculos/relatorios'
 import { Fragment } from 'react'
-import { CATEGORIA_RISCO, rotuloLugar, situacao } from '@/dados/regras'
+import { CATEGORIA_RISCO, enderecoCurto, rotuloLugar, situacao } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, formatarDiaNoAno, type Dia } from '@/lib/datas'
 import { dias, numero } from '@/lib/formato'
@@ -17,7 +17,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
   return (
     <>
       <p className="mb-4 text-[10.5px] leading-relaxed text-ink-3">
-        Dias = desde a última saída para a rua (em vermelho, passou dos 5 dias). "(2ª ida)" = serviço que voltou à rua.
+        Dias = desde a última saída para a rua (em vermelho, passou dos 5 dias). "2ª ida" embaixo do número = serviço que voltou à rua.
         <span className="max-sm:hidden print:inline"> Anotar à mão a data de retorno.</span>
         <span className="print:hidden"> Toque no número do serviço para ver a ficha.</span>
       </p>
@@ -56,7 +56,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                             {servico.categoria === CATEGORIA_RISCO && <span aria-hidden>⚡ </span>}
                             {servico.categoria ?? 'Sem categoria'}
                           </p>
-                          {detalhes && <p className="text-[12px] text-ink-2">{det?.endereco ?? '—'}</p>}
+                          {detalhes && <p className="text-[12px] text-ink-2">{det?.endereco ? enderecoCurto(det.endereco) : '—'}</p>}
                           {lugar && <p className="text-[11px] text-ink-3">{lugar}</p>}
                           <p className="mt-0.5 text-[11px] text-ink-3">Saiu em {formatarDia(saida.dataSaida)}</p>
                         </li>
@@ -103,7 +103,7 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
                               </td>
                               {detalhes && (
                                 <td>
-                                  {d?.endereco ?? '—'}
+                                  {d?.endereco ? enderecoCurto(d.endereco) : '—'}
                                   {lugar && <span className="block text-[10.5px] text-ink-3">{lugar}</span>}
                                 </td>
                               )}

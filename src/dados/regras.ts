@@ -88,6 +88,19 @@ export function rotuloLugar(s: Servico): string | null {
   return s.local ? `${s.local} (${s.tipoLocal})` : tipo
 }
 
+/**
+ * Endereço para as listas dos relatórios: rua e número, sem o fim que alguns trazem do Colab (" - Bairro, Niterói - RJ,
+ * 24360-000, Brasil", ", Niterói - RJ", CEP solto) — o bairro já está no grupo da lista (usuário, 24/10/2026). Só o FIM:
+ * "Brasil" e "Niterói" no começo são nome de rua (Rua Pau Brasil). A ficha continua com o endereço inteiro.
+ */
+export function enderecoCurto(e: string): string {
+  return e
+    .replace(/\s+-\s+[^,]+,\s*Niter[oó]i\s*-\s*RJ\b.*$/i, '')
+    .replace(/,\s*Niter[oó]i\s*-\s*RJ\b.*$/i, '')
+    .replace(/,\s*\d{5}-?\d{3}(,\s*Brasil)?\s*$/i, '')
+    .trim()
+}
+
 /** Mediana certa (lista par = média dos dois do meio) */
 export function mediana(valores: number[]): number | null {
   if (!valores.length) return null

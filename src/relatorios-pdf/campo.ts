@@ -1,7 +1,7 @@
 // Lista de campo em PDF — a mesma tabela de relatorios/Campo.tsx no papel: cada região começa numa página
 // nova, bairro em destaque, grupos de pedidos próximos (até 300 m) e a coluna de retorno para escrever à mão.
 import type { RegiaoCampo } from '@/calculos/relatorios'
-import { CATEGORIA_RISCO, rotuloLugar, situacao } from '@/dados/regras'
+import { CATEGORIA_RISCO, enderecoCurto, rotuloLugar, situacao } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDiaNoAno, type Dia } from '@/lib/datas'
 import { numero } from '@/lib/formato'
@@ -18,7 +18,7 @@ export function desenharCampo(f: Folha, regioes: RegiaoCampo[], detalhes: Map<st
     f.paragrafo('Nenhum serviço em aberto com esses filtros.', x, w, { tam: 13, cor: COR.ink2, alinhar: 'centro' })
     return
   }
-  f.paragrafo('Dias = desde a última saída para a rua (em vermelho, passou dos 5 dias). "(2ª ida)" = serviço que voltou à rua. Anotar à mão a data de retorno.', x, w, {
+  f.paragrafo('Dias = desde a última saída para a rua (em vermelho, passou dos 5 dias). "2ª ida" embaixo do número = serviço que voltou à rua. Anotar à mão a data de retorno.', x, w, {
     tam: 10.5,
     lh: 1.625,
     cor: COR.ink3,
@@ -61,12 +61,12 @@ export function desenharCampo(f: Folha, regioes: RegiaoCampo[], detalhes: Map<st
           const atraso = situacao(saida, hoje) === 'atraso'
           linhas.push({
             celulas: [
-              { trechos: [{ t: String(servico.idColab), peso: 600 }, ...(saida.ordem > 1 ? [{ t: ` (${saida.ordem}ª\u00a0ida)`, tam: 10, cor: COR.ink3 }] : [])] },
+              { trechos: [{ t: String(servico.idColab), peso: 600 }], abaixo: saida.ordem > 1 ? `${saida.ordem}ª ida` : undefined },
               {
                 trechos: [...(servico.categoria === CATEGORIA_RISCO ? [{ t: '', icone: 'raio' as const }] : []), { t: servico.categoria ?? 'Sem categoria' }],
                 abaixo: detalhes ? undefined : lugar,
               },
-              ...(detalhes ? [{ trechos: [{ t: d?.endereco ?? '—' }], abaixo: lugar }] : []),
+              ...(detalhes ? [{ trechos: [{ t: d?.endereco ? enderecoCurto(d.endereco) : '—' }], abaixo: lugar }] : []),
               formatarDiaNoAno(saida.dataSaida, hoje),
               { trechos: [{ t: numero(dias), ...(atraso ? { peso: 500 as const, cor: COR.atrasoTexto } : {}) }] },
               { trechos: [], retorno: true },
