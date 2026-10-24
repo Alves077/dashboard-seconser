@@ -46,17 +46,21 @@ export function Folha({ children }: { children: ReactNode }) {
 
 export function CabecalhoFolha({ titulo, subtitulo, meta }: { titulo: string; subtitulo?: ReactNode; meta: ReactNode[] }) {
   return (
-    <header className="mb-5 flex flex-col gap-3 border-b-2 border-ink pb-3 sm:flex-row sm:items-end sm:justify-between">
-      <div>
-        <h2 className="text-[19px] leading-tight font-semibold tracking-[-0.3px] text-ink">{titulo}</h2>
-        <p className="mt-0.5 text-[11.5px] text-ink-2">Departamento de Iluminação Pública · SECONSER Niterói</p>
-        {subtitulo && <p className="mt-1 text-[12px] text-ink-2">{subtitulo}</p>}
+    // o título na largura toda: dividindo a linha com as datas, "Serviços Executados · Bairro Camboinhas" quebrava em
+    // duas (usuário, 24/10/2026); departamento e subtítulo embaixo, com as datas à direita
+    <header className="mb-5 border-b-2 border-ink pb-3">
+      <h2 className="text-[19px] leading-tight font-semibold tracking-[-0.3px] text-ink">{titulo}</h2>
+      <div className="mt-0.5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-[11.5px] text-ink-2">Departamento de Iluminação Pública · SECONSER Niterói</p>
+          {subtitulo && <p className="mt-1 text-[12px] text-ink-2">{subtitulo}</p>}
+        </div>
+        <ul className="text-[10.5px] leading-relaxed text-ink-3 sm:text-right">
+          {meta.map((m, i) => (
+            <li key={i}>{m}</li>
+          ))}
+        </ul>
       </div>
-      <ul className="text-[10.5px] leading-relaxed text-ink-3 sm:text-right">
-        {meta.map((m, i) => (
-          <li key={i}>{m}</li>
-        ))}
-      </ul>
     </header>
   )
 }

@@ -10,16 +10,19 @@ export interface Cabecalho {
   meta: string[]
 }
 
-/** CabecalhoFolha: título, departamento e subtítulo à esquerda; datas à direita; fio grosso embaixo */
+/**
+ * CabecalhoFolha: o título na largura toda (antes dividia a linha com as datas e, com o nome do bairro, quebrava em duas;
+ * usuário, 24/10/2026); embaixo, departamento e subtítulo à esquerda e as datas à direita; fio grosso no fim
+ */
 export function cabecalho(f: Folha, c: Cabecalho) {
   const x = f.x0
   const w = f.largura
   const larguraMeta = Math.max(0, ...c.meta.map((m) => f.medirTexto(m, 10.5)))
   const larguraEsq = w - larguraMeta - 16
-  const y0 = f.y
-  const linhasTitulo = f.quebrar([{ t: c.titulo }], larguraEsq, 19, 600)
-  let y = y0 + f.desenharLinhas(linhasTitulo, x, y0, larguraEsq, { tam: 19, peso: 600, lh: 1.25 })
+  const linhasTitulo = f.quebrar([{ t: c.titulo }], w, 19, 600)
+  let y = f.y + f.desenharLinhas(linhasTitulo, x, f.y, w, { tam: 19, peso: 600, lh: 1.25 })
   y += 2
+  const y0 = y
   f.texto('Departamento de Iluminação Pública · SECONSER Niterói', x, y, { tam: 11.5, cor: COR.ink2 })
   y += 11.5 * 1.5
   if (c.subtitulo) {

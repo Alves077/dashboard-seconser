@@ -186,7 +186,8 @@ export function BarraSuperior() {
       <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-4 sm:px-6 lg:h-16">
         <NavLink to={destino('/')} className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label="Início — Panorama">
           <img src={`${import.meta.env.BASE_URL}img/logo-seconser.png`} alt="" className="h-8 w-auto" />
-          <span className="hidden min-w-0 leading-tight sm:block">
+          {/* entre 1024 e 1280 px o menu inteiro + o nome + os botões passavam ~50 px da tela: ali, só o logo */}
+          <span className="hidden min-w-0 leading-tight sm:block lg:hidden xl:block">
             <span className="block text-[13px] font-semibold text-ink">Iluminação Pública</span>
             <span className="block text-[11px] text-ink-3">DIP · SECONSER Niterói</span>
           </span>

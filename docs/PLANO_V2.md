@@ -892,3 +892,13 @@ Pedido do usuário (21/10): uma listagem dos serviços fechados. `relatorioExecu
   vale em todas as listas); **endereço curto** nas listas dos relatórios (`enderecoCurto` em dados/regras.ts: tira
   " - Bairro, Niterói - RJ, CEP, Brasil", ", Niterói - RJ", CEP solto; só o fim — "Rua Pau Brasil" fica). A ficha segue
   com o endereço inteiro. Resumo em 1 página conferido nas 5 regiões, em Camboinhas e na cidade (30 dias, dado real).
+
+## Correções e ideias avaliadas (24/10/2026)
+- Barra de cima: entre 1024 e 1280 px só o logo (o nome "Iluminação Pública / DIP" voltava a estourar ~50 px). Conferido
+  em 1024 (folga 58 px; com login +40, sem login −86 do Relatórios +85 do "Entrar") e 1280 (folga 46).
+- Cabeçalho da folha (tela e PDF): título na largura toda; departamento/subtítulo embaixo, datas à direita — o título
+  não divide mais a linha com as datas (com "Bairro …" quebrava em duas).
+- Ideias do painel Cadra / "18 leis de UX" (não feitas, aguardando o usuário): **entrou × executado por dia** (barras
+  divergentes, últimos 14 dias, saldo da fila — o Panorama tem o Movimento do período e a Evolução o saldo por região,
+  mas não o ritmo dia a dia); **ritmo do mês em curso** no indicador; **uma linha de leitura** em cartões do Prazo/Panorama.
+  Descartadas: badges no menu, barra flutuante, cartão "hoje" separado (a frase de abertura do Panorama já faz isso).
