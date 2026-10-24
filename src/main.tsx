@@ -8,7 +8,7 @@ import { ErroPagina } from '@/componentes/estados/ErroPagina'
 import { ProvedorInterface } from '@/componentes/layout/interface'
 import { Moldura } from '@/componentes/layout/Moldura'
 import { ProvedorSessao } from '@/dados/sessao'
-import { Evolucao, Mapa, Panorama, Prazo, Relatorios, Vereadores } from '@/paginas/carregar'
+import { Evolucao, Mapa, Panorama, Prazo, Relatorios, Servicos, Vereadores } from '@/paginas/carregar'
 import { EmConstrucao } from '@/paginas/EmConstrucao'
 
 // Rotas com "#" (…/dashboard-seconser/#/mapa): o GitHub Pages não sabe responder rotas de
@@ -28,6 +28,7 @@ const rotas = createHashRouter([
           { path: '/prazo', element: <Prazo /> },
           { path: '/evolucao', element: <Evolucao /> },
           { path: '/vereadores', element: <Vereadores /> },
+          { path: '/servicos', element: <Servicos /> },
           { path: '/relatorios', element: <Relatorios /> },
           { path: '*', element: <EmConstrucao /> },
         ],

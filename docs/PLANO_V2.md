@@ -911,3 +911,27 @@ antes do commit. Não propor de novo gráfico diário de fluxo.
   em pecas.ts, centrada no número). Células de duas linhas centram as outras na altura (CSS da folha compacta; PDF `meio`).
 - `?execucao` e `?lista` não seguem para as outras páginas (SO_DA_PAGINA em lib/ganchos.ts).
 - Panorama: a legenda/explicação embaixo da chave "Nas listas abaixo" centrada no celular.
+
+## Página Serviços + busca rápida (24/10/2026)
+Pedido do usuário: listar todos os serviços (abertos e fechados) com busca dentro; e a busca rápida sem região/bairro,
+com a situação no resultado de endereço e sem perder o texto ao abrir a ficha. Decisões (formulário): item no menu;
+o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com login.
+- `/servicos` (paginas/Servicos.tsx, calculos/servicos.ts): um serviço por linha pela saída mais recente; busca
+  aproximada (busca/casar.ts) em nº, rua, bairro, categoria, local e — com acesso — endereço; chave Todos · Em aberto ·
+  Em atraso · Executados com contagem; ?q= e ?estado= na URL (não seguem para outras páginas); 50 por vez ("Mostrar
+  mais"); celular em cartões. Dado real: 17.724 serviços (994 em aberto, 507 em atraso, 16.730 executados).
+- Busca rápida (PaletaBusca.tsx): sem regiões/bairros; sem login busca pela rua (pública), com login pelo endereço;
+  cada resultado com nº · categoria · bairro e o selo da situação; endereço mostrado sem " - Bairro, Niterói - RJ";
+  abrir a ficha fecha a busca guardando o texto e ela volta quando a ficha fecha; "Ver todos para … na página Serviços".
+- Barra de cima com 7 páginas: entre 1024 e 1280 px "Buscar" vira só a lupa e os itens ficam mais juntos; a data dos
+  dados não aparece mais por escrito (só "há N dias" quando atrasado; abaixo de 375 px só o ícone) — a barra tem no
+  máximo 1280 px em qualquer tela. Medido logado (+ botão da conta) e deslogado ("Entrar" no lugar de Relatórios) de
+  1024 a 1920 e de 320 a 390: nada passa da tela. Navegação de baixo com 7 itens: 10 px até 420 px de largura.
+- Ajustes (24/10, depois): página **fechada para a equipe** (decisão do usuário; `PaginaRestrita`, o mesmo bloqueio
+  dos Relatórios); **ordem** pelos títulos de coluna (Serviço, Saída, Execução; asc/desc, aria-sort; no celular, seletor
+  "Ordenar"; ?ordem=); **datas com o ano**; **páginas de 50** (1 … 4 5 6 7 8 … N; celular "Página 6 de 52"; volta ao
+  topo da lista). Busca rápida: **Enter** sem ter escolhido com as setas abre a lista completa na página Serviços (só a
+  equipe; sem acesso, o 1º, como antes); nº exato abre a ficha; setas + Enter abrem o item.
+- **Navegação do celular com no máximo 5** (skills mobile-native/emil): sem login, as 5 de sempre; a equipe tem
+  Panorama, Mapa, Serviços, Relatórios e "Mais" (Prazo, Evolução, Vereadores) — numa delas o "Mais" fica marcado com o
+  nome e o ícone dela. Itens de 75 px em 375 px (eram 51).

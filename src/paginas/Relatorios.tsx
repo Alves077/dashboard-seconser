@@ -6,18 +6,17 @@
 // navegador): baixar no computador, compartilhar o arquivo no celular (decisão do usuário, 17/10/2026).
 import { Toggle } from '@base-ui/react/toggle'
 import { ToggleGroup } from '@base-ui/react/toggle-group'
-import { ClipboardList, Download, FileText, Link2, ListChecks, ListTodo, LogIn, Printer, Share2 } from 'lucide-react'
+import { ClipboardList, Download, FileText, Link2, ListChecks, ListTodo, Printer, Share2 } from 'lucide-react'
 import { useEffect, useMemo, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router'
 import { toast } from 'sonner'
-import { EstadoErro, EstadoRestrito, Esqueleto } from '@/componentes/estados/Estados'
-import { useInterface } from '@/componentes/layout/interface'
+import { EstadoErro, Esqueleto } from '@/componentes/estados/Estados'
+import { PaginaRestrita } from '@/componentes/layout/PaginaRestrita'
 import { Botao } from '@/componentes/ui/Botao'
 import { Card } from '@/componentes/ui/Card'
 import { Selecao } from '@/componentes/ui/Selecao'
 import { listaCampo, mesesDoRelatorio, relatorioAbertos, relatorioExecutados, relatorioMensal } from '@/calculos/relatorios'
 import { useBase, useDetalhes } from '@/dados/consultas'
-import { useSessao } from '@/dados/sessao'
 import { filtrarLugar, intervaloDo, noIntervalo, type Atalho, type Intervalo } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
 import { chaveMes, diaDe, formatarDia, formatarDiaCurto, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
@@ -110,48 +109,17 @@ function useObservacao(chave: string) {
   return [valor, mudar] as const
 }
 
-/**
- * Relatórios são ferramenta da equipe da DIP (reunião e rua): só com acesso à parte restrita.
- * O menu já esconde a página (usePaginas); quem chega pelo link vê esta tela com o botão de entrar,
- * e depois de entrar a página aparece sozinha (o acesso muda e o componente redesenha).
- */
+/** Relatórios são ferramenta da equipe da DIP (reunião e rua): só com acesso à parte restrita (PaginaRestrita) */
 export function Relatorios() {
-  const { modo, usuario } = useSessao()
-  const { acesso, erroRestrito, error: erroDetalhes, refetch: tentarDetalhes } = useDetalhes()
-  const { setLoginAberto } = useInterface()
-  if (acesso === true) return <PaginaRelatorios />
   return (
-    <>
-      <h1 className="mb-5 text-2xl font-normal tracking-[-0.4px] text-ink">Relatórios</h1>
-      <Card>
-        {erroRestrito ? (
-          <EstadoErro erro={erroDetalhes} aoTentar={() => tentarDetalhes()} altura="min-h-72" titulo="Não foi possível abrir os relatórios" />
-        ) : acesso === undefined ? (
-          <div aria-busy="true" className="flex min-h-72 flex-col items-center justify-center gap-3">
-            <Esqueleto className="size-10 rounded-full" />
-            <Esqueleto className="h-4 w-56" />
-          </div>
-        ) : (
-          <EstadoRestrito
-            titulo="Relatórios são para a equipe da DIP"
-            texto={
-              usuario
-                ? 'Sua conta não tem acesso a esta parte. Fale com o administrador.'
-                : 'Entre com a sua conta para imprimir o relatório mensal, os serviços em aberto, os executados e a lista de campo.'
-            }
-            acao={
-              !usuario &&
-              modo === 'supabase' && (
-                <Botao variante="primario" tamanho="compacto" onClick={() => setLoginAberto(true)}>
-                  <LogIn aria-hidden className="size-4" /> Entrar
-                </Botao>
-              )
-            }
-            altura="min-h-72"
-          />
-        )}
-      </Card>
-    </>
+    <PaginaRestrita
+      nome="Relatórios"
+      titulo="Relatórios são para a equipe da DIP"
+      texto="Entre com a sua conta para imprimir o relatório mensal, os serviços em aberto, os executados e a lista de campo."
+      tituloErro="Não foi possível abrir os relatórios"
+    >
+      <PaginaRelatorios />
+    </PaginaRestrita>
   )
 }
 

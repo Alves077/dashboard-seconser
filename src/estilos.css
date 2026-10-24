@@ -587,6 +587,15 @@ html[data-transicao='gaveta-volta']::view-transition-new(*.gaveta-lista) {
   border-bottom: 1px solid var(--c-line);
   vertical-align: top;
 }
+/* página Serviços: a mesma tabela, em letra de tela e com as células no meio da linha (depois do .tabela-folha td) */
+.tabela-servicos {
+  font-size: 13px;
+}
+.tabela-servicos th,
+.tabela-servicos td {
+  padding: 8px 8px;
+  vertical-align: middle;
+}
 .tabela-folha .num {
   font-variant-numeric: tabular-nums;
   text-align: center;

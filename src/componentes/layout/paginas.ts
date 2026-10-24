@@ -1,4 +1,4 @@
-import { FileText, Gauge, Landmark, Map, Timer, TrendingUp, type LucideIcon } from 'lucide-react'
+import { FileText, Gauge, Landmark, List, Map, Timer, TrendingUp, type LucideIcon } from 'lucide-react'
 
 // Páginas pela pergunta de quem usa (docs/PLANO_V2.md §3)
 // restrita = só aparece no menu para quem tem acesso à parte restrita (usePaginas)
@@ -8,5 +8,7 @@ export const PAGINAS: { caminho: string; nome: string; pergunta: string; icone: 
   { caminho: '/prazo', nome: 'Prazo', pergunta: 'Estamos atendendo bem?', icone: Timer },
   { caminho: '/evolucao', nome: 'Evolução', pergunta: 'Está melhorando ou piorando?', icone: TrendingUp },
   { caminho: '/vereadores', nome: 'Vereadores', pergunta: 'O que os vereadores pediram?', icone: Landmark },
+  // só a equipe (usuário, 24/10/2026): a lista com endereço e a fila em atraso uma a uma
+  { caminho: '/servicos', nome: 'Serviços', pergunta: 'Onde está tal serviço?', icone: List, restrita: true },
   { caminho: '/relatorios', nome: 'Relatórios', pergunta: 'O que levo para a reunião ou para a rua?', icone: FileText, restrita: true },
 ]

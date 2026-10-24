@@ -11,6 +11,7 @@ const importadores = {
   Evolucao: () => import('./Evolucao').then((m) => ({ default: m.Evolucao })),
   Vereadores: () => import('./Vereadores').then((m) => ({ default: m.Vereadores })),
   Relatorios: () => import('./Relatorios').then((m) => ({ default: m.Relatorios })),
+  Servicos: () => import('./Servicos').then((m) => ({ default: m.Servicos })),
 }
 
 export const Panorama = lazy(importadores.Panorama)
@@ -18,6 +19,7 @@ export const Mapa = lazy(importadores.Mapa)
 export const Prazo = lazy(importadores.Prazo)
 export const Evolucao = lazy(importadores.Evolucao)
 export const Vereadores = lazy(importadores.Vereadores)
+export const Servicos = lazy(importadores.Servicos)
 export const Relatorios = lazy(importadores.Relatorios)
 
 let jaPediu = false

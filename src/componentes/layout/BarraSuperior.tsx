@@ -64,14 +64,13 @@ function StatusDados() {
         ) : semDados ? (
           <span className="hidden sm:inline">Sem dados</span>
         ) : velho ? (
-          // abaixo de 360 px só o ícone âmbar (o texto empurrava o cabeçalho para fora da tela; o aviso
-          // continua no aria-label e ao tocar)
-          <span className="max-[359px]:hidden">
-            <span className="hidden xl:inline">Dados de {curto} · </span>há {dias} dias
-          </span>
-        ) : (
-          em && <span className="hidden xl:inline">Dados de {curto}</span>
-        )}
+          // abaixo de 375 px só o ícone âmbar (o texto empurrava o cabeçalho para fora da tela — logado, em 360 px, com o
+          // botão da conta; o aviso continua no aria-label e ao tocar)
+          <span className="max-[374px]:hidden">há {dias} dias</span>
+        ) : null
+        // sem a data por escrito (usuário, 24/10/2026): com 7 páginas no menu e a conta, a barra (no máximo 1280 px de
+        // largura, em qualquer tela) passava do espaço. Dado em dia: só o ícone; a data completa está no aria-label e ao tocar
+        }
         {modo === 'local' && <span aria-hidden className="size-1.5 rounded-full bg-andamento" title="Dados locais" />}
       </Popover.Trigger>
       <Popover.Portal>
@@ -193,7 +192,7 @@ export function BarraSuperior() {
           </span>
         </NavLink>
 
-        <nav aria-label="Páginas" className="ml-4 hidden items-center gap-1 lg:flex">
+        <nav aria-label="Páginas" className="ml-1 hidden items-center gap-0.5 lg:flex xl:ml-4 xl:gap-1">
           {paginas.map((p) => (
             <NavLink
               key={p.caminho}
@@ -202,7 +201,8 @@ export function BarraSuperior() {
               title={p.pergunta}
               className={({ isActive }) =>
                 clsx(
-                  'relative flex h-16 items-center px-3 text-[13px] font-medium transition-colors duration-150',
+                  // entre 1024 e 1280 px, com 7 páginas, itens mais juntos (px-2.5) para tudo caber na barra
+                  'relative flex h-16 items-center px-2.5 text-[13px] font-medium transition-colors duration-150 xl:px-3',
                   isActive
                     ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-acao'
                     : 'text-ink-2 hover:text-ink',
@@ -219,12 +219,13 @@ export function BarraSuperior() {
             type="button"
             onClick={() => setBuscaAberta(true)}
             data-gatilho-busca
-            className="pressionavel mr-1 flex h-9 items-center gap-2 rounded-full border border-line bg-page px-3 text-[13px] text-ink-3 hover:border-acao/40 hover:text-ink-2 max-sm:w-9 max-sm:justify-center max-sm:px-0"
+            className="pressionavel mr-1 flex h-9 items-center gap-2 rounded-full border border-line bg-page px-3 text-[13px] text-ink-3 hover:border-acao/40 hover:text-ink-2 max-sm:w-9 max-sm:justify-center max-sm:px-0 lg:max-xl:w-9 lg:max-xl:justify-center lg:max-xl:px-0"
             aria-label="Buscar serviço, bairro ou endereço"
           >
             <Search aria-hidden className="size-4" />
-            <span className="hidden sm:inline">Buscar</span>
-            <kbd className="ml-3 hidden rounded border border-line px-1.5 font-sans text-[11px] text-ink-3 md:inline">/</kbd>
+            {/* entre 1024 e 1280 px só a lupa: o menu inteiro ocupa a barra */}
+            <span className="hidden sm:inline lg:hidden xl:inline">Buscar</span>
+            <kbd className="ml-3 hidden rounded border border-line px-1.5 font-sans text-[11px] text-ink-3 md:inline lg:hidden xl:inline">/</kbd>
           </button>
           <StatusDados />
           <Botao
