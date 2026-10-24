@@ -97,7 +97,8 @@ export function useFicha() {
  * campo e trocar de página levava "?relatorio=campo&saida=30d" para o Panorama). Relatórios: aba, só em atraso,
  * época da saída e mês de referência; Mapa: o que mostrar.
  */
-const SO_DA_PAGINA = ['relatorio', 'campo', 'saida', 'referencia', 'mostrar']
+// "execucao" e "lista" (Executados): sem eles aqui, o ?lista=1 seguia para o Panorama (usuário, 24/10/2026)
+const SO_DA_PAGINA = ['relatorio', 'campo', 'saida', 'referencia', 'mostrar', 'execucao', 'lista']
 
 /** Link para outra página levando os filtros atuais (e sem a ficha aberta, salvo se pedida em `extra`) */
 export function useDestino() {

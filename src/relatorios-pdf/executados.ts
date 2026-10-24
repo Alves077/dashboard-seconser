@@ -192,7 +192,7 @@ export function desenharExecutados(
             { tipo: 'grupo', trechos: [{ t: `${b.nome} ` }, { t: `· ${numero(b.itens.length)}`, peso: 400, cor: COR.ink3 }] },
             ...b.itens.map(({ servico, saida, dias }) => ({
               celulas: [
-                { trechos: [{ t: String(servico.idColab), peso: 600 as const }], abaixo: saida.ordem > 1 ? `${saida.ordem}ª ida` : undefined },
+                { trechos: [{ t: String(servico.idColab), peso: 600 as const }], pilula: saida.ordem > 1 ? `${saida.ordem}ª ida` : undefined },
                 servico.categoria ?? 'Sem categoria',
                 // com login, rua e número (sem o fim " - Bairro, Niterói - RJ, CEP": o bairro já é o grupo); sem, só a rua
                 (detalhes ? (e => (e ? enderecoCurto(e) : null))(detalhes.get(servico.chave)?.endereco) : servico.rua) ?? '—',

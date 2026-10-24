@@ -61,7 +61,7 @@ export function desenharCampo(f: Folha, regioes: RegiaoCampo[], detalhes: Map<st
           const atraso = situacao(saida, hoje) === 'atraso'
           linhas.push({
             celulas: [
-              { trechos: [{ t: String(servico.idColab), peso: 600 }], abaixo: saida.ordem > 1 ? `${saida.ordem}ª ida` : undefined },
+              { trechos: [{ t: String(servico.idColab), peso: 600 }], pilula: saida.ordem > 1 ? `${saida.ordem}ª ida` : undefined },
               {
                 trechos: [...(servico.categoria === CATEGORIA_RISCO ? [{ t: '', icone: 'raio' as const }] : []), { t: servico.categoria ?? 'Sem categoria' }],
                 abaixo: detalhes ? undefined : lugar,

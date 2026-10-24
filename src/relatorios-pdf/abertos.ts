@@ -14,8 +14,8 @@ import { barraFaixas, cartao, colunas, nota, secao, tabela, type Celula, type Co
 // as mesmas cores da tela (Abertos.tsx), com o color-mix já resolvido
 const COR_ESPERA = [COR.ok, COR.andamento, '#e77c28', COR.atraso, '#872727']
 
-/** .folha-compacta: tabela menor, numa linha só (menos o que pode quebrar) */
-export const ESTILO: EstiloTabela = { tam: 10.5, padX: 5, padY: 3, ultimaSemFio: true }
+/** .folha-compacta: tabela menor, numa linha só (menos o que pode quebrar); célula de duas linhas centra as outras na altura */
+export const ESTILO: EstiloTabela = { tam: 10.5, padX: 5, padY: 3, ultimaSemFio: true, meio: true }
 
 const MESES_NO_RESUMO = 12
 /** a partir de quantas letras um texto da tabela de mais antigos pode quebrar linha */

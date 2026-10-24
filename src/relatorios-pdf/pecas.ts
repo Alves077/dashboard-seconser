@@ -162,6 +162,8 @@ export interface Celula {
   abaixo?: string
   /** linha em branco para escrever à mão (retorno da lista de campo) */
   retorno?: boolean
+  /** pílula com borda embaixo, centrada no texto de cima ("2ª ida" embaixo do número do serviço) */
+  pilula?: string
 }
 
 export type LinhaTabela =
@@ -186,6 +188,8 @@ const TAM_CABECALHO = 10
 const ESPACO_CABECALHO = 0.4
 const TAM_ABAIXO = 10.5
 const RETORNO = 20
+const TAM_PILULA = 9
+const ALT_PILULA = 13
 
 const celulaDe = (c: Celula | string): Celula => (typeof c === 'string' ? { trechos: [{ t: c }] } : c)
 const textoDe = (c: Celula) => c.trechos.map((t) => t.t).join('')
@@ -213,7 +217,8 @@ function larguras(f: Folha, w: number, colunas: Coluna[], linhas: LinhaTabela[],
       const c = celulaDe(bruta)
       const inteira = c.trechos.reduce((s, t) => s + (t.icone ? e.tam * 1.15 : f.medirTexto(t.t, t.tam ?? e.tam, t.peso ?? 400)), 0)
       const abaixo = c.abaixo ? f.medirTexto(c.abaixo, TAM_ABAIXO) : 0
-      const cheia = Math.max(inteira, abaixo)
+      const pilula = c.pilula ? f.medirTexto(c.pilula, TAM_PILULA, 500) + 10 : 0
+      const cheia = Math.max(inteira, abaixo, pilula)
       max[i] = Math.max(max[i], cheia)
       // a palavra medida no peso em que vai ser desenhada: medida em 400 e desenhada em 500, "Associação" não cabia e
       // partia no meio ("Associaçã / o")
@@ -273,7 +278,7 @@ export function tabela(f: Folha, x: number, w: number, colunas: Coluna[], linhas
       // coluna sem `quebra` fica numa linha só, mesmo passando um pouco da célula (td.num: nowrap, como o navegador)
       const ls = c.retorno ? [] : f.quebrar(c.trechos, colunas[i].quebra ? largura : Infinity, e.tam, l.tipo === 'total' ? 600 : 400)
       const lsAbaixo = c.abaixo ? f.quebrar([{ t: c.abaixo }], largura, TAM_ABAIXO) : []
-      const alt = c.retorno ? RETORNO : ls.length * e.tam * lh + lsAbaixo.length * TAM_ABAIXO * lh
+      const alt = c.retorno ? RETORNO : ls.length * e.tam * lh + lsAbaixo.length * TAM_ABAIXO * lh + (c.pilula ? ALT_PILULA + 2 : 0)
       return { c, ls, lsAbaixo, alt }
     })
     return { l, celulas, alt: Math.max(...celulas.map((c) => c.alt)) + 2 * e.padY, ls: [] as Trecho[][] }
@@ -324,6 +329,15 @@ export function tabela(f: Folha, x: number, w: number, colunas: Coluna[], linhas
         const alinhar = colunas[i].alinhar ?? 'esq'
         const h = f.desenharLinhas(cel.ls, cx, topo, largura, { tam: e.tam, lh, alinhar, peso: m.l.tipo === 'total' ? 600 : 400 })
         if (cel.lsAbaixo.length) f.desenharLinhas(cel.lsAbaixo, cx, topo + h, largura, { tam: TAM_ABAIXO, lh, alinhar, cor: COR.ink3 })
+        if (cel.c.pilula) {
+          // centrada na 1ª linha de cima (o número), não na coluna
+          const lw = (cel.ls[0] ?? []).reduce((t, p) => t + f.medirTexto(p.t, p.tam ?? e.tam, p.peso ?? 400), 0)
+          const meioX = alinhar === 'centro' ? cx + largura / 2 : alinhar === 'dir' ? cx + largura - lw / 2 : cx + lw / 2
+          const pw = f.medirTexto(cel.c.pilula, TAM_PILULA, 500) + 10
+          const py = topo + h + 2
+          f.caixa(meioX - pw / 2, py, pw, ALT_PILULA, { borda: COR.line, raio: ALT_PILULA / 2 })
+          f.texto(cel.c.pilula, meioX, 0, { tam: TAM_PILULA, peso: 500, cor: COR.ink2, alinhar: 'centro', base: f.base(py, TAM_PILULA, ALT_PILULA / TAM_PILULA) })
+        }
       })
     }
     const antesDoTotal = montadas[k + 1]?.l.tipo === 'total'

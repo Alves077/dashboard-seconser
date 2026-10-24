@@ -262,10 +262,11 @@ export function SeletorMedida({ medida, aoMudar, porRetorno }: { medida: Medida;
           </Toggle>
         ))}
       </ToggleGroup>
-      {medida === 'fila' && <span className="text-xs text-ink-3">Em aberto hoje, de qualquer mês: o período não muda estas listas.</span>}
-      {medida === 'abertosPeriodo' && <span className="text-xs text-ink-3">Saíram para a rua no período e ainda não voltaram.</span>}
+      {/* celular: a chave ocupa a largura toda e o texto desce — centrado embaixo dela (usuário, 24/10/2026) */}
+      {medida === 'fila' && <span className="text-xs text-ink-3 max-sm:w-full max-sm:text-center">Em aberto hoje, de qualquer mês: o período não muda estas listas.</span>}
+      {medida === 'abertosPeriodo' && <span className="text-xs text-ink-3 max-sm:w-full max-sm:text-center">Saíram para a rua no período e ainda não voltaram.</span>}
       {medida === 'periodo' && !porRetorno && (
-        <span className="flex items-center gap-3 text-xs text-ink-3">
+        <span className="flex items-center gap-3 text-xs text-ink-3 max-sm:w-full max-sm:justify-center">
           <span className="flex items-center gap-1.5">
             <span aria-hidden className="h-2 w-3 rounded-full bg-s1" /> já voltaram
           </span>

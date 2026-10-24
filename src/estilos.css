@@ -633,6 +633,8 @@ html[data-transicao='gaveta-volta']::view-transition-new(*.gaveta-lista) {
 }
 .folha-compacta .tabela-folha td {
   white-space: nowrap;
+  /* célula que quebra em duas linhas: as outras da linha ficam centradas na altura, não no topo */
+  vertical-align: middle;
 }
 .folha-compacta .tabela-folha td.quebra {
   white-space: normal;

@@ -96,7 +96,8 @@ export function SecaoFolha({
 export function IdServico({ servico, ordem }: { servico: Servico; ordem?: number }) {
   const { abrir } = useFicha()
   return (
-    <>
+    // número e "2ª ida" empilhados e centrados um no outro (usuário, 24/10/2026)
+    <span className="inline-flex flex-col items-center gap-0.5 align-middle">
       <button
         type="button"
         onClick={() => abrir(servico.chave)}
@@ -107,9 +108,12 @@ export function IdServico({ servico, ordem }: { servico: Servico; ordem?: number
         <Info aria-hidden className="size-3" />
       </button>
       <span className="numeros hidden font-semibold print:inline">{servico.idColab}</span>
-      {/* embaixo do número (usuário, 24/10/2026): na mesma linha alargava a coluna e desalinhava os números */}
-      {ordem !== undefined && ordem > 1 && <span className="block text-[10px] font-normal text-ink-3">{ordem}ª ida</span>}
-    </>
+      {/* embaixo do número, numa pílula com borda (aparece bem no papel em preto e branco): na mesma linha alargava a
+          coluna e desalinhava os números */}
+      {ordem !== undefined && ordem > 1 && (
+        <span className="rounded-full border border-line px-1.5 text-[10px] leading-4 font-medium whitespace-nowrap text-ink-2">{ordem}ª ida</span>
+      )}
+    </span>
   )
 }
 

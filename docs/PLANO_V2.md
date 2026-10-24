@@ -898,7 +898,16 @@ Pedido do usuário (21/10): uma listagem dos serviços fechados. `relatorioExecu
   em 1024 (folga 58 px; com login +40, sem login −86 do Relatórios +85 do "Entrar") e 1280 (folga 46).
 - Cabeçalho da folha (tela e PDF): título na largura toda; departamento/subtítulo embaixo, datas à direita — o título
   não divide mais a linha com as datas (com "Bairro …" quebrava em duas).
-- Ideias do painel Cadra / "18 leis de UX" (não feitas, aguardando o usuário): **entrou × executado por dia** (barras
-  divergentes, últimos 14 dias, saldo da fila — o Panorama tem o Movimento do período e a Evolução o saldo por região,
-  mas não o ritmo dia a dia); **ritmo do mês em curso** no indicador; **uma linha de leitura** em cartões do Prazo/Panorama.
+- Ideias do painel Cadra / "18 leis de UX": entrou × executado por dia — feito e descartado (ver abaixo); **ritmo do mês em curso** no indicador; **uma linha de leitura** em cartões do Prazo/Panorama.
   Descartadas: badges no menu, barra flutuante, cartão "hoje" separado (a frase de abertura do Panorama já faz isso).
+
+## Panorama: "Dia a dia" — testado e DESCARTADO (24/10/2026)
+Barras divergentes de saídas × executadas por dia, abaixo do Movimento. O usuário não gostou: por dia, os fins de semana
+(zero) fazem o gráfico parecer quebrado, e a tendência saídas × executados já existe em linha na Evolução. Removido
+antes do commit. Não propor de novo gráfico diário de fluxo.
+
+## Listas (24/10/2026)
+- Número do serviço e "2ª ida" empilhados e centrados; a ida numa pílula com borda (tela: IdServico; PDF: `Celula.pilula`
+  em pecas.ts, centrada no número). Células de duas linhas centram as outras na altura (CSS da folha compacta; PDF `meio`).
+- `?execucao` e `?lista` não seguem para as outras páginas (SO_DA_PAGINA em lib/ganchos.ts).
+- Panorama: a legenda/explicação embaixo da chave "Nas listas abaixo" centrada no celular.
