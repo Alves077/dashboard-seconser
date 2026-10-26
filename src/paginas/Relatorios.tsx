@@ -66,16 +66,35 @@ const MESES_EXECUCAO = 12
 /** "hoje", "ontem" ou "em 22/10" */
 const quandoDia = (d: Dia, hoje: Dia) => (d === hoje ? 'hoje' : d === hoje - 1 ? 'ontem' : `em ${formatarDiaCurto(d)}`)
 
-function intervaloDaExecucao(valor: string | null, hoje: Dia, ultimo: Dia | null): { intervalo: Intervalo; quando: string } {
+/**
+ * "Últimos 7/30 dias" terminam no último dia com execução da cidade, não em hoje (usuário, 26/10/2026): a execução só
+ * entra com a baixa do dia seguinte, então hoje fica vazio e a janela que termina hoje perdia o 7º dia (numa segunda,
+ * a segunda anterior). Sem execução nenhuma na base, termina em hoje.
+ */
+function ultimosDias(n: number, hoje: Dia, ultimoNaCidade: Dia | null): { intervalo: Intervalo; quando: string } {
+  const ate = ultimoNaCidade ?? hoje
+  const de = ate - (n - 1)
+  return {
+    intervalo: { de, ate, parcial: ate >= hoje, rotulo: `${formatarDia(de)} a ${formatarDia(ate)}` },
+    quando: `nos últimos ${n} dias (${formatarDiaCurto(de)} até ${formatarDiaCurto(ate)})`,
+  }
+}
+
+function intervaloDaExecucao(
+  valor: string | null,
+  hoje: Dia,
+  ultimo: Dia | null,
+  ultimoNaCidade: Dia | null,
+): { intervalo: Intervalo; quando: string } {
   if (valor === 'ultimo' && ultimo !== null)
     return { intervalo: { de: ultimo, ate: ultimo, parcial: ultimo === hoje, rotulo: formatarDia(ultimo) }, quando: quandoDia(ultimo, hoje) }
-  if (valor === '30d') return { intervalo: intervaloDo({ tipo: 'atalho', atalho: '30d' }, hoje), quando: 'nos últimos 30 dias' }
+  if (valor === '30d') return ultimosDias(30, hoje, ultimoNaCidade)
   const mes = /^m(\d{6})$/.exec(valor ?? '')
   if (mes) {
     const intervalo = intervaloDo({ tipo: 'mes', mes: +mes[1] }, hoje)
     return { intervalo, quando: `em ${intervalo.rotulo}` }
   }
-  return { intervalo: intervaloDo({ tipo: 'atalho', atalho: '7d' }, hoje), quando: 'nos últimos 7 dias' }
+  return ultimosDias(7, hoje, ultimoNaCidade)
 }
 
 function intervaloDaSaida(valor: string | null, hoje: Dia): Intervalo | null {
@@ -196,7 +215,17 @@ function PaginaRelatorios() {
     for (const s of filtrarLugar(base.saidas, filtros)) if (s.dataRetorno !== null && (ultimo === null || s.dataRetorno > ultimo)) ultimo = s.dataRetorno
     return ultimo
   }, [base, filtros])
-  const execucao = useMemo(() => intervaloDaExecucao(paramExecucao, hoje, ultimoExecutado), [paramExecucao, hoje, ultimoExecutado])
+  // o último dia com execução na cidade: onde terminam "últimos 7/30 dias" (num bairro parado, o dele puxaria a janela para trás)
+  const ultimoNaCidade = useMemo(() => {
+    if (!base) return null
+    let ultimo: Dia | null = null
+    for (const s of base.saidas) if (s.dataRetorno !== null && (ultimo === null || s.dataRetorno > ultimo)) ultimo = s.dataRetorno
+    return ultimo
+  }, [base])
+  const execucao = useMemo(
+    () => intervaloDaExecucao(paramExecucao, hoje, ultimoExecutado, ultimoNaCidade),
+    [paramExecucao, hoje, ultimoExecutado, ultimoNaCidade],
+  )
   const saida = useMemo(() => intervaloDaSaida(paramSaida, hoje), [paramSaida, hoje])
   // meses que ainda têm pedido em aberto (os mais recentes primeiro)
   const mesesAbertos = useMemo(
