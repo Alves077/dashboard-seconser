@@ -493,8 +493,14 @@ export function relatorioExecutados(base: Base, f: Filtros, periodo: Intervalo) 
   for (const it of itens) if (it.servico.origem === 'Vereador' && it.servico.vereador) vereadores.set(it.servico.vereador, (vereadores.get(it.servico.vereador) ?? 0) + 1)
 
   const noPrazo = itens.filter(dentro).length
+  // o que saiu para a rua na mesma época, com os mesmos filtros (usuário, 26/10/2026): referência para os executados, que
+  // NÃO são uma parte disso — boa parte tinha saído antes (`saiuAntes`); por isso os dois números não viram porcentagem
+  const sairam = filtrarLugar(base.saidas, f).filter((s) => noIntervalo(s, periodo, 'saida')).length
+  const saiuAntes = periodo.de === null ? 0 : itens.filter((it) => it.saida.dataSaida < periodo.de!).length
   return {
     n,
+    sairam,
+    saiuAntes,
     nivel,
     categorias: porChave((s) => s.categoria ?? 'Sem categoria'),
     origens: porChave((s) => s.origem),

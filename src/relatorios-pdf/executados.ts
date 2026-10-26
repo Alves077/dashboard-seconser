@@ -58,6 +58,17 @@ export function desenharExecutados(
       : [{ t: ' em média; metade em até ' }, forte(diasLevou(r.mediana)), { t: '.' }]),
   ]
   if (r.lugares.length > 1) trechos.push({ t: ` ${tres} com mais execuções: ${r.tres.map((l) => `${l.nome} (${numero(l.executados)})`).join(', ')}.` })
+  // o que saiu na mesma época, como referência (como na tela; sem %: os executados não são uma parte dessas saídas)
+  const saldo = r.sairam - r.n
+  trechos.push(
+    { t: ' Nesse período, ' },
+    forte(numero(r.sairam)),
+    { t: ` ${r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua. Dos ${numero(r.n)} executados, ` },
+    forte(numero(r.n - r.saiuAntes)),
+    { t: ' saíram nesse mesmo período e ' },
+    forte(numero(r.saiuAntes)),
+    { t: ' já estavam na rua antes dele.' },
+  )
   const linhas = f.quebrar(trechos, w - 27, 12)
   const alto = linhas.length * 12 * 1.625 + 16
   f.caixa(x, f.y, w, alto, { fundo: COR.page, raio: [0, 6, 6, 0] })
@@ -67,7 +78,18 @@ export function desenharExecutados(
 
   secao(f, x, w, 'Indicadores', (xi, wi) =>
     kpis(f, xi, wi, [
-      { rotulo: 'Executados', valor: numero(r.n), apoio: quando, cor: COR.ok },
+      {
+        rotulo: 'Saíram para a rua',
+        valor: numero(r.sairam),
+        apoio: saldo === 0 ? 'fila igual' : `fila ${saldo > 0 ? 'cresceu' : 'diminuiu'} ${numero(Math.abs(saldo))}`,
+        cor: COR.ink3,
+      },
+      {
+        rotulo: 'Executados',
+        valor: numero(r.n),
+        apoio: r.saiuAntes ? `${numero(r.saiuAntes)} saíram antes do período` : 'todos saíram no período',
+        cor: COR.ok,
+      },
       { rotulo: 'No prazo', valor: numero(r.noPrazo), apoio: `${pct(r.noPrazo, r.n)} · até ${PRAZO_DIAS} dias`, cor: COR.ok },
       { rotulo: 'Fora do prazo', valor: numero(r.foraPrazo), apoio: `${pct(r.foraPrazo, r.n)} · mais de ${PRAZO_DIAS} dias`, cor: COR.atraso },
       { rotulo: 'Tempo médio', valor: decimal(r.media), unidade: 'd', apoio: metadeEm(r.mediana), cor: COR.ink3 },

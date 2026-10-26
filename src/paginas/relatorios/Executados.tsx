@@ -111,6 +111,8 @@ export function RelatorioExecutadosFolha({
   const { grupo, tres } = NIVEL[r.nivel]
   const Quando = quando.charAt(0).toUpperCase() + quando.slice(1)
   const um = r.n === 1
+  // saíram − executados na época: quanto a fila cresceu (positivo) ou diminuiu
+  const saldo = r.sairam - r.n
 
   return (
     <div className="folha-compacta">
@@ -133,12 +135,28 @@ export function RelatorioExecutadosFolha({
             {' '}
             {tres} com mais execuções: {r.tres.map((l) => `${l.nome} (${numero(l.executados)})`).join(', ')}.
           </>
-        )}
+        )}{' '}
+        {/* o que saiu na mesma época, como referência — sem porcentagem: os executados não são uma parte dessas saídas */}
+        Nesse período, <strong className={forte}>{numero(r.sairam)}</strong> {r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua.
+        Dos {numero(r.n)} executados, <strong className={forte}>{numero(r.n - r.saiuAntes)}</strong> saíram nesse mesmo período e{' '}
+        <strong className={forte}>{numero(r.saiuAntes)}</strong> já estavam na rua antes dele.
       </p>
 
       <SecaoFolha titulo="Indicadores">
-        <div className="grid grid-cols-2 gap-1.5 lg:grid-cols-4 print:grid-cols-4">
-          <Kpi rotulo="Executados" valor={numero(r.n)} apoio={quando} cor="var(--c-ok)" />
+        {/* "Saíram" antes, como referência (sem % dos executados: eles não são uma parte dessas saídas) */}
+        <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3 lg:grid-cols-5 print:grid-cols-5">
+          <Kpi
+            rotulo="Saíram para a rua"
+            valor={numero(r.sairam)}
+            apoio={saldo === 0 ? 'fila igual' : `fila ${saldo > 0 ? 'cresceu' : 'diminuiu'} ${numero(Math.abs(saldo))}`}
+            cor="var(--c-ink-3)"
+          />
+          <Kpi
+            rotulo="Executados"
+            valor={numero(r.n)}
+            apoio={r.saiuAntes ? `${numero(r.saiuAntes)} saíram antes do período` : 'todos saíram no período'}
+            cor="var(--c-ok)"
+          />
           <Kpi rotulo="No prazo" valor={numero(r.noPrazo)} apoio={`${pct(r.noPrazo, r.n)} · até ${PRAZO_DIAS} dias`} cor="var(--c-ok)" />
           <Kpi rotulo="Fora do prazo" valor={numero(r.foraPrazo)} apoio={`${pct(r.foraPrazo, r.n)} · mais de ${PRAZO_DIAS} dias`} cor="var(--c-atraso)" />
           <Kpi rotulo="Tempo médio" valor={decimal(r.media)} unidade="d" apoio={metadeEm(r.mediana)} cor="var(--c-ink-3)" />
