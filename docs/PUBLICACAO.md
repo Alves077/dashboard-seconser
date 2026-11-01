@@ -3,8 +3,10 @@
 > **01/11 — etapa FINAL** (usuário: "já pode fazer tudo referente à troca do site", antecipando 03/11): workflow em
 > `ETAPA: final` — só a v2; `/legado/` deixa de existir e os 5 endereços dele (`legado/`, `legado/pages/mapa.html`,
 > `qualidade`, `tendencia`, `legado/relatorio.html`) redirecionam como os da raiz. Simulado em casa com o script do
-> workflow: 11 páginas publicadas (index + 5 da raiz/teste + 5 do legado). Fora do código, com o usuário (§4): arquivar
-> a implantação do Apps Script, tirar o passo Power Query → Sheets da rotina, proteção de senha vazada no Supabase.
+> workflow: 11 páginas publicadas (index + 5 da raiz/teste + 5 do legado). **No ar (push `c89c5c6`, conferido no site:
+> `/legado/` e os favoritos antigos redirecionam).** Apps Script: implantação ativa (a do `js/config.js`) arquivada
+> pelo usuário (a planilha já era fechada, sem link). O passo Power Query → Sheets já tinha saído da rotina havia tempo.
+> **Troca concluída.** A proteção de senha vazada não existe no plano gratuito do Supabase (só no Pro): fica de fora.
 
 > **20/10 — troca NO AR** (publicação 22:53 UTC ok; conferido: raiz = v2, `/legado/` com aviso, redirecionamentos). Falta: Site URL no Supabase.
 > Antes: **troca preparada** (workflow em `ETAPA: troca`, `FIM_LEGADO: '03/11/2026'`; usuário: "até 2 semanas,
@@ -72,4 +74,5 @@ depois desligar o Apps Script e tirar a pasta. O código do antigo fica para sem
    a implantação (Implantar → Gerenciar implantações → Arquivar) e, se quiser, despublicar a planilha.
 2. No trabalho: tirar da rotina diária o passo Power Query → CSV → Google Sheets (a v2 lê o Supabase).
 3. No workflow: `ETAPA: final`. Commit e push.
-4. Segurança (docs/SEGURANCA.md): ligar a proteção de senha vazada no Supabase (Authentication → Policies).
+4. ~~Segurança: ligar a proteção de senha vazada~~ — só no plano Pro do Supabase; o projeto é gratuito (conferido
+   01/11/2026). Ver docs/SEGURANCA.md.

@@ -42,13 +42,15 @@ vezes recarrega uma vez (o Vite preparando o Leaflet sob demanda) — no build d
   token. O `.env.local` está no `.gitignore`.
 - Histórico do git — dashboard (90 commits, todos os ramos) e projeto de dados (público; só o commit inicial): nenhum
   segredo e nenhum arquivo de dado (CSV, planilha, `.env`) jamais commitado.
-- Site antigo (ramo `main`): o endereço do Apps Script com o token está no código (já sabido) — quem tiver o link
-  baixa a planilha com as colunas públicas. **Quando a v2 for ao ar, desativar esse Apps Script.**
+- Site antigo (ramo `main`): o endereço do Apps Script com o token está no código (já sabido). **Implantação arquivada
+  em 01/11/2026** (etapa final): o endereço não responde mais.
 
 ## Recomendações (não são falhas)
 
-1. **Proteção contra senha vazada** (aviso do Supabase): verifica a senha na base do HaveIBeenPwned. Nos planos que
-   têm, ligar em *Authentication → Policies*. Senha forte para as contas de acesso.
+1. **Proteção contra senha vazada** (aviso do Supabase): verifica a senha na base do HaveIBeenPwned. Só existe no plano
+   Pro; o projeto é gratuito (01/11/2026), então o aviso do `get_advisors` continua e é esperado. No lugar: senha forte
+   para as contas de acesso (no gratuito dá para exigir tamanho mínimo e tipos de caractere em *Authentication →
+   Providers → Email*).
 2. **URLs de redirecionamento do login** (*Authentication → URL Configuration*): deixar só o endereço do site
    publicado (e `http://localhost:5173` enquanto houver desenvolvimento). Evita link de "nova senha" apontando para
    outro site.
