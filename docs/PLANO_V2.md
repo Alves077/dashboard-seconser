@@ -948,3 +948,13 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
   indicadores). Sem `export` o que só o próprio arquivo usa (serieMensal, escolherPasso, coordenadaValida, tituloSecao,
   normalizarTexto, enxuto, ATALHOS, PERIODO_PADRAO, SEM_BAIRRO, INDICACAO_LEGISLATIVA). Análise de sem uso
   (scratchpad `sem_uso.mjs`): nenhum código morto; tokens o1/o2/o4/o5 sobram no CSS (paleta do DESIGN.md, mantidos).
+
+## Feito no trabalho (26/10/2026) — puxado em casa em 31/10
+- `ab0c997` Executados "últimos 7/30 dias" terminam no **último dia com execução da cidade** (`ultimosDias` em
+  Relatorios.tsx; não em hoje, que fica vazio até a baixa do dia seguinte e fazia perder o 7º dia) e dizem o período
+  ("nos últimos 7 dias (19/10 até 25/10)"). O último dia da cidade, não o do filtro: num bairro parado puxaria para trás.
+- `5a3ecdb` "Buscar dados de novo" travava o site: `structuralSharing: false` em `useBase` (dados/consultas.ts) — serviço
+  e saída se apontam e a comparação do TanStack seguia o vai-e-volta.
+- `f1b6622` Executados com **"Saíram para a rua"** no mesmo período (5 indicadores; apoio "fila cresceu/diminuiu N") e,
+  dos executados, quantos saíram no período e quantos já estavam na rua antes (`sairam`, `saiuAntes` em
+  `relatorioExecutados`). Sem porcentagem entre os dois: os executados não são uma parte dessas saídas.
