@@ -7,34 +7,17 @@
 import { clsx } from 'clsx'
 import { Fragment } from 'react'
 import { FAIXAS_EXEC } from '@/calculos/prazo'
-import type { LinhaLugarExecutado, RelatorioExecutados } from '@/calculos/relatorios'
+import { NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
+import { COR_EXEC, TEXTO_ESCURO_EXEC } from '@/lib/cores'
 import { formatarDiaNoAno, type Dia } from '@/lib/datas'
 import { decimal, diasLevou, diasLevouCurto, metadeEm, numero, pct } from '@/lib/formato'
 import { Kpi } from './Abertos'
 import { BarraFaixas, IdServico, Rolavel, SecaoFolha } from './Folha'
 
-/** nome do nível da distribuição (um abaixo do filtro) e a frase "… com mais execuções" */
-const NIVEL = {
-  regiao: { grupo: 'Região', tres: 'Regiões' },
-  bairro: { grupo: 'Bairro', tres: 'Bairros' },
-  rua: { grupo: 'Rua', tres: 'Ruas' },
-} as const
-
 const forte = 'font-semibold text-ink'
-
-// faixas da página Prazo: as duas primeiras no prazo, em verde (claro e escuro); fora do prazo, do dourado ao vermelho —
-// vizinhas com luminância bem diferente, para a impressão em preto e branco
-const COR_EXEC = [
-  'var(--c-ok)',
-  'var(--c-ok-texto)',
-  'var(--c-andamento)',
-  'color-mix(in oklab, var(--c-andamento) 55%, var(--c-atraso))',
-  'var(--c-atraso)',
-]
-const TEXTO_ESCURO = [true, false, true, true, false]
 
 
 /**
@@ -108,7 +91,7 @@ export function RelatorioExecutadosFolha({
   comLista: boolean
 }) {
   if (r.n === 0) return <p className="py-10 text-center text-[13px] text-ink-2">Nenhum serviço executado nessa época com esses filtros.</p>
-  const { grupo, tres } = NIVEL[r.nivel]
+  const { grupo, grupos } = NIVEL[r.nivel]
   const Quando = quando.charAt(0).toUpperCase() + quando.slice(1)
   const um = r.n === 1
   // saíram − executados na época: quanto a fila cresceu (positivo) ou diminuiu
@@ -133,7 +116,7 @@ export function RelatorioExecutadosFolha({
         {r.lugares.length > 1 && (
           <>
             {' '}
-            {tres} com mais execuções: {r.tres.map((l) => `${l.nome} (${numero(l.executados)})`).join(', ')}.
+            {grupos} com mais execuções: {r.tres.map((l) => `${l.nome} (${numero(l.executados)})`).join(', ')}.
           </>
         )}{' '}
         {/* o que saiu na mesma época, como referência — sem porcentagem: os executados não são uma parte dessas saídas */}
@@ -175,7 +158,7 @@ export function RelatorioExecutadosFolha({
         </div>
         <BarraFaixas
           comPct={false}
-          partes={FAIXAS_EXEC.map((fx, i) => ({ rotulo: fx.rotulo, n: r.faixas[i], cor: COR_EXEC[i], textoEscuro: TEXTO_ESCURO[i] }))}
+          partes={FAIXAS_EXEC.map((fx, i) => ({ rotulo: fx.rotulo, n: r.faixas[i], cor: COR_EXEC[i], textoEscuro: TEXTO_ESCURO_EXEC(i) }))}
           total={r.n}
         />
       </SecaoFolha>

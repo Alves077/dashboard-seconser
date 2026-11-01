@@ -7,7 +7,17 @@
 // Outra época (7/30/90 dias, este ano, um mês; usuário, 21/10/2026): a abertura e os indicadores contam quem saiu nela e
 // quantos seguem em aberto, e somem as faixas de espera e o "> 30 dias" que a época não deixa acontecer.
 import { clsx } from 'clsx'
-import { faixasDaEpoca, origemTexto, variaNaEpoca, type LinhaSimplesAberto, type RelatorioAbertos } from '@/calculos/relatorios'
+import {
+  alertaDias,
+  faixasDaEpoca,
+  LONGO,
+  MESES_NO_RESUMO,
+  NIVEL,
+  origemTexto,
+  variaNaEpoca,
+  type LinhaSimplesAberto,
+  type RelatorioAbertos,
+} from '@/calculos/relatorios'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, rotuloMes, type Dia } from '@/lib/datas'
@@ -16,8 +26,11 @@ import { COR_ESPERA, TEXTO_ESCURO_ESPERA } from '@/lib/cores'
 import { BarraFaixas, IdServico, Rolavel, SecaoFolha } from './Folha'
 
 
-/** Espera: acima de 30 dias em vermelho, acima de 15 em âmbar (como no script) */
-const corDias = (v: number) => (v > 30 ? 'text-atraso-texto' : v > 15 ? 'text-andamento-texto' : undefined)
+const CLASSE_ALERTA = { atraso: 'text-atraso-texto', andamento: 'text-andamento-texto' } as const
+const corDias = (v: number) => {
+  const a = alertaDias(v)
+  return a ? CLASSE_ALERTA[a] : undefined
+}
 
 /** Indicador do script: rótulo, barrinha de cor ao lado do número e uma linha de apoio (também nos Executados) */
 export function Kpi({ rotulo, valor, unidade, apoio, cor }: { rotulo: string; valor: string; unidade?: string; apoio: string; cor: string }) {
@@ -62,17 +75,6 @@ function TabelaSimples({ titulo, linhas, total, doDia = false }: { titulo: strin
     </Rolavel>
   )
 }
-
-const MESES_NO_RESUMO = 12
-/** a partir de quantas letras um texto da tabela de mais antigos pode quebrar linha */
-const LONGO = 24
-
-/** nome do nível da tabela de distribuição (um abaixo do filtro) e a frase "os três … com mais pendências" */
-const NIVEL = {
-  regiao: { grupo: 'Região', tres: 'As três regiões', um: 'outra região', varios: 'outras', plural: 'regiões' },
-  bairro: { grupo: 'Bairro', tres: 'Os três bairros', um: 'outro bairro', varios: 'outros', plural: 'bairros' },
-  rua: { grupo: 'Rua', tres: 'As três ruas', um: 'outra rua', varios: 'outras', plural: 'ruas' },
-} as const
 
 /** "Hoje saíram 75 para a rua: Camboinhas (61), Piratininga (14) e mais 3 em outros 2 bairros." */
 function AberturaDoDia({ r }: { r: RelatorioAbertos }) {

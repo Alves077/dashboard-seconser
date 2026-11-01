@@ -3,7 +3,7 @@
 // evolução mensal em dois gráficos (o antigo tinha dois eixos no mesmo quadro).
 import { clsx } from 'clsx'
 import { GraficoTempo, LegendaTempo } from '@/componentes/graficos/GraficoTempo'
-import { COR_ESPERA, TEXTO_ESCURO_ESPERA } from '@/lib/cores'
+import { COR_ESPERA, COR_FAIXA_MENSAL, TEXTO_ESCURO_ESPERA, TEXTO_ESCURO_FAIXA_MENSAL } from '@/lib/cores'
 import { FAIXAS_ESPERA } from '@/calculos/panorama'
 import type { GrupoMensal, RelatorioMensal } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
@@ -12,9 +12,6 @@ import { formatarDia, formatarDiaCurto, rotuloMes, rotuloMesLongo } from '@/lib/
 import { decimal, numero, pct } from '@/lib/formato'
 import { BarraFaixas, IdServico, NumeroFolha, Observacoes, Rolavel, SecaoFolha } from './Folha'
 
-// cores do antigo: ≤3 verde · 4–7 azul · 8–15 âmbar · >15 vermelho
-// azul um pouco mais escuro que o s1: o branco em cima dele ficava em 4,4:1
-const COR_FAIXA = ['var(--c-ok)', 'color-mix(in oklab, var(--c-s1) 82%, black)', 'var(--c-andamento)', 'var(--c-atraso)']
 // saídas × retornos: marinho escuro × laranja — no papel em preto e branco viram quase preto × cinza médio (azul e
 // laranja viravam dois cinzas parecidos); bolinha × quadradinho reforçam
 const COR_SAIDAS = 'var(--c-ink-2)'
@@ -276,7 +273,7 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
 
       {totalFaixas > 0 && (
         <SecaoFolha titulo="Distribuição por faixa · só concluídos" cartao>
-          <BarraFaixas partes={FAIXAS.map((f, i) => ({ rotulo: f.rotulo, n: r.faixas[i], cor: COR_FAIXA[i], textoEscuro: i === 0 || i === 2 }))} total={totalFaixas} />
+          <BarraFaixas partes={FAIXAS.map((f, i) => ({ rotulo: f.rotulo, n: r.faixas[i], cor: COR_FAIXA_MENSAL[i], textoEscuro: TEXTO_ESCURO_FAIXA_MENSAL(i) }))} total={totalFaixas} />
         </SecaoFolha>
       )}
 

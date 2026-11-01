@@ -5,12 +5,9 @@ import { PRAZO_DIAS } from '@/config'
 import { CATEGORIA_RISCO, FAIXAS } from '@/dados/regras'
 import { formatarDia, formatarDiaCurto, rotuloMes } from '@/lib/datas'
 import { decimal, numero, pct } from '@/lib/formato'
-import { COR_ESPERA_PDF, TEXTO_ESCURO_ESPERA } from '@/lib/cores'
+import { COR_ESPERA_PDF, COR_FAIXA_MENSAL_PDF, TEXTO_ESCURO_ESPERA, TEXTO_ESCURO_FAIXA_MENSAL } from '@/lib/cores'
 import { COR, type Folha, type Trecho } from './motor'
 import { barraFaixas, colunas, grafico, legendaLinhas, nota, secao, tabela, type Celula, type Coluna, type EstiloTabela, type LinhaTabela } from './pecas'
-
-// as mesmas cores da tela (Mensal.tsx), já resolvidas (o color-mix vira a cor final)
-const COR_FAIXA = [COR.ok, '#2263b1', COR.andamento, COR.atraso]
 
 const ESTILO: EstiloTabela = { tam: 12, padX: 6, padY: 5, ultimaSemFio: true }
 
@@ -248,7 +245,7 @@ export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
       x,
       w,
       'Distribuição por faixa · só concluídos',
-      (xi, wi) => barraFaixas(f, xi, wi, FAIXAS.map((fx, i) => ({ rotulo: fx.rotulo, n: r.faixas[i], cor: COR_FAIXA[i], textoEscuro: i === 0 || i === 2 })), totalFaixas),
+      (xi, wi) => barraFaixas(f, xi, wi, FAIXAS.map((fx, i) => ({ rotulo: fx.rotulo, n: r.faixas[i], cor: COR_FAIXA_MENSAL_PDF[i], textoEscuro: TEXTO_ESCURO_FAIXA_MENSAL(i) })), totalFaixas),
       { cartao: true },
     )
 

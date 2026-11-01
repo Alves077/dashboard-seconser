@@ -979,3 +979,13 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
   busca achou. Teclado: Tab, ficha abre/fecha com Esc e o foco volta ao número; "Mais" abre com Enter, anda com as
   setas e fecha com Esc. Fica como está: o axe acusa "region" no menu "Mais" (o Base UI põe o menu fora do `nav`;
   boa prática, não WCAG).
+
+## Tela e PDF sem cópia (01/11/2026, casa)
+- O que a folha da tela e o PDF repetiam agora fica num lugar só: **cores das faixas** dos Executados (`COR_EXEC` /
+  `COR_EXEC_PDF` / `TEXTO_ESCURO_EXEC`) e do Mensal (`COR_FAIXA_MENSAL` / `_PDF` / `TEXTO_ESCURO_FAIXA_MENSAL`) em
+  lib/cores.ts, junto das de espera; **textos do nível** (`NIVEL`: Região/Bairro/Rua, "As três regiões", "Regiões com
+  mais execuções", "outros 2 bairros"), `MESES_NO_RESUMO`, `LONGO` e `alertaDias` (âmbar > 15, vermelho > 30) em
+  calculos/relatorios.ts. Mudar um deles muda tela e PDF juntos.
+- Nada mudou no que se vê: 22 telas (Em aberto, Executados, Mensal; claro e escuro) e 16 páginas de PDF comparadas
+  pixel a pixel antes × depois, iguais (scratchpad `centr/`: telas.mjs, pdfs.mjs, render.py). `src/testes/cores.test.ts`:
+  uma cor por faixa na tela e no PDF, e nenhuma faixa com o laranja do risco (48 testes).

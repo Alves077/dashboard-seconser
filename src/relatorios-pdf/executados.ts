@@ -1,25 +1,17 @@
 // Serviços executados em PDF — as mesmas seções de relatorios/Executados.tsx: abertura, 4 indicadores, distribuição um
 // nível abaixo do filtro, categoria e origem e, se pedida, a lista por região (cartão) e bairro (linha de grupo), execução mais recente primeiro.
 import { FAIXAS_EXEC } from '@/calculos/prazo'
-import type { LinhaLugarExecutado, RelatorioExecutados } from '@/calculos/relatorios'
+import { NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
+import { COR_EXEC_PDF, TEXTO_ESCURO_EXEC } from '@/lib/cores'
 import { formatarDiaNoAno, type Dia } from '@/lib/datas'
 import { decimal, diasLevou, diasLevouCurto, metadeEm, numero, pct } from '@/lib/formato'
 import { ESTILO, kpis, tituloCartao } from './abertos'
 import { COR, type Folha, type Trecho } from './motor'
 import { barraFaixas, cartao, colunas, nota, secao, tabela, type Coluna, type EstiloTabela, type LinhaTabela } from './pecas'
 
-const NIVEL = {
-  regiao: { grupo: 'Região', tres: 'Regiões' },
-  bairro: { grupo: 'Bairro', tres: 'Bairros' },
-  rua: { grupo: 'Rua', tres: 'Ruas' },
-} as const
-
-// as mesmas cores da tela (Executados.tsx), com o color-mix já resolvido
-const COR_EXEC = [COR.ok, COR.okTexto, COR.andamento, '#e77c28', COR.atraso]
-const TEXTO_ESCURO = [true, false, true, true, false]
 
 
 /** a lista: larguras fixas, para as tabelas das regiões ficarem alinhadas uma embaixo da outra */
@@ -39,7 +31,7 @@ export function desenharExecutados(
     f.paragrafo('Nenhum serviço executado nessa época com esses filtros.', x, w, { tam: 13, cor: COR.ink2, alinhar: 'centro' })
     return
   }
-  const { grupo, tres } = NIVEL[r.nivel]
+  const { grupo, grupos } = NIVEL[r.nivel]
   const forte = (t: string): Trecho => ({ t, peso: 600, cor: COR.ink })
   const um = r.n === 1
 
@@ -57,7 +49,7 @@ export function desenharExecutados(
       ? [{ t: ' em média; metade ' }, forte('no mesmo dia'), { t: '.' }]
       : [{ t: ' em média; metade em até ' }, forte(diasLevou(r.mediana)), { t: '.' }]),
   ]
-  if (r.lugares.length > 1) trechos.push({ t: ` ${tres} com mais execuções: ${r.tres.map((l) => `${l.nome} (${numero(l.executados)})`).join(', ')}.` })
+  if (r.lugares.length > 1) trechos.push({ t: ` ${grupos} com mais execuções: ${r.tres.map((l) => `${l.nome} (${numero(l.executados)})`).join(', ')}.` })
   // o que saiu na mesma época, como referência (como na tela; sem %: os executados não são uma parte dessas saídas)
   const saldo = r.sairam - r.n
   trechos.push(
@@ -110,7 +102,7 @@ export function desenharExecutados(
         f,
         xi,
         wi,
-        FAIXAS_EXEC.map((fx, i) => ({ rotulo: fx.rotulo, n: r.faixas[i], cor: COR_EXEC[i], textoEscuro: TEXTO_ESCURO[i] })),
+        FAIXAS_EXEC.map((fx, i) => ({ rotulo: fx.rotulo, n: r.faixas[i], cor: COR_EXEC_PDF[i], textoEscuro: TEXTO_ESCURO_EXEC(i) })),
         r.n,
         false,
       )

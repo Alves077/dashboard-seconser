@@ -3,7 +3,17 @@
 // Modo "Hoje" (`doDia`): o resumo do dia, como na tela — abertura do dia, 4 indicadores, sem barra e colunas de espera
 // e sem lista no fim (a do dia é a Lista de campo). Outra época: abertura e indicadores de quem saiu nela, sem as faixas de espera e o
 // "> 30 dias" que ela não deixa acontecer (como na tela).
-import { faixasDaEpoca, origemTexto, variaNaEpoca, type LinhaSimplesAberto, type RelatorioAbertos } from '@/calculos/relatorios'
+import {
+  alertaDias,
+  faixasDaEpoca,
+  LONGO,
+  MESES_NO_RESUMO,
+  NIVEL,
+  origemTexto,
+  variaNaEpoca,
+  type LinhaSimplesAberto,
+  type RelatorioAbertos,
+} from '@/calculos/relatorios'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { formatarDia, rotuloMes, type Dia } from '@/lib/datas'
@@ -16,19 +26,10 @@ import { barraFaixas, cartao, colunas, nota, secao, tabela, type Celula, type Co
 /** .folha-compacta: tabela menor, numa linha só (menos o que pode quebrar); célula de duas linhas centra as outras na altura */
 export const ESTILO: EstiloTabela = { tam: 10.5, padX: 5, padY: 3, ultimaSemFio: true, meio: true }
 
-const MESES_NO_RESUMO = 12
-/** a partir de quantas letras um texto da tabela de mais antigos pode quebrar linha */
-const LONGO = 24
-
-/** nome do nível da tabela de distribuição (um abaixo do filtro) e a frase "os três … com mais pendências" */
-const NIVEL = {
-  regiao: { grupo: 'Região', tres: 'As três regiões', um: 'outra região', varios: 'outras', plural: 'regiões' },
-  bairro: { grupo: 'Bairro', tres: 'Os três bairros', um: 'outro bairro', varios: 'outros', plural: 'bairros' },
-  rua: { grupo: 'Rua', tres: 'As três ruas', um: 'outra rua', varios: 'outras', plural: 'ruas' },
-} as const
-
-/** espera acima de 30 dias em vermelho, acima de 15 em âmbar */
-const corDias = (v: number) => (v > 30 ? COR.atrasoTexto : v > 15 ? COR.andamentoTexto : undefined)
+const corDias = (v: number) => {
+  const a = alertaDias(v)
+  return a === 'atraso' ? COR.atrasoTexto : a === 'andamento' ? COR.andamentoTexto : undefined
+}
 const dias = (v: number, peso: 400 | 600 = 400): Celula => ({ trechos: [{ t: `${decimal(v)}d`, peso, cor: corDias(v) }] })
 
 /** Indicador do script: rótulo, barrinha de cor ao lado do número e uma linha de apoio (também nos Executados) */

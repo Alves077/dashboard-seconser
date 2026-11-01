@@ -256,6 +256,28 @@ function tabelaSimples(itens: ItemAberto[], chave: (s: Servico) => string, limit
   return linhas.map(([nome, d]) => ({ nome, abertos: d.length, media: d.reduce((a, b) => a + b, 0) / d.length }))
 }
 
+// ── Textos e limites que a tela e o PDF dividem ─────────────────────────────
+
+/**
+ * Nome do nível da distribuição (um abaixo do filtro: cidade → regiões, região → bairros, bairro → ruas) e as frases que
+ * o citam: "As três regiões com mais pendências" (Em aberto), "Regiões com mais execuções" (Executados), "mais 3 em
+ * outros 2 bairros" (Em aberto, Hoje).
+ */
+export const NIVEL = {
+  regiao: { grupo: 'Região', grupos: 'Regiões', plural: 'regiões', tres: 'As três regiões', um: 'outra região', varios: 'outras' },
+  bairro: { grupo: 'Bairro', grupos: 'Bairros', plural: 'bairros', tres: 'Os três bairros', um: 'outro bairro', varios: 'outros' },
+  rua: { grupo: 'Rua', grupos: 'Ruas', plural: 'ruas', tres: 'As três ruas', um: 'outra rua', varios: 'outras' },
+} as const
+
+/** Em aberto: quantos meses de registro o resumo lista um a um (com anos de fila virava um parágrafo de ~100 meses) */
+export const MESES_NO_RESUMO = 12
+
+/** Em aberto: a partir de quantas letras um texto da tabela dos mais antigos pode quebrar linha */
+export const LONGO = 24
+
+/** Espera na tabela por lugar do Em aberto: acima de 30 dias em vermelho, acima de 15 em âmbar (como no script) */
+export const alertaDias = (v: number): 'atraso' | 'andamento' | null => (v > 30 ? 'atraso' : v > 15 ? 'andamento' : null)
+
 /** Origem como no script: "Cidadão", o nome do vereador, ou o detalhe da origem */
 export const origemTexto = (s: Servico) => (s.origem === 'Cidadão' ? 'Cidadão' : s.vereador || s.origemDetalhe || s.origem)
 

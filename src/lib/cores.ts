@@ -25,3 +25,24 @@ export const COR_ESPERA = [
 export const COR_ESPERA_PDF = ['#0ca30c', '#fab219', '#e77c28', '#d03b3b', '#872727']
 /** texto escuro dentro da faixa (verde, âmbar e laranja: branco ficava com contraste baixo) */
 export const TEXTO_ESCURO_ESPERA = (i: number) => i < 3
+
+// Faixas da saída à execução (FAIXAS_EXEC, as da página Prazo: até 3 · 4–5 · 6–15 · 16–30 · > 30 dias) nos Executados,
+// tela e PDF: as duas primeiras no prazo, em verde (claro e escuro); fora do prazo, do dourado ao vermelho — vizinhas com
+// luminância bem diferente, para a impressão em preto e branco
+export const COR_EXEC = [
+  'var(--c-ok)',
+  'var(--c-ok-texto)',
+  'var(--c-andamento)',
+  'color-mix(in oklab, var(--c-andamento) 55%, var(--c-atraso))',
+  'var(--c-atraso)',
+]
+export const COR_EXEC_PDF = ['#0ca30c', '#006300', '#fab219', '#e77c28', '#d03b3b']
+/** texto escuro dentro da faixa (no verde-escuro e no vermelho, branco) */
+export const TEXTO_ESCURO_EXEC = (i: number) => i !== 1 && i !== 4
+
+// Faixas do relatório mensal (FAIXAS, as do site antigo: até 3 · 4–7 · 8–15 · > 15 dias): verde · azul · âmbar · vermelho.
+// Azul um pouco mais escuro que o s1: o branco em cima dele ficava em 4,4:1
+export const COR_FAIXA_MENSAL = ['var(--c-ok)', 'color-mix(in oklab, var(--c-s1) 82%, black)', 'var(--c-andamento)', 'var(--c-atraso)']
+export const COR_FAIXA_MENSAL_PDF = ['#0ca30c', '#2263b1', '#fab219', '#d03b3b']
+/** texto escuro no verde e no âmbar */
+export const TEXTO_ESCURO_FAIXA_MENSAL = (i: number) => i === 0 || i === 2
