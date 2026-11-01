@@ -1,5 +1,11 @@
 # Publicação da v2 (plano decidido em 17/10/2026)
 
+> **01/11 — etapa FINAL** (usuário: "já pode fazer tudo referente à troca do site", antecipando 03/11): workflow em
+> `ETAPA: final` — só a v2; `/legado/` deixa de existir e os 5 endereços dele (`legado/`, `legado/pages/mapa.html`,
+> `qualidade`, `tendencia`, `legado/relatorio.html`) redirecionam como os da raiz. Simulado em casa com o script do
+> workflow: 11 páginas publicadas (index + 5 da raiz/teste + 5 do legado). Fora do código, com o usuário (§4): arquivar
+> a implantação do Apps Script, tirar o passo Power Query → Sheets da rotina, proteção de senha vazada no Supabase.
+
 > **20/10 — troca NO AR** (publicação 22:53 UTC ok; conferido: raiz = v2, `/legado/` com aviso, redirecionamentos). Falta: Site URL no Supabase.
 > Antes: **troca preparada** (workflow em `ETAPA: troca`, `FIM_LEGADO: '03/11/2026'`; usuário: "até 2 semanas,
 > talvez até antes — não é como se muita gente usasse"). Simulada em casa com o mesmo script do workflow e um servidor
@@ -61,7 +67,7 @@ depois desligar o Apps Script e tirar a pasta. O código do antigo fica para sem
 5. Opcional (organização do repositório): levar a `v2` para a `main` (merge) e deixar a `main` como ramo do
    workflow — quando fizer, trocar `branches: [v2]` por `[main]` no workflow e o ramo permitido no environment.
 
-## 4. Final (na data de FIM_LEGADO)
+## 4. Final (no ar desde 01/11/2026 — passo 3 feito; 1, 2 e 4 com o usuário)
 1. **Desligar o Apps Script** do site antigo (o token dele está no código público): no Google Apps Script, remover
    a implantação (Implantar → Gerenciar implantações → Arquivar) e, se quiser, despublicar a planilha.
 2. No trabalho: tirar da rotina diária o passo Power Query → CSV → Google Sheets (a v2 lê o Supabase).

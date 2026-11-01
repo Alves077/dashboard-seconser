@@ -994,3 +994,5 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
   Executados, tela e PDF: ΔE 7,5 do risco, ≥ 10 das vizinhas, texto escuro dentro a 4,5:1, luminância entre âmbar e
   vermelho (P&B). Alternativa mostrada ao usuário: `#b7810f` (ocre; ΔE 11,5 do risco, mas parece mostarda ao lado do
   âmbar). Prévias no scratchpad `centr/lar/`.
+- **Etapa final da publicação** (01/11, antecipada): `ETAPA: final` no workflow; `/legado/` sai e os endereços dele
+  redirecionam para o mesmo assunto no painel novo (docs/PUBLICACAO.md).

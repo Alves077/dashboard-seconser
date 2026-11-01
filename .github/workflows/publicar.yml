@@ -5,7 +5,8 @@
 #   teste → site antigo na raiz (do ramo main, como hoje) + v2 em /dashboard-seconser/teste/
 #   troca → v2 na raiz + site antigo em /dashboard-seconser/legado/ com aviso de que sai do ar em FIM_LEGADO
 #           (o código do antigo vem da marca "site-antigo", criada antes da troca)
-#   final → só a v2 (depois de desligar o Apps Script do site antigo)
+#   final → só a v2; endereços do antigo (raiz e /legado/) levam ao mesmo assunto no painel novo
+#           (no ar desde 01/11/2026)
 name: Publicar site
 
 on:
@@ -24,8 +25,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  ETAPA: troca
-  FIM_LEGADO: '03/11/2026' # data em que o site antigo sai do ar (etapa troca); dá para antecipar
+  ETAPA: final
+  FIM_LEGADO: '03/11/2026' # só na etapa troca: a data escrita no aviso do site antigo
 
 jobs:
   montar:
@@ -103,6 +104,12 @@ jobs:
             final)
               cp -r dist/. _site/
               redirecionar_antigos
+              # quem guardou um endereço do /legado/ (troca, 20/10 a 01/11/2026) cai no mesmo assunto no painel novo
+              redirecionar _site/legado/index.html ''
+              redirecionar _site/legado/pages/mapa.html '#/mapa'
+              redirecionar _site/legado/pages/qualidade.html '#/prazo'
+              redirecionar _site/legado/pages/tendencia.html '#/evolucao'
+              redirecionar _site/legado/relatorio.html '#/relatorios'
               ;;
             *)
               echo "ETAPA desconhecida: $ETAPA" && exit 1
