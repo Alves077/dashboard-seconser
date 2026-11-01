@@ -58,7 +58,7 @@
   --c-line-input: #3a4d6f;
   --c-ink: #e6edf6;
   --c-ink-2: #a3b1c6;
-  --c-ink-3: #7d8ba1;
+  --c-ink-3: #8593a9; /* ≥ 4,7:1 no fundo, no card, na linha destacada e no item escolhido da busca (o #7d8ba1 dava 4,3) */
   --c-acao: #8d87ff;
   --c-acao-press: #b3afff;
   --c-acao-suave: #23224d;

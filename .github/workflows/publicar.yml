@@ -41,6 +41,10 @@ jobs:
 
       - run: npm ci
 
+      # os números que a chefia lê (src/testes/): se algum mudar sem querer, para aqui e o site no ar fica como estava
+      - name: Testes dos cálculos
+        run: npm test
+
       - name: Gerar a v2
         run: |
           if [ "$ETAPA" = teste ]; then BASE=/dashboard-seconser/teste/; else BASE=/dashboard-seconser/; fi

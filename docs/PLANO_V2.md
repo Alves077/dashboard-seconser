@@ -958,3 +958,24 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
 - `f1b6622` Executados com **"Saíram para a rua"** no mesmo período (5 indicadores; apoio "fila cresceu/diminuiu N") e,
   dos executados, quantos saíram no período e quantos já estavam na rua antes (`sairam`, `saiuAntes` em
   `relatorioExecutados`). Sem porcentagem entre os dois: os executados não são uma parte dessas saídas.
+
+## Testes e acessibilidade (31/10/2026, casa)
+- **Testes automáticos dos cálculos** (vitest 5.0.5; `npm test`): `src/testes/` — `base.ts` monta uma base pequena à mão
+  (hoje = 31/10/2026) e 44 testes conferem de cabeça: textos de dias ("hoje", "mesmo dia", nunca "0 dias"), pct,
+  variação; prazo de 5 dias e situação; mediana; `enderecoCurto` (Colab com bairro/cidade/CEP/Brasil; "Rua Pau Brasil"
+  fica); chave de mês (set/26 = 202608); Em aberto (fila, faixas, níveis região → bairro → rua, época Hoje e 7 dias);
+  `faixasDaEpoca` e `variaNaEpoca`; Executados (no prazo, média/mediana, faixas, saíram × já estavam na rua, 2ª ida,
+  "Demais" de bairros e categorias, período vazio sem NaN); Lista de campo (grupos por proximidade, só em atraso);
+  página Serviços (saída mais recente, chave de situação, período não vale) e o período do site. Conferido estragando
+  de propósito `diasEspera` e o prazo: os testes falham. `config.ts`: o cenário de teste só lê `window` se existir.
+  Rodar antes de commitar mudança de cálculo. O deploy (`publicar.yml`) roda `npm test` depois do `npm ci`: teste
+  falhando, não publica (o site no ar fica como estava; o erro aparece em Actions).
+- **Acessibilidade das telas novas** (axe + teclado de verdade, claro e escuro, 1280 e 375 px): Serviços, ordenação,
+  Executados (resumo e lista), menu "Mais", busca. Corrigido: **ink-3 do escuro #7d8ba1 → #8593a9** (dava 4,3:1 no
+  item escolhido da busca e 4,49 na linha destacada; agora ≥ 4,7 também ali; DESIGN.md atualizado); item destacado dos
+  menus "Mais" e da conta com `bg-acao-suave` (o realce-forte, 7% de tinta, mal aparecia no teclado), e a pergunta
+  embaixo do nome em ink-2 quando destacada; menu da conta sem escala com movimento reduzido; tabela da página Serviços
+  com nome ("Serviços") e a contagem ("1–50 de N serviços") em `role="status"`, para o leitor de tela ouvir o que a
+  busca achou. Teclado: Tab, ficha abre/fecha com Esc e o foco volta ao número; "Mais" abre com Enter, anda com as
+  setas e fecha com Esc. Fica como está: o axe acusa "region" no menu "Mais" (o Base UI põe o menu fora do `nav`;
+  boa prática, não WCAG).

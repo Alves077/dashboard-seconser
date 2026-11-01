@@ -9,9 +9,10 @@ export const SUPABASE_CHAVE_PUBLICA: string =
  * Cenário de teste (dados inventados: pior caso, vazio…), escolhido por `?dados=` no endereço.
  * SÓ no `npm run dev` — no site publicado é sempre null e o código dos cenários nem entra (src/dev/).
  */
-export const CENARIO: string | null = import.meta.env.DEV
-  ? new URLSearchParams(window.location.search).get('dados')
-  : null
+export const CENARIO: string | null =
+  import.meta.env.DEV && typeof window !== 'undefined' // nos testes (npm test) não há window
+    ? new URLSearchParams(window.location.search).get('dados')
+    : null
 
 /** De onde vêm os dados. Produção é sempre Supabase; o CSV local (e os cenários) só existem no `npm run dev`. */
 export const FONTE: 'csv' | 'supabase' =

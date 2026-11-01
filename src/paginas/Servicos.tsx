@@ -363,9 +363,10 @@ function PaginaServicos() {
           </div>
 
           <div ref={topoLista} className="flex scroll-mt-40 flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <p className="numeros text-xs text-ink-3">
+            {/* role=status: quem usa leitor de tela ouve quantos a busca achou */}
+            <p role="status" className="numeros text-xs text-ink-3">
               {linhas.length === 0
-                ? ''
+                ? <span className="sr-only">Nenhum serviço encontrado</span>
                 : `${numero((atual - 1) * POR_PAGINA + 1)}–${numero(Math.min(atual * POR_PAGINA, linhas.length))} de ${plural(linhas.length, 'serviço', 'serviços')}${buscando ? ` para “${consulta.trim()}”` : ''}`}
             </p>
             <p className="text-xs text-ink-3 max-md:hidden">
@@ -413,7 +414,7 @@ function PaginaServicos() {
               </ul>
               {/* computador: a tabela; os títulos de Serviço, Saída e Execução ordenam */}
               <div className="max-md:hidden">
-                <table className="tabela-folha tabela-servicos w-full">
+                <table aria-label="Serviços" className="tabela-folha tabela-servicos w-full">
                   <thead>
                     <tr>
                       <Ordenavel campo="numero" ordem={ordem} aoOrdenar={ordenarPor} className="pl-5">

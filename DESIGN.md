@@ -24,7 +24,7 @@ colors:
   dark-hairline: "#22314d"
   dark-ink: "#e6edf6"         # 14.6:1 sobre dark-card
   dark-ink-secondary: "#a3b1c6" # 7.9:1
-  dark-ink-mute: "#7d8ba1"    # 5.0:1
+  dark-ink-mute: "#8593a9"    # 5.5:1
   dark-primary: "#8d87ff"     # 5.8:1 — link/ação no escuro
   # Situação (reservadas — sempre com ícone + texto)
   status-ok: "#0ca30c"            # OK (retornou)
@@ -201,7 +201,7 @@ ação, retângulo `rounded.sm` para campos e filtros.
 | Borda | `hairline #e3e8ee` | `dark-hairline #22314d` | 1px em card/tabela; separador |
 | Texto | `ink #0d253d` | `dark-ink #e6edf6` | títulos, valores |
 | Texto secundário | `ink-secondary #273951` | `dark-ink-secondary #a3b1c6` | descrições |
-| Texto apagado | `ink-mute #5a6a83` | `dark-ink-mute #7d8ba1` | legendas, eixos — passa AA no fundo, no card e em linha destacada (17/10/2026: era #64748d, 4,49:1 no fundo) |
+| Texto apagado | `ink-mute #5a6a83` | `dark-ink-mute #8593a9` | legendas, eixos — passa AA no fundo, no card e em linha destacada (17/10/2026: o claro era #64748d, 4,49:1 no fundo; 31/10/2026: o escuro era #7d8ba1, 4,3:1 no item escolhido da busca) |
 | Ação | `primary #533afd` | `dark-primary #8d87ff` | botão principal, link, foco, item selecionado |
 
 - Índigo é a **única** cor de ação e nunca representa dado.

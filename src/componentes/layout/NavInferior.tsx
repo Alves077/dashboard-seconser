@@ -60,14 +60,15 @@ export function NavInferior() {
                         key={caminho}
                         onClick={() => navegar(destino(caminho))}
                         className={clsx(
-                          'flex min-h-12 cursor-default items-center gap-3 rounded-lg px-3 py-2 outline-none data-highlighted:bg-realce-forte',
+                          // destaque como nas listas de escolha e na busca: o realce-forte (7% de tinta) mal aparecia para quem usa teclado
+                          'group flex min-h-12 cursor-default items-center gap-3 rounded-lg px-3 py-2 outline-none data-highlighted:bg-acao-suave',
                           pathname === caminho ? 'text-acao' : 'text-ink',
                         )}
                       >
                         <Icone aria-hidden className="size-5 shrink-0" />
                         <span className="min-w-0">
                           <span className="block text-[14px] font-medium">{nome}</span>
-                          <span className="block text-[12px] text-ink-3">{pergunta}</span>
+                          <span className="block text-[12px] text-ink-3 group-data-highlighted:text-ink-2">{pergunta}</span>
                         </span>
                       </Menu.Item>
                     ))}

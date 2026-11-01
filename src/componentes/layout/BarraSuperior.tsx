@@ -153,7 +153,7 @@ function Conta() {
       </Menu.Trigger>
       <Menu.Portal>
         <Menu.Positioner sideOffset={8} align="end" className="z-50">
-          <Menu.Popup className="min-w-56 origin-(--transform-origin) rounded-lg border border-line bg-card p-1 shadow-2 transition-[opacity,scale] duration-150 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0">
+          <Menu.Popup className="min-w-56 origin-(--transform-origin) rounded-lg border border-line bg-card p-1 shadow-2 transition-[opacity,scale] duration-150 ease-saida data-ending-style:scale-95 data-ending-style:opacity-0 data-starting-style:scale-95 data-starting-style:opacity-0 motion-reduce:data-ending-style:scale-100 motion-reduce:data-starting-style:scale-100">
             <div className="px-3 py-2">
               <p className="truncate text-[13px] font-medium text-ink">{usuario.email}</p>
               <p className="text-xs text-ink-3">
@@ -162,7 +162,7 @@ function Conta() {
             </div>
             <Menu.Item
               onClick={() => sair()}
-              className="flex h-10 cursor-default items-center rounded-md px-3 text-[13px] text-ink-2 outline-none data-highlighted:bg-realce-forte data-highlighted:text-ink"
+              className="flex h-10 cursor-default items-center rounded-md px-3 text-[13px] text-ink-2 outline-none data-highlighted:bg-acao-suave data-highlighted:text-ink"
             >
               Sair
             </Menu.Item>
