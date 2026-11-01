@@ -66,8 +66,8 @@ depois desligar o Apps Script e tirar a pasta. O código do antigo fica para sem
 2. No workflow: `ETAPA: troca` e `FIM_LEGADO: 'DD/MM/AAAA'` (2 a 4 semanas). Commit e push na `v2`.
 3. Supabase → URL Configuration → **Site URL**: `https://alves077.github.io/dashboard-seconser/`.
 4. Avisar a equipe do endereço (o mesmo de sempre) e de que o antigo fica em `/legado/` até a data.
-5. Opcional (organização do repositório): levar a `v2` para a `main` (merge) e deixar a `main` como ramo do
-   workflow — quando fizer, trocar `branches: [v2]` por `[main]` no workflow e o ramo permitido no environment.
+5. ~~Opcional: levar a `v2` para a `main`~~ — feito em 01/11/2026: a `main` avançou até a `v2` (sem merge, o histórico
+   é o mesmo), o workflow roda na `main` e o environment `github-pages` permite a `main`. A `v2` pode ser apagada.
 
 ## 4. Final (no ar desde 01/11/2026 — passo 3 feito; 1, 2 e 4 com o usuário)
 1. **Desligar o Apps Script** do site antigo (o token dele está no código público): no Google Apps Script, remover

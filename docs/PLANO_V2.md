@@ -996,3 +996,6 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
   âmbar). Prévias no scratchpad `centr/lar/`.
 - **Etapa final da publicação** (01/11, antecipada): `ETAPA: final` no workflow; `/legado/` sai e os endereços dele
   redirecionam para o mesmo assunto no painel novo (docs/PUBLICACAO.md).
+- **Ramo `main` = o site** (01/11): a `main` avança até a `v2` (fast-forward; a `main` antiga era ancestral da `v2`),
+  o workflow publica a cada push na `main`, e a etapa `teste` (se um dia voltar) busca o antigo na marca `site-antigo`.
+  README refeito (7 páginas, dados, comandos, publicação, pastas). Daqui em diante trabalhar na `main` (casa e trabalho).

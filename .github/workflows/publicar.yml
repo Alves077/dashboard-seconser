@@ -1,8 +1,9 @@
 # Publica o site no GitHub Pages (Settings → Pages → Source: GitHub Actions).
-# Roda a cada push no ramo v2 (ou à mão, em Actions → Publicar site → Run workflow).
+# Roda a cada push no ramo main (ou à mão, em Actions → Publicar site → Run workflow). Até 01/11/2026 o site saía do
+# ramo v2; a main guardava o site antigo, que hoje fica na marca "site-antigo".
 #
 # ETAPA (mudar a linha abaixo e dar push — plano em docs/PUBLICACAO.md):
-#   teste → site antigo na raiz (do ramo main, como hoje) + v2 em /dashboard-seconser/teste/
+#   teste → site antigo na raiz (da marca site-antigo) + v2 em /dashboard-seconser/teste/
 #   troca → v2 na raiz + site antigo em /dashboard-seconser/legado/ com aviso de que sai do ar em FIM_LEGADO
 #           (o código do antigo vem da marca "site-antigo", criada antes da troca)
 #   final → só a v2; endereços do antigo (raiz e /legado/) levam ao mesmo assunto no painel novo
@@ -11,7 +12,7 @@ name: Publicar site
 
 on:
   push:
-    branches: [v2]
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -32,7 +33,7 @@ jobs:
   montar:
     runs-on: ubuntu-latest
     steps:
-      - name: Código da v2
+      - name: Código do painel
         uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
@@ -46,7 +47,7 @@ jobs:
       - name: Testes dos cálculos
         run: npm test
 
-      - name: Gerar a v2
+      - name: Gerar o painel
         run: |
           if [ "$ETAPA" = teste ]; then BASE=/dashboard-seconser/teste/; else BASE=/dashboard-seconser/; fi
           npx tsc -b
@@ -56,7 +57,7 @@ jobs:
         if: env.ETAPA != 'final'
         uses: actions/checkout@v4
         with:
-          ref: ${{ env.ETAPA == 'teste' && 'main' || 'site-antigo' }}
+          ref: site-antigo
           path: antigo
 
       - name: Montar o site
