@@ -10,6 +10,10 @@ export function corRegiao(nome: string): string {
   return i >= 0 ? FUNDO[i] : 'bg-ink-3'
 }
 
+// "16 a 30 dias" (espera e execução): o laranja de antes (#e77c28, a mistura de âmbar e vermelho) ficava a ΔE 4 do laranja
+// do risco elétrico (#ec835a), e os dois aparecem no mesmo cartão do Panorama (usuário, 01/11/2026)
+const FAIXA_16A30 = '#dc6a17'
+
 // Faixas de espera (FAIXAS_ESPERA: até 5 · 6–15 · 16–30 · 31–90 · > 90 dias) — a MESMA paleta no Panorama, no Mensal e no
 // Em aberto, na tela e no PDF (usuário, 24/10/2026: eram três). A 1ª faixa é o prazo: verde; depois âmbar → vermelho
 // escuro, cada vez mais grave. Sem o laranja do risco elétrico (cor reservada). Vizinhas com luminância diferente (P&B).
@@ -17,12 +21,12 @@ export function corRegiao(nome: string): string {
 export const COR_ESPERA = [
   'var(--c-ok)',
   'var(--c-andamento)',
-  'color-mix(in oklab, var(--c-andamento) 55%, var(--c-atraso))',
+  FAIXA_16A30,
   'var(--c-atraso)',
   'color-mix(in oklab, var(--c-atraso) 65%, black)',
 ]
 /** no PDF (o color-mix já resolvido) */
-export const COR_ESPERA_PDF = ['#0ca30c', '#fab219', '#e77c28', '#d03b3b', '#872727']
+export const COR_ESPERA_PDF = ['#0ca30c', '#fab219', FAIXA_16A30, '#d03b3b', '#872727']
 /** texto escuro dentro da faixa (verde, âmbar e laranja: branco ficava com contraste baixo) */
 export const TEXTO_ESCURO_ESPERA = (i: number) => i < 3
 
@@ -33,10 +37,10 @@ export const COR_EXEC = [
   'var(--c-ok)',
   'var(--c-ok-texto)',
   'var(--c-andamento)',
-  'color-mix(in oklab, var(--c-andamento) 55%, var(--c-atraso))',
+  FAIXA_16A30,
   'var(--c-atraso)',
 ]
-export const COR_EXEC_PDF = ['#0ca30c', '#006300', '#fab219', '#e77c28', '#d03b3b']
+export const COR_EXEC_PDF = ['#0ca30c', '#006300', '#fab219', FAIXA_16A30, '#d03b3b']
 /** texto escuro dentro da faixa (no verde-escuro e no vermelho, branco) */
 export const TEXTO_ESCURO_EXEC = (i: number) => i !== 1 && i !== 4
 

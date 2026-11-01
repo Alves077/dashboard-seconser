@@ -989,3 +989,8 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
 - Nada mudou no que se vê: 22 telas (Em aberto, Executados, Mensal; claro e escuro) e 16 páginas de PDF comparadas
   pixel a pixel antes × depois, iguais (scratchpad `centr/`: telas.mjs, pdfs.mjs, render.py). `src/testes/cores.test.ts`:
   uma cor por faixa na tela e no PDF, e nenhuma faixa com o laranja do risco (48 testes).
+- **"16 a 30 dias" sem parecer o risco elétrico** (01/11): o laranja era a mistura âmbar+vermelho (#e77c28), a ΔE 4 do
+  laranja do risco (#ec835a). Agora `FAIXA_16A30 = '#dc6a17'` (laranja queimado) em lib/cores.ts, na espera e nos
+  Executados, tela e PDF: ΔE 7,5 do risco, ≥ 10 das vizinhas, texto escuro dentro a 4,5:1, luminância entre âmbar e
+  vermelho (P&B). Alternativa mostrada ao usuário: `#b7810f` (ocre; ΔE 11,5 do risco, mas parece mostarda ao lado do
+  âmbar). Prévias no scratchpad `centr/lar/`.
