@@ -53,9 +53,12 @@ export function diasLevouCurto(n: number, sufixo = ''): string {
   return n === 0 ? 'mesmo dia' : `${enxuto(n)}${sufixo}`
 }
 
-/** A mediana na frase e no indicador dos Executados: "metade no mesmo dia" / "metade em até 3 dias" */
-export function metadeEm(mediana: number): string {
-  return mediana === 0 ? 'metade no mesmo dia' : `metade em até ${diasLevou(mediana)}`
+/**
+ * A mediana no indicador dos Executados: "metade no mesmo dia" / "metade até 3 dias". Curto: "metade em até 57,5 dias"
+ * quebrava em 2 linhas no cartão do PDF (cinco cartões numa folha A4; 01/11/2026). A frase de abertura diz "em até".
+ */
+export function metadeAte(mediana: number): string {
+  return mediana === 0 ? 'metade no mesmo dia' : `metade até ${diasLevou(mediana)}`
 }
 
 /** Variação % de b para a (null sem base: anterior vazio ou zero) — nos indicadores do Panorama, Prazo e Evolução */

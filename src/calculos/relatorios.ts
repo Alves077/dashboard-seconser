@@ -5,7 +5,7 @@ import type { Base, Saida, Servico } from '@/dados/tipos'
 import { PRAZO_DIAS } from '@/config'
 import { filtrarLugar, noIntervalo, type Filtros, type Intervalo } from '@/filtros/filtros'
 import { distanciaM, RAIO_PERTO_M } from '@/lib/geo'
-import { compararTexto } from '@/lib/formato'
+import { compararTexto, numero } from '@/lib/formato'
 import { chaveMes, diaDaChave, fimDoMes, somarMeses, type ChaveMes, type Dia } from '@/lib/datas'
 import { calcularAgora, FAIXAS_ESPERA, type ItemFila } from './panorama'
 import { FAIXAS_EXEC } from './prazo'
@@ -277,6 +277,24 @@ export const LONGO = 24
 
 /** Espera na tabela por lugar do Em aberto: acima de 30 dias em vermelho, acima de 15 em âmbar (como no script) */
 export const alertaDias = (v: number): 'atraso' | 'andamento' | null => (v > 30 ? 'atraso' : v > 15 ? 'andamento' : null)
+
+/**
+ * Executados: de quando eram os executados — "Dos 58 executados, 7 saíram nesse mesmo período e 51 já estavam na rua
+ * antes dele." Com a concordância no singular ("1 saiu", "1 já estava") e "Todos os …" quando uma das partes é zero.
+ * Em pedaços, para a tela e o PDF porem em negrito (`forte`) os mesmos números.
+ */
+export function fraseDeQuando(n: number, saiuAntes: number): { t: string; forte?: boolean }[] {
+  const noPeriodo = n - saiuAntes
+  if (saiuAntes === 0) return n === 1 ? [{ t: 'O executado saiu nesse mesmo período.' }] : [{ t: `Todos os ${numero(n)} executados saíram nesse mesmo período.` }]
+  if (noPeriodo === 0) return n === 1 ? [{ t: 'O executado já estava na rua antes dele.' }] : [{ t: `Todos os ${numero(n)} executados já estavam na rua antes dele.` }]
+  return [
+    { t: `Dos ${numero(n)} executados, ` },
+    { t: numero(noPeriodo), forte: true },
+    { t: ` ${noPeriodo === 1 ? 'saiu' : 'saíram'} nesse mesmo período e ` },
+    { t: numero(saiuAntes), forte: true },
+    { t: ` ${saiuAntes === 1 ? 'já estava' : 'já estavam'} na rua antes dele.` },
+  ]
+}
 
 /** Origem como no script: "Cidadão", o nome do vereador, ou o detalhe da origem */
 export const origemTexto = (s: Servico) => (s.origem === 'Cidadão' ? 'Cidadão' : s.vereador || s.origemDetalhe || s.origem)

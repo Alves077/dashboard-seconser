@@ -1,13 +1,13 @@
 // Serviços executados em PDF — as mesmas seções de relatorios/Executados.tsx: abertura, 4 indicadores, distribuição um
 // nível abaixo do filtro, categoria e origem e, se pedida, a lista por região (cartão) e bairro (linha de grupo), execução mais recente primeiro.
 import { FAIXAS_EXEC } from '@/calculos/prazo'
-import { NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
+import { fraseDeQuando, NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { COR_EXEC_PDF, TEXTO_ESCURO_EXEC } from '@/lib/cores'
 import { formatarDiaNoAno, type Dia } from '@/lib/datas'
-import { decimal, diasLevou, diasLevouCurto, metadeEm, numero, pct } from '@/lib/formato'
+import { decimal, diasLevou, diasLevouCurto, metadeAte, numero, pct, plural } from '@/lib/formato'
 import { ESTILO, kpis, tituloCartao } from './abertos'
 import { COR, type Folha, type Trecho } from './motor'
 import { barraFaixas, cartao, colunas, nota, secao, tabela, type Coluna, type EstiloTabela, type LinhaTabela } from './pecas'
@@ -55,11 +55,8 @@ export function desenharExecutados(
   trechos.push(
     { t: ' Nesse período, ' },
     forte(numero(r.sairam)),
-    { t: ` ${r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua. Dos ${numero(r.n)} executados, ` },
-    forte(numero(r.n - r.saiuAntes)),
-    { t: ' saíram nesse mesmo período e ' },
-    forte(numero(r.saiuAntes)),
-    { t: ' já estavam na rua antes dele.' },
+    { t: ` ${r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua. ` },
+    ...fraseDeQuando(r.n, r.saiuAntes).map((p) => (p.forte ? forte(p.t) : { t: p.t })),
   )
   const linhas = f.quebrar(trechos, w - 27, 12)
   const alto = linhas.length * 12 * 1.625 + 16
@@ -79,12 +76,12 @@ export function desenharExecutados(
       {
         rotulo: 'Executados',
         valor: numero(r.n),
-        apoio: r.saiuAntes ? `${numero(r.saiuAntes)} saíram antes do período` : 'todos saíram no período',
+        apoio: r.saiuAntes ? plural(r.saiuAntes, 'saiu antes', 'saíram antes') : 'nenhum saiu antes',
         cor: COR.ok,
       },
       { rotulo: 'No prazo', valor: numero(r.noPrazo), apoio: `${pct(r.noPrazo, r.n)} · até ${PRAZO_DIAS} dias`, cor: COR.ok },
       { rotulo: 'Fora do prazo', valor: numero(r.foraPrazo), apoio: `${pct(r.foraPrazo, r.n)} · mais de ${PRAZO_DIAS} dias`, cor: COR.atraso },
-      { rotulo: 'Tempo médio', valor: decimal(r.media), unidade: 'd', apoio: metadeEm(r.mediana), cor: COR.ink3 },
+      { rotulo: 'Tempo médio', valor: decimal(r.media), unidade: 'd', apoio: metadeAte(r.mediana), cor: COR.ink3 },
     ]),
   )
 

@@ -999,3 +999,9 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
 - **Ramo `main` = o site** (01/11): a `main` avança até a `v2` (fast-forward; a `main` antiga era ancestral da `v2`),
   o workflow publica a cada push na `main`, e a etapa `teste` (se um dia voltar) busca o antigo na marca `site-antigo`.
   README refeito (7 páginas, dados, comandos, publicação, pastas). Daqui em diante trabalhar na `main` (casa e trabalho).
+- **Indicadores dos Executados numa linha** (01/11): o rótulo "Saíram para a rua" já cabia (de 360 px para cima); quem
+  quebrava em 2 linhas era o apoio — "51 saíram antes do período" (tela, de 1024 a 1920) e, no PDF, também "metade em
+  até 57,5 dias". Agora "51 saíram antes" / "1 saiu antes" / "nenhum saiu antes" e `metadeAte` ("metade até 57,5 dias"):
+  medidos de 360 a 1920 px e no PDF, tudo numa linha (em 320 px o rótulo e "84,5% · mais de 5 dias" ainda quebram —
+  celular raro). A frase de abertura (por extenso) virou `fraseDeQuando` em calculos/relatorios.ts, a mesma na tela e
+  no PDF, com o singular ("1 saiu", "1 já estava") e "Todos os N executados…" quando uma parte é zero (50 testes).

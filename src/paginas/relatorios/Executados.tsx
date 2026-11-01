@@ -7,13 +7,13 @@
 import { clsx } from 'clsx'
 import { Fragment } from 'react'
 import { FAIXAS_EXEC } from '@/calculos/prazo'
-import { NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
+import { fraseDeQuando, NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
 import { COR_EXEC, TEXTO_ESCURO_EXEC } from '@/lib/cores'
 import { formatarDiaNoAno, type Dia } from '@/lib/datas'
-import { decimal, diasLevou, diasLevouCurto, metadeEm, numero, pct } from '@/lib/formato'
+import { decimal, diasLevou, diasLevouCurto, metadeAte, numero, pct, plural } from '@/lib/formato'
 import { Kpi } from './Abertos'
 import { BarraFaixas, IdServico, Rolavel, SecaoFolha } from './Folha'
 
@@ -120,9 +120,16 @@ export function RelatorioExecutadosFolha({
           </>
         )}{' '}
         {/* o que saiu na mesma época, como referência — sem porcentagem: os executados não são uma parte dessas saídas */}
-        Nesse período, <strong className={forte}>{numero(r.sairam)}</strong> {r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua.
-        Dos {numero(r.n)} executados, <strong className={forte}>{numero(r.n - r.saiuAntes)}</strong> saíram nesse mesmo período e{' '}
-        <strong className={forte}>{numero(r.saiuAntes)}</strong> já estavam na rua antes dele.
+        Nesse período, <strong className={forte}>{numero(r.sairam)}</strong> {r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua.{' '}
+        {fraseDeQuando(r.n, r.saiuAntes).map((p, i) =>
+          p.forte ? (
+            <strong key={i} className={forte}>
+              {p.t}
+            </strong>
+          ) : (
+            <Fragment key={i}>{p.t}</Fragment>
+          ),
+        )}
       </p>
 
       <SecaoFolha titulo="Indicadores">
@@ -137,12 +144,13 @@ export function RelatorioExecutadosFolha({
           <Kpi
             rotulo="Executados"
             valor={numero(r.n)}
-            apoio={r.saiuAntes ? `${numero(r.saiuAntes)} saíram antes do período` : 'todos saíram no período'}
+            // curto: "51 saíram antes do período" quebrava em 2 linhas no cartão (tela e PDF); a frase de abertura explica
+            apoio={r.saiuAntes ? plural(r.saiuAntes, 'saiu antes', 'saíram antes') : 'nenhum saiu antes'}
             cor="var(--c-ok)"
           />
           <Kpi rotulo="No prazo" valor={numero(r.noPrazo)} apoio={`${pct(r.noPrazo, r.n)} · até ${PRAZO_DIAS} dias`} cor="var(--c-ok)" />
           <Kpi rotulo="Fora do prazo" valor={numero(r.foraPrazo)} apoio={`${pct(r.foraPrazo, r.n)} · mais de ${PRAZO_DIAS} dias`} cor="var(--c-atraso)" />
-          <Kpi rotulo="Tempo médio" valor={decimal(r.media)} unidade="d" apoio={metadeEm(r.mediana)} cor="var(--c-ink-3)" />
+          <Kpi rotulo="Tempo médio" valor={decimal(r.media)} unidade="d" apoio={metadeAte(r.mediana)} cor="var(--c-ink-3)" />
         </div>
       </SecaoFolha>
 

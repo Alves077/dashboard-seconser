@@ -7,7 +7,7 @@ import {
   diasEsperaCurto,
   diasLevou,
   diasLevouCurto,
-  metadeEm,
+  metadeAte,
   numero,
   pct,
   pctCurto,
@@ -42,10 +42,11 @@ describe('dias', () => {
     expect(textoDiasSelo('atraso', 9)).toBe('9 dias')
   })
 
-  it('mediana na frase dos Executados', () => {
-    expect(metadeEm(0)).toBe('metade no mesmo dia')
-    expect(metadeEm(3)).toBe('metade em até 3 dias')
-    expect(metadeEm(1)).toBe('metade em até 1 dia')
+  it('mediana no indicador dos Executados (curta, cabe numa linha do cartão)', () => {
+    expect(metadeAte(0)).toBe('metade no mesmo dia')
+    expect(metadeAte(3)).toBe('metade até 3 dias')
+    expect(metadeAte(1)).toBe('metade até 1 dia')
+    expect(metadeAte(57.5)).toBe('metade até 57,5 dias')
   })
 
   it('"dias" sozinho continua dizendo o número (é para medidas, não para espera)', () => {
