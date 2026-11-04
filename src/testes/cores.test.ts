@@ -34,18 +34,25 @@ describe('textos e limites dos relatórios', () => {
 })
 
 describe('frase dos Executados: de quando eram os executados', () => {
-  const texto = (n: number, antes: number) => fraseDeQuando(n, antes).map((p) => p.t).join('')
+  const texto = (n: number, antes: number, quando = 'ontem') => fraseDeQuando(n, antes, quando).map((p) => p.t).join('')
   it('plural, singular e "Todos os"', () => {
-    expect(texto(58, 51)).toBe('Dos 58 executados, 7 saíram nesse mesmo período e 51 já estavam na rua antes dele.')
-    expect(texto(5, 1)).toBe('Dos 5 executados, 4 saíram nesse mesmo período e 1 já estava na rua antes dele.')
-    expect(texto(2, 1)).toBe('Dos 2 executados, 1 saiu nesse mesmo período e 1 já estava na rua antes dele.')
-    expect(texto(12, 0)).toBe('Todos os 12 executados saíram nesse mesmo período.')
-    expect(texto(3, 3)).toBe('Todos os 3 executados já estavam na rua antes dele.')
-    expect(texto(1, 0)).toBe('O executado saiu nesse mesmo período.')
-    expect(texto(1, 1)).toBe('O executado já estava na rua antes dele.')
+    expect(texto(58, 51)).toBe('Dos 58 executados, 7 saíram ontem e 51 já estavam na rua antes.')
+    expect(texto(5, 1)).toBe('Dos 5 executados, 4 saíram ontem e 1 já estava na rua antes.')
+    expect(texto(2, 1)).toBe('Dos 2 executados, 1 saiu ontem e 1 já estava na rua antes.')
+    expect(texto(12, 0)).toBe('Todos os 12 executados saíram ontem.')
+    expect(texto(3, 3)).toBe('Todos os 3 executados já estavam na rua antes de ontem.')
+    expect(texto(1, 0)).toBe('O executado saiu ontem.')
+    expect(texto(1, 1)).toBe('O executado já estava na rua antes de ontem.')
+  })
+
+  it('a época da frase: sem as datas entre parênteses, e "antes" de acordo com ela', () => {
+    expect(texto(110, 98, 'nos últimos 7 dias (28/10 até 03/11)')).toBe('Dos 110 executados, 12 saíram nos últimos 7 dias e 98 já estavam na rua antes.')
+    expect(texto(3, 3, 'nos últimos 30 dias (05/10 até 03/11)')).toBe('Todos os 3 executados já estavam na rua antes desses 30 dias.')
+    expect(texto(1560, 929, 'em outubro de 2026')).toBe('Dos 1.560 executados, 631 saíram em outubro de 2026 e 929 já estavam na rua antes.')
+    expect(texto(4, 4, 'em 30/10')).toBe('Todos os 4 executados já estavam na rua antes de 30/10.')
   })
 
   it('os números em negrito são as duas partes', () => {
-    expect(fraseDeQuando(1234, 1000).filter((p) => p.forte).map((p) => p.t)).toEqual(['234', '1.000'])
+    expect(fraseDeQuando(1234, 1000, 'ontem').filter((p) => p.forte).map((p) => p.t)).toEqual(['234', '1.000'])
   })
 })

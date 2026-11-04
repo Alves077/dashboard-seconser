@@ -94,6 +94,16 @@ export function rotuloMesLongo(k: ChaveMes): string {
   return `${MESES[k % 100]} de ${Math.floor(k / 100)}`
 }
 
+/** 'outubro' */
+export function nomeMes(k: ChaveMes): string {
+  return MESES[k % 100]
+}
+
+/** 'out' — mês de 0 a 11 */
+export function abrevMes(mes0: number): string {
+  return MESES_ABREV[mes0]
+}
+
 /** Todas as chaves de mês entre dois dias, inclusive */
 export function mesesEntre(de: Dia, ate: Dia): ChaveMes[] {
   const r: ChaveMes[] = []

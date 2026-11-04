@@ -6,7 +6,7 @@ import { PRAZO_DIAS } from '@/config'
 import { filtrarLugar, noIntervalo, type Filtros, type Intervalo } from '@/filtros/filtros'
 import { distanciaM, RAIO_PERTO_M } from '@/lib/geo'
 import { compararTexto, numero } from '@/lib/formato'
-import { chaveMes, diaDaChave, fimDoMes, somarMeses, type ChaveMes, type Dia } from '@/lib/datas'
+import { abrevMes, chaveMes, diaDaChave, fimDoMes, somarMeses, type ChaveMes, type Dia } from '@/lib/datas'
 import { calcularAgora, FAIXAS_ESPERA, type ItemFila } from './panorama'
 import { FAIXAS_EXEC } from './prazo'
 
@@ -76,11 +76,16 @@ export interface MesHistorico {
   filaFim: number
 }
 
-export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, hoje: Dia) {
+/**
+ * `mes` = um mês; sem mês, o histórico completo ou, com `ano`, o histórico só dos serviços registrados naquele ano
+ * (usuário, 04/11/2026). No ano, retornos e fila no fim do mês seguem contando todos os pendentes, de qualquer ano.
+ */
+export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, hoje: Dia, ano: number | null = null) {
   const lugar = filtrarLugar(base.saidas, f)
   const todos = mes === null
   const doMes = (k: ChaveMes) => lugar.filter((s) => chaveMes(s.dataSaida) === k)
-  const linhas = mes === null ? lugar : doMes(mes)
+  const doAno = mes === null && ano !== null ? lugar.filter((s) => Math.floor(chaveMes(s.dataSaida) / 100) === ano) : lugar
+  const linhas = mes === null ? doAno : doMes(mes)
 
   const total = linhas.length
   const q = qualidade(linhas)
@@ -145,11 +150,13 @@ export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, ho
     ultimoFechado: MesHistorico | null
     fila: { espera: number[]; total: number; acima150: number }
     ultimos3: (MesHistorico & { filaFim: number; saldo: number })[]
+    /** abertos hoje por mês de registro, um ano por linha (null = mês sem registro no recorte) */
+    abertosPorAno: { ano: number; meses: (number | null)[]; total: number }[]
     serie: MesHistorico[]
     maisAntigos: ItemFila[]
   } | null = null
   if (todos) {
-    const abertasHoje = lugar.filter((s) => s.dataRetorno === null)
+    const abertasHoje = doAno.filter((s) => s.dataRetorno === null)
     const espera = FAIXAS_ESPERA.map(() => 0)
     let acima150 = 0
     for (const s of abertasHoje) {
@@ -158,7 +165,7 @@ export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, ho
       espera[FAIXAS_ESPERA.findIndex((x) => d <= x.max)]++
     }
     const porMes = new Map<ChaveMes, Saida[]>()
-    for (const s of lugar) {
+    for (const s of doAno) {
       const k = chaveMes(s.dataSaida)
       if (!porMes.has(k)) porMes.set(k, [])
       porMes.get(k)!.push(s)
@@ -184,19 +191,29 @@ export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, ho
       })
     // saldo do mês: saíram − executados no mês (vermelho na tabela quando a fila cresceu)
     const ultimos3 = serie.slice(-3).map((m) => ({ ...m, saldo: m.registrados - m.retornos }))
+    const anos = new Map<number, { ano: number; meses: (number | null)[]; total: number }>()
+    for (const m of serie) {
+      const ano = Math.floor(m.mes / 100)
+      if (!anos.has(ano)) anos.set(ano, { ano, meses: Array(12).fill(null), total: 0 })
+      const a = anos.get(ano)!
+      a.meses[m.mes % 100] = m.abertos
+      a.total += m.abertos
+    }
     historico = {
       meses: serie.length,
       ultimoFechado: [...serie].reverse().find((m) => m.mes < atual && m.media !== null) ?? null,
       fila: { espera, total: abertasHoje.length, acima150 },
       ultimos3,
+      abertosPorAno: [...anos.values()].sort((a, b) => a.ano - b.ano),
       serie,
-      maisAntigos: calcularAgora([...new Set(lugar.map((s) => s.servico))], hoje).itens.slice(0, 8),
+      maisAntigos: calcularAgora([...new Set(doAno.map((s) => s.servico))], hoje).itens.slice(0, 8),
     }
   }
 
   return {
     todos,
     mes,
+    ano: mes === null ? ano : null,
     total,
     ...q,
     abertos,
@@ -216,6 +233,18 @@ export function relatorioMensal(base: Base, f: Filtros, mes: ChaveMes | null, ho
 }
 
 export type RelatorioMensal = ReturnType<typeof relatorioMensal>
+
+/** Abertos por ano para o texto do topo, do ano mais recente ao mais antigo: { ano, total, meses: 'jan 16, fev 8' } (só meses com aberto) */
+export function abertosPorAnoTexto(anos: { ano: number; meses: (number | null)[]; total: number }[]) {
+  return [...anos]
+    .filter((a) => a.total > 0)
+    .reverse()
+    .map((a) => ({
+      ano: a.ano,
+      total: a.total,
+      meses: a.meses.flatMap((n, i) => (n ? [`${abrevMes(i)} ${numero(n)}`] : [])).join(', '),
+    }))
+}
 
 // ── Serviços em aberto (espelho do tratamento_manual/relatorio_abertos.py) ──────────────────
 // Unidade: saídas sem retorno (o que está na rua hoje); espera = dias desde o registro (data de saída).
@@ -279,20 +308,27 @@ export const LONGO = 24
 export const alertaDias = (v: number): 'atraso' | 'andamento' | null => (v > 30 ? 'atraso' : v > 15 ? 'andamento' : null)
 
 /**
- * Executados: de quando eram os executados — "Dos 58 executados, 7 saíram nesse mesmo período e 51 já estavam na rua
- * antes dele." Com a concordância no singular ("1 saiu", "1 já estava") e "Todos os …" quando uma das partes é zero.
+ * Executados: de quando eram os executados, dito com a própria época (usuário, 04/11/2026; antes era "nesse mesmo
+ * período") — "Dos 110 executados, 12 saíram ontem e 98 já estavam na rua antes." `quando` é o da frase de abertura
+ * ("ontem", "nos últimos 7 dias (28/10 até 03/11)", "em outubro de 2026"); as datas entre parênteses ficam só lá.
+ * Com a concordância no singular ("1 saiu", "1 já estava") e "Todos os …" quando uma das partes é zero.
  * Em pedaços, para a tela e o PDF porem em negrito (`forte`) os mesmos números.
  */
-export function fraseDeQuando(n: number, saiuAntes: number): { t: string; forte?: boolean }[] {
+export function fraseDeQuando(n: number, saiuAntes: number, quando: string): { t: string; forte?: boolean }[] {
   const noPeriodo = n - saiuAntes
-  if (saiuAntes === 0) return n === 1 ? [{ t: 'O executado saiu nesse mesmo período.' }] : [{ t: `Todos os ${numero(n)} executados saíram nesse mesmo período.` }]
-  if (noPeriodo === 0) return n === 1 ? [{ t: 'O executado já estava na rua antes dele.' }] : [{ t: `Todos os ${numero(n)} executados já estavam na rua antes dele.` }]
+  const epoca = quando.replace(/\s*\(.*\)$/, '')
+  // "antes de ontem", "antes de outubro de 2026", "antes desses 7 dias"
+  const ultimos = /^nos últimos (\d+) dias$/.exec(epoca)
+  const antesDela = ultimos ? `antes desses ${ultimos[1]} dias` : `antes de ${epoca.replace(/^em /, '')}`
+  if (saiuAntes === 0) return n === 1 ? [{ t: `O executado saiu ${epoca}.` }] : [{ t: `Todos os ${numero(n)} executados saíram ${epoca}.` }]
+  if (noPeriodo === 0)
+    return n === 1 ? [{ t: `O executado já estava na rua ${antesDela}.` }] : [{ t: `Todos os ${numero(n)} executados já estavam na rua ${antesDela}.` }]
   return [
     { t: `Dos ${numero(n)} executados, ` },
     { t: numero(noPeriodo), forte: true },
-    { t: ` ${noPeriodo === 1 ? 'saiu' : 'saíram'} nesse mesmo período e ` },
+    { t: ` ${noPeriodo === 1 ? 'saiu' : 'saíram'} ${epoca} e ` },
     { t: numero(saiuAntes), forte: true },
-    { t: ` ${saiuAntes === 1 ? 'já estava' : 'já estavam'} na rua antes dele.` },
+    { t: ` ${saiuAntes === 1 ? 'já estava' : 'já estavam'} na rua antes.` },
   ]
 }
 

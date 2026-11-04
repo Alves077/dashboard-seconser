@@ -56,7 +56,7 @@ export function desenharExecutados(
     { t: ' Nesse período, ' },
     forte(numero(r.sairam)),
     { t: ` ${r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua. ` },
-    ...fraseDeQuando(r.n, r.saiuAntes).map((p) => (p.forte ? forte(p.t) : { t: p.t })),
+    ...fraseDeQuando(r.n, r.saiuAntes, quando).map((p) => (p.forte ? forte(p.t) : { t: p.t })),
   )
   const linhas = f.quebrar(trechos, w - 27, 12)
   const alto = linhas.length * 12 * 1.625 + 16

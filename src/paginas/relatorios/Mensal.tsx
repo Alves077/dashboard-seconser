@@ -5,7 +5,7 @@ import { clsx } from 'clsx'
 import { GraficoTempo, LegendaTempo } from '@/componentes/graficos/GraficoTempo'
 import { COR_ESPERA, COR_FAIXA_MENSAL, TEXTO_ESCURO_ESPERA, TEXTO_ESCURO_FAIXA_MENSAL } from '@/lib/cores'
 import { FAIXAS_ESPERA } from '@/calculos/panorama'
-import type { GrupoMensal, RelatorioMensal } from '@/calculos/relatorios'
+import { abertosPorAnoTexto, type GrupoMensal, type RelatorioMensal } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { CATEGORIA_RISCO, FAIXAS } from '@/dados/regras'
 import { formatarDia, formatarDiaCurto, rotuloMes, rotuloMesLongo } from '@/lib/datas'
@@ -96,6 +96,24 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
               No último mês fechado (<strong className="font-semibold text-ink">{rotuloMes(h.ultimoFechado.mes)}</strong>): tempo médio{' '}
               <strong className="font-semibold text-ink">{decimal(h.ultimoFechado.media)} d</strong> e{' '}
               <strong className="font-semibold text-ink">{decimal(h.ultimoFechado.pctFora)}%</strong> fora do prazo.
+            </>
+          )}
+          {/* abertos hoje por ano e mês de registro (usuário, 04/11/2026: em texto, complementando a frase; mês sem aberto fica de fora) */}
+          {h.fila.total > 0 && (
+            <>
+              {' '}
+              Em aberto hoje: <strong className="font-semibold text-ink">{numero(h.fila.total)}</strong>
+              {abertosPorAnoTexto(h.abertosPorAno).map((a, i, l) =>
+                l.length === 1 ? (
+                  <span key={a.ano}> ({a.meses})</span>
+                ) : (
+                  <span key={a.ano}>
+                    {i === 0 ? ' — ' : i === l.length - 1 ? ' e ' : '; '}
+                    <strong className="font-semibold text-ink">{numero(a.total)}</strong> de {a.ano} ({a.meses})
+                  </span>
+                ),
+              )}
+              .
             </>
           )}
         </p>

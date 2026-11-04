@@ -121,7 +121,7 @@ export function RelatorioExecutadosFolha({
         )}{' '}
         {/* o que saiu na mesma época, como referência — sem porcentagem: os executados não são uma parte dessas saídas */}
         Nesse período, <strong className={forte}>{numero(r.sairam)}</strong> {r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua.{' '}
-        {fraseDeQuando(r.n, r.saiuAntes).map((p, i) =>
+        {fraseDeQuando(r.n, r.saiuAntes, quando).map((p, i) =>
           p.forte ? (
             <strong key={i} className={forte}>
               {p.t}

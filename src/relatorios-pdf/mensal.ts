@@ -1,6 +1,6 @@
 // Relatório mensal / histórico em PDF — as mesmas seções de relatorios/Mensal.tsx, na mesma ordem.
 import { FAIXAS_ESPERA } from '@/calculos/panorama'
-import type { GrupoMensal, RelatorioMensal } from '@/calculos/relatorios'
+import { abertosPorAnoTexto, type GrupoMensal, type RelatorioMensal } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { CATEGORIA_RISCO, FAIXAS } from '@/dados/regras'
 import { formatarDia, formatarDiaCurto, rotuloMes } from '@/lib/datas'
@@ -10,6 +10,8 @@ import { COR, type Folha, type Trecho } from './motor'
 import { barraFaixas, colunas, grafico, legendaLinhas, nota, secao, tabela, type Celula, type Coluna, type EstiloTabela, type LinhaTabela } from './pecas'
 
 const ESTILO: EstiloTabela = { tam: 12, padX: 6, padY: 5, ultimaSemFio: true }
+/** respiro que `secao` põe antes de cada seção (fora do topo da página) */
+const MARGEM_SECAO = 20
 
 const media = (v: number | null): Celula =>
   v === null ? { trechos: [{ t: '—', cor: COR.ink3 }] } : { trechos: [{ t: `${decimal(v)} d`, ...(v > 15 ? { peso: 600, cor: COR.atrasoTexto } : v > PRAZO_DIAS ? { cor: COR.andamentoTexto } : {}) }] }
@@ -73,6 +75,16 @@ function movimento(f: Folha, x: number, w: number, termos: { rotulo: string; not
   f.y += alto
 }
 
+/**
+ * Altura do gráfico de uma seção: a cheia, ou menos (até 110) quando a seção quase cabe no resto da página — senão
+ * ela vai inteira para a seguinte e deixa um buraco grande na primeira (usuário, 04/11/2026, depois que o texto dos
+ * abertos por mês deixou o topo mais alto).
+ */
+function alturaQueCabe(f: Folha, cheia: number, desenhar: (altura: number) => void) {
+  const sobra = MARGEM_SECAO + f.medir(() => desenhar(cheia)) - (f.fim - f.y)
+  return sobra > 0 && cheia - sobra >= 110 ? Math.floor(cheia - sobra) : cheia
+}
+
 export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
   const x = f.x0
   const w = f.largura
@@ -99,6 +111,14 @@ export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
         forte(`${decimal(h.ultimoFechado.pctFora)}%`),
         { t: ' fora do prazo.' },
       )
+    // abertos hoje por ano e mês de registro, em texto (como na tela)
+    if (h.fila.total > 0) {
+      const anos = abertosPorAnoTexto(h.abertosPorAno)
+      trechos.push({ t: ' Em aberto hoje: ' }, forte(numero(h.fila.total)))
+      if (anos.length === 1) trechos.push({ t: ` (${anos[0].meses})` })
+      else anos.forEach((a, i) => trechos.push({ t: i === 0 ? ' — ' : i === anos.length - 1 ? ' e ' : '; ' }, forte(numero(a.total)), { t: ` de ${a.ano} (${a.meses})` }))
+      trechos.push({ t: '.' })
+    }
     const linhas = f.quebrar(trechos, w - 24, 12.5)
     const alto = linhas.length * 12.5 * 1.625 + 16
     f.caixa(x, f.y, w, alto, { fundo: COR.page, raio: 6 })
@@ -196,36 +216,38 @@ export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
   if (h && h.serie.length > 1) {
     const rotulos = h.serie.map((s) => rotuloMes(s.mes))
     const parcial = h.serie[h.serie.length - 1].parcial
-    secao(
-      f,
-      x,
-      w,
-      'Saídas × retornos por mês',
-      (xi, wi) => {
-        legendaLinhas(f, xi, [
-          { nome: 'Saíram para a rua', cor: COR.ink2, marcador: 'circulo' },
-          { nome: 'Retornos (executados no mês)', cor: COR.s2, marcador: 'quadrado' },
-          { nome: 'Na fila no fim do mês', cor: COR.ink3, area: true },
-        ])
-        grafico(f, xi, wi, 190, {
-          rotulos,
-          series: [
-            { valores: h.serie.map((s) => s.filaFim), cor: COR.ink3, estilo: 'area' },
-            { valores: h.serie.map((s) => s.registrados), cor: COR.ink2 },
-            { valores: h.serie.map((s) => s.retornos), cor: COR.s2, marcador: 'quadrado' },
-          ],
-          parcial,
-          formatar: numero,
-        })
-        nota(
-          f,
-          xi,
-          wi,
-          'Saídas pela data em que o serviço saiu para a rua; retornos pela data da execução, de qualquer mês de saída. Saídas (bolinha) acima dos retornos (quadradinho): saiu mais do que voltou, e a fila (área cinza) cresceu no mês.',
-        )
-      },
-      { cartao: true },
-    )
+    const saidasRetornos = (altura: number) =>
+      secao(
+        f,
+        x,
+        w,
+        'Saídas × retornos por mês',
+        (xi, wi) => {
+          legendaLinhas(f, xi, [
+            { nome: 'Saíram para a rua', cor: COR.ink2, marcador: 'circulo' },
+            { nome: 'Retornos (executados no mês)', cor: COR.s2, marcador: 'quadrado' },
+            { nome: 'Na fila no fim do mês', cor: COR.ink3, area: true },
+          ])
+          grafico(f, xi, wi, altura, {
+            rotulos,
+            series: [
+              { valores: h.serie.map((s) => s.filaFim), cor: COR.ink3, estilo: 'area' },
+              { valores: h.serie.map((s) => s.registrados), cor: COR.ink2 },
+              { valores: h.serie.map((s) => s.retornos), cor: COR.s2, marcador: 'quadrado' },
+            ],
+            parcial,
+            formatar: numero,
+          })
+          nota(
+            f,
+            xi,
+            wi,
+            'Saídas pela data em que o serviço saiu para a rua; retornos pela data da execução, de qualquer mês de saída. Saídas (bolinha) acima dos retornos (quadradinho): saiu mais do que voltou, e a fila (área cinza) cresceu no mês.',
+          )
+        },
+        { cartao: true },
+      )
+    saidasRetornos(alturaQueCabe(f, 190, saidasRetornos))
     secao(
       f,
       x,

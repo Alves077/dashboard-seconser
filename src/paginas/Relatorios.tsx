@@ -19,7 +19,7 @@ import { listaCampo, mesesDoRelatorio, relatorioAbertos, relatorioExecutados, re
 import { useBase, useDetalhes } from '@/dados/consultas'
 import { filtrarLugar, intervaloDo, noIntervalo, type Atalho, type Intervalo } from '@/filtros/filtros'
 import { useFiltros } from '@/filtros/useFiltros'
-import { chaveMes, diaDe, formatarDia, formatarDiaCurto, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
+import { chaveMes, diaDe, formatarDia, formatarDiaCurto, nomeMes, rotuloMesLongo, type ChaveMes, type Dia } from '@/lib/datas'
 import { numero } from '@/lib/formato'
 import { useHoje, useMidia } from '@/lib/ganchos'
 import type { PedidoPdf } from '@/relatorios-pdf'
@@ -33,7 +33,7 @@ import { MarcadorChave } from '@/componentes/ui/MarcadorChave'
 type Aba = 'mensal' | 'abertos' | 'executados' | 'campo'
 
 const ABAS: { id: Aba; nome: string; icone: typeof FileText; descricao: string }[] = [
-  { id: 'mensal', nome: 'Mensal', icone: FileText, descricao: 'Para reunião e prestação de contas: o relatório de um mês fechado ou o histórico completo. Escolha o mês aqui (o período do filtro não vale nesta aba).' },
+  { id: 'mensal', nome: 'Mensal', icone: FileText, descricao: 'Para reunião e prestação de contas: o relatório de um mês fechado, de um ano ou o histórico completo. Escolha aqui (o período do filtro não vale nesta aba).' },
   { id: 'abertos', nome: 'Em aberto', icone: ListTodo, descricao: 'A fila de hoje da cidade, de uma região ou de um bairro (escolha nos filtros). Para ver só os que saíram para a rua numa época, escolha aqui (o período do filtro não vale nesta aba).' },
   { id: 'executados', nome: 'Executados', icone: ListChecks, descricao: 'Os serviços que voltaram da rua executados numa época, por região e bairro, com os dias da saída à execução. A época se escolhe aqui (o período do filtro não vale nesta aba).' },
   { id: 'campo', nome: 'Lista de campo', icone: ClipboardList, descricao: 'Para levar à rua: os abertos por região e bairro, juntando os que estão perto um do outro (até 300 m), mais antigos primeiro, com espaço para anotar o retorno. A época da saída se escolhe aqui (o período do filtro não vale nesta aba).' },
@@ -202,8 +202,12 @@ function PaginaRelatorios() {
   const meses = useMemo(() => (base ? mesesDoRelatorio(base, hoje) : []), [base, hoje])
   // "referencia" e não "mes": "mes" é do filtro de período do site (?periodo=mes&mes=2026-09)
   const paramMes = params.get('referencia')
-  const mes: ChaveMes | null = paramMes === 'tudo' ? null : meses.find((k) => String(k) === paramMes) ?? meses[0] ?? null
-  const [obs, setObs] = useObservacao(JSON.stringify([mes ?? 'tudo', escopo]))
+  const anosRelatorio = useMemo(() => [...new Set(meses.map((k) => Math.floor(k / 100)))], [meses])
+  // ano inteiro: "a2026"
+  const anoRef = anosRelatorio.find((a) => paramMes === `a${a}`) ?? null
+  const mes: ChaveMes | null = paramMes === 'tudo' || anoRef !== null ? null : meses.find((k) => String(k) === paramMes) ?? meses[0] ?? null
+  const anoSelecionado = anoRef ?? (mes !== null ? Math.floor(mes / 100) : null)
+  const [obs, setObs] = useObservacao(JSON.stringify([mes ?? (anoRef !== null ? `a${anoRef}` : 'tudo'), escopo]))
 
   const paramSaida = params.get('saida')
   const paramExecucao = params.get('execucao')
@@ -264,7 +268,7 @@ function PaginaRelatorios() {
     [base],
   )
 
-  const mensal = useMemo(() => (base && aba === 'mensal' ? relatorioMensal(base, filtros, mes, hoje) : null), [base, filtros, hoje, aba, mes])
+  const mensal = useMemo(() => (base && aba === 'mensal' ? relatorioMensal(base, filtros, mes, hoje, anoRef) : null), [base, filtros, hoje, aba, mes, anoRef])
   const abertos = useMemo(
     () => (base && aba === 'abertos' ? relatorioAbertos(base, filtros, hoje, saida) : null),
     [base, filtros, hoje, aba, saida],
@@ -291,7 +295,7 @@ function PaginaRelatorios() {
   const cab =
     aba === 'mensal' && mensal
       ? {
-          titulo: mensal.todos ? 'Visão Geral · Todo o Período' : `Relatório Mensal · ${rotuloMesLongo(mensal.mes!)}`,
+          titulo: mensal.ano !== null ? `Relatório Anual · ${mensal.ano}` : mensal.todos ? 'Visão Geral · Todo o Período' : `Relatório Mensal · ${rotuloMesLongo(mensal.mes!)}`,
           subtitulo: escopo === 'Cidade inteira' ? undefined : escopo,
           meta: soTexto([geradoLongo, `${numero(mensal.total)} serviços ${mensal.todos ? 'no período' : 'registrados no mês'}`, dadosAte]),
         }
@@ -326,7 +330,7 @@ function PaginaRelatorios() {
   const podeCompartilhar = typeof navigator !== 'undefined' && typeof navigator.share === 'function'
   const tituloCompartilhar =
     aba === 'mensal'
-      ? `Relatório ${mes === null ? 'histórico' : rotuloMesLongo(mes)} · ${escopo}`
+      ? `Relatório ${anoRef !== null ? `de ${anoRef}` : mes === null ? 'histórico' : rotuloMesLongo(mes)} · ${escopo}`
       : `${aba === 'abertos' ? 'Serviços em aberto' : aba === 'executados' ? `Serviços executados ${execucao.quando}` : 'Lista de campo'} · ${escopo}`
   const compartilhar = async () => {
     try {
@@ -510,14 +514,30 @@ function PaginaRelatorios() {
         </ToggleGroup>
         <p className="mt-3 text-[13px] text-ink-2">{atual.descricao}</p>
 
+        {/* ano e mês separados (usuário, 04/11/2026): numa lista só, os meses de anos diferentes se misturavam; e o ano
+            inteiro virou opção. Ao trocar de ano, vai para o ano inteiro; "Histórico completo" fica no lugar do ano e esconde o mês */}
         {aba === 'mensal' && meses.length > 0 && (
-          <Selecao
-            rotulo="Mês de referência"
-            className="mt-3 w-full max-w-64"
-            opcoes={[{ valor: 'tudo', texto: 'Histórico completo' }, ...meses.map((k) => ({ valor: String(k), texto: rotuloMesLongo(k) }))]}
-            value={mes === null ? 'tudo' : String(mes)}
-            onChange={(e) => trocar('referencia', e.target.value)}
-          />
+          <div className="mt-3 flex w-full max-w-md gap-2">
+            <Selecao
+              rotulo="Referência"
+              className={anoSelecionado === null ? 'w-52 shrink-0' : 'w-28 shrink-0'}
+              opcoes={[{ valor: 'tudo', texto: 'Histórico completo' }, ...anosRelatorio.map((a) => ({ valor: `a${a}`, texto: String(a) }))]}
+              value={anoSelecionado === null ? 'tudo' : `a${anoSelecionado}`}
+              onChange={(e) => trocar('referencia', e.target.value)}
+            />
+            {anoSelecionado !== null && (
+              <Selecao
+                rotulo="Mês"
+                className="min-w-0 flex-1"
+                opcoes={[
+                  { valor: `a${anoSelecionado}`, texto: 'Ano inteiro' },
+                  ...meses.filter((k) => Math.floor(k / 100) === anoSelecionado).map((k) => ({ valor: String(k), texto: nomeMes(k) })),
+                ]}
+                value={mes === null ? `a${anoSelecionado}` : String(mes)}
+                onChange={(e) => trocar('referencia', e.target.value)}
+              />
+            )}
+          </div>
         )}
 
         {aba === 'executados' && (
