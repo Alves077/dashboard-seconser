@@ -34,9 +34,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Código do painel
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -55,7 +55,7 @@ jobs:
 
       - name: Código do site antigo
         if: env.ETAPA != 'final'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           ref: site-antigo
           path: antigo
@@ -116,10 +116,11 @@ jobs:
               echo "ETAPA desconhecida: $ETAPA" && exit 1
               ;;
           esac
-          touch _site/.nojekyll
+          # sem .nojekyll: a publicação pelo Actions não passa pelo Jekyll (e o upload-pages-artifact v4+ deixa arquivos
+          # com ponto de fora)
           echo "Conteúdo publicado:" && find _site -name '*.html' -not -path '*/node_modules/*' | sort
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: _site
 
@@ -131,4 +132,4 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

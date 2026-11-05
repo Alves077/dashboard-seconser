@@ -1035,3 +1035,16 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
   cada 30 min (~20/dia), uma aba visível o dia todo baixa ~18 MB/dia (+ até ~15 MB logado). Plano gratuito: 5 GB/mês de
   saída. Folga hoje; se a equipe crescer, no trabalho o `sincroniza.py` deve não registrar carga quando nada mudou
   (assim o site só baixa quando algo mudou de verdade). Acompanhar em Supabase → Usage → Egress.
+
+## Leitura no meio da carga e revisão de interface (05/11/2026)
+- **Do trabalho (`433fa41`):** às 12h12 uma leitura no meio da carga estourou os 8 s do Supabase nas 19 páginas pedidas
+  juntas e o site ficou ~3 min sem dados. Agora no máximo 4 páginas por vez (`PAGINAS_JUNTAS`), nova tentativa em 5 s, e
+  se a carga nova não vem o site mostra a cópia guardada (`copiaAnterior`): selo âmbar "Não atualizou" + aviso no
+  popover, nova tentativa a cada minuto. O deploy desse commit falhou no `deploy-pages` ("Timeout reached") por um
+  incidente do GitHub Actions; o "Re-run failed jobs" publicou.
+- **Revisão de interface (casa):** a busca por trás (atualização automática) mostrava "Atualizando…" no selo, que
+  alargava ~85 px e empurrava o Buscar a cada carga → com dados na tela, só o ícone gira e o texto do estado fica
+  ("Atualizando…"/"Tentando…" só na 1ª abertura). "Tentando de novo…" estourava o cabeçalho em 1280 px logado → "Tentando…".
+  Folga do cabeçalho medida com cada texto do selo, 320–1920 px (scratchpad `cabecalho.mjs`).
+- **Workflow:** actions/checkout v7, setup-node v7, upload-pages-artifact v5, deploy-pages v5 (o aviso do Node 20
+  ia virar erro); sem `.nojekyll` (o Actions não usa Jekyll e o upload v4+ deixa arquivos com ponto de fora).

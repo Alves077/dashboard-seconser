@@ -21,7 +21,11 @@ function StatusDados() {
   const { data, isFetching, error, failureCount } = useBase()
   const semDados = !data && !!error && !isFetching
   // a carga nova não veio e o site mostra a anterior (guardada no navegador); tenta de novo sozinho a cada minuto
-  const anterior = !!data?.copiaAnterior && !isFetching
+  const anterior = !!data?.copiaAnterior
+  // buscando sem nada na tela (1ª abertura): diz por escrito. Com dados na tela (atualização automática, a cada carga),
+  // só o ícone gira e o texto do estado fica: antes "Atualizando…" alargava o selo ~85 px e empurrava o Buscar para a
+  // esquerda a cada 30 min (revisão de interface, 05/11/2026)
+  const carregando = isFetching && !data
   const impossiveis = data?.datasImpossiveis ?? []
   const { modo } = useSessao()
   const recarregar = useRecarregar()
@@ -68,9 +72,10 @@ function StatusDados() {
         ) : (
           <Database aria-hidden className="size-3.5" />
         )}
-        {isFetching ? (
-          // a 1ª tentativa falhou e o site tenta mais uma vez: dito, para a espera não parecer travada
-          <span className="hidden sm:inline">{failureCount > 0 ? 'Tentando de novo…' : 'Atualizando…'}</span>
+        {carregando ? (
+          // a 1ª tentativa falhou e o site tenta mais uma vez: dito, para a espera não parecer travada ("Tentando de
+          // novo…" estourava o cabeçalho em 1280 px, logado)
+          <span className="hidden sm:inline">{failureCount > 0 ? 'Tentando…' : 'Atualizando…'}</span>
         ) : semDados ? (
           <span className="hidden sm:inline">Sem dados</span>
         ) : anterior ? (
