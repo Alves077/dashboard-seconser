@@ -14,7 +14,7 @@
 import { diaDe, isoDe, partes, type Dia } from '@/lib/datas'
 import type { Bairro, CategoriaRevisada, Detalhe, Foto, LinhaVw, Vereador } from '@/dados/tipos'
 
-export type Cenario = 'pior' | 'vazio' | 'um' | 'enorme' | 'lento' | 'erro' | 'erro-restrito'
+export type Cenario = 'pior' | 'vazio' | 'um' | 'enorme' | 'lento' | 'erro' | 'erro-restrito' | 'vivo'
 export const CENARIOS: { id: Cenario | null; rotulo: string }[] = [
   { id: null, rotulo: 'Dados reais' },
   { id: 'pior', rotulo: 'Pior caso' },
@@ -24,6 +24,8 @@ export const CENARIOS: { id: Cenario | null; rotulo: string }[] = [
   { id: 'lento', rotulo: 'Lento' },
   { id: 'erro', rotulo: 'Erro' },
   { id: 'erro-restrito', rotulo: 'Erro restrito' },
+  // a cada consulta (2 em 2 min) há uma carga nova: para ver o site se atualizar sozinho
+  { id: 'vivo', rotulo: 'Ao vivo' },
 ]
 
 export interface DadosCenario {
@@ -180,7 +182,7 @@ const DESCRICAO_LONGA =
   'o poste 5 acende de dia e apaga de noite (fotocélula?); o poste 6 pisca. **Atenção equipe: cão bravo no portão.**'
 
 export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
-  if (cenario === 'lento' || cenario === 'erro' || cenario === 'erro-restrito') cenario = 'pior'
+  if (cenario === 'lento' || cenario === 'erro' || cenario === 'erro-restrito' || cenario === 'vivo') cenario = 'pior'
   const s = sorteador(cenario === 'enorme' ? 77 : 1284)
   const bairros: Bairro[] = REGIOES_BAIRROS.map(([nome, regiao], i) => ({ id: i + 1, nome, regiao }))
   const categorias: CategoriaRevisada[] = CATEGORIAS.map(([nome, descricao], i) => ({ id: i + 1, nome, descricao }))

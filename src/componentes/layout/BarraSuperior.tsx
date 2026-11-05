@@ -2,7 +2,7 @@ import { Menu } from '@base-ui/react/menu'
 import { Popover } from '@base-ui/react/popover'
 import { clsx } from 'clsx'
 import { CloudOff, Database, History, LogIn, Moon, RefreshCw, Search, Sun, UserRound } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { DIAS_PARA_DESATUALIZADO } from '@/config'
 import { NavLink } from 'react-router'
 import { Botao } from '@/componentes/ui/Botao'
@@ -23,7 +23,13 @@ function StatusDados() {
   const impossiveis = data?.datasImpossiveis ?? []
   const { modo } = useSessao()
   const recarregar = useRecarregar()
-  const [agora] = useState(() => Date.now())
+  // o relógio anda (de minuto em minuto): com o site se atualizando sozinho, a aba fica aberta o dia todo e "há N dias"
+  // não pode ficar preso na hora em que ela abriu
+  const [agora, setAgora] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setAgora(Date.now()), 60_000)
+    return () => clearInterval(t)
+  }, [])
   const em = data?.atualizadoEm ?? null
   const dias = em ? Math.floor((agora - em.getTime()) / 86_400_000) : null
   const velho = dias !== null && dias >= DIAS_PARA_DESATUALIZADO

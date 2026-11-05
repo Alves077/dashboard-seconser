@@ -1021,3 +1021,17 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
 - **Colab fora da planilha:** o Supabase só tem os serviços da planilha (todos com saída); os encaminhados (API "ABERTO")
   e os em atendimento sem saída estão só no MySQL (`demandas.status`). Consulta para o trabalho:
   `sql/colab_fora_da_planilha.sql` no projeto de dados (contagem por status, lista com descrição, divergências).
+
+## Site atualizando sozinho, sem F5 (04/11/2026)
+- `useAtualizacaoAutomatica` (dados/consultas.ts, montado na Moldura): a cada 2 min, só com a aba visível
+  (`refetchIntervalInBackground: false`; ao voltar à aba pergunta na hora), `fonte.ultimaCarga()` (~80 bytes: fim da
+  última carga em `sincronizacoes`). Mais nova que a base na tela → busca a base de novo por trás (sem esqueleto; o
+  ícone de dados gira) e avisa "Dados atualizados · Carga das 14:32". Filtros, página, ficha aberta e rolagem ficam.
+  A parte restrita só fica marcada como velha (`refetchType: 'none'`): é buscada ao abrir a ficha, Serviços ou
+  Relatórios, ou ao voltar à aba. O selo "há N dias" passou a andar com o relógio (antes ficava na hora em que a aba abriu).
+- Cenário de teste `?dados=vivo` (só dev): cada pergunta acha uma carga nova (1 min depois). Testado no Chrome: trocou
+  aos 116 s e 235 s, sem esqueleto, com aviso, ficha/página/rolagem mantidas.
+- Tráfego (medido 04/11): base pública ~0,9 MB compactada por download; restrita ~0,73 MB; pergunta ~80 B. Com carga a
+  cada 30 min (~20/dia), uma aba visível o dia todo baixa ~18 MB/dia (+ até ~15 MB logado). Plano gratuito: 5 GB/mês de
+  saída. Folga hoje; se a equipe crescer, no trabalho o `sincroniza.py` deve não registrar carga quando nada mudou
+  (assim o site só baixa quando algo mudou de verdade). Acompanhar em Supabase → Usage → Egress.

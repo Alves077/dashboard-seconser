@@ -22,6 +22,8 @@ export interface Fonte {
   carregarBase(): Promise<Base>
   carregarDetalhes(): Promise<Map<string, Detalhe>>
   carregarFotos(chave: string): Promise<Foto[]>
+  /** Fim da última carga (ISO) — a pergunta pequena da atualização automática. Sem Supabase (CSV, cenários): null */
+  ultimaCarga(): Promise<string | null>
 }
 
 // ── CSV local (só desenvolvimento) ────────────────────────────────────────────
@@ -99,6 +101,10 @@ function fonteCsv(): Fonte {
       return linhas
         .filter((f) => chaveServico(Number(f.demand_id), f.type) === chave)
         .map((f) => ({ url: f.image_url, atualizadoEm: f.updated_at || null }))
+    },
+    // retrato local: não muda sozinho
+    async ultimaCarga() {
+      return null
     },
   }
 }
@@ -183,6 +189,16 @@ function fonteSupabase(): Fonte {
       if (ultima) void gravarCache(CHAVE_CACHE, copia)
       return montar(copia)
     },
+    async ultimaCarga() {
+      const { data, error } = await supabase
+        .from('sincronizacoes')
+        .select('terminada_em')
+        .eq('status', 'ok')
+        .order('terminada_em', { ascending: false })
+        .limit(1)
+      if (error) throw error
+      return (data?.[0]?.terminada_em as string | undefined) ?? null
+    },
     async carregarDetalhes() {
       try {
         const linhas = await lerTudo(
@@ -222,6 +238,8 @@ function fonteCenario(cenario: string): Fonte {
   const esperar = (ms: number) => new Promise((r) => setTimeout(r, ms))
   // as mensagens que o navegador e o Supabase dão de verdade, para ver como o site as mostra
   const semRede = () => new TypeError('Failed to fetch')
+  // "vivo": cada pergunta pela última carga acha uma nova (1 min depois da anterior), e a base sai com ela
+  let carga = Date.now()
   return {
     tipo: 'csv',
     async carregarBase() {
@@ -231,7 +249,8 @@ function fonteCenario(cenario: string): Fonte {
       }
       if (cenario === 'lento') await esperar(4000)
       const d = await dados
-      return montarBase(d.linhas, { vereadores: d.vereadores, categorias: d.categorias, bairros: d.bairros }, d.atualizadoEm)
+      if (cenario === 'vivo') await esperar(1200)
+      return montarBase(d.linhas, { vereadores: d.vereadores, categorias: d.categorias, bairros: d.bairros }, cenario === 'vivo' ? new Date(carga) : d.atualizadoEm)
     },
     async carregarDetalhes() {
       if (cenario === 'erro-restrito') {
@@ -246,6 +265,11 @@ function fonteCenario(cenario: string): Fonte {
         throw semRede()
       }
       return (await dados).fotos.get(chave) ?? []
+    },
+    async ultimaCarga() {
+      if (cenario !== 'vivo') return null
+      carga += 60_000
+      return new Date(carga).toISOString()
     },
   }
 }

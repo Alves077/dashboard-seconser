@@ -1,10 +1,13 @@
 // Ganchos de dados (TanStack Query): carregam uma vez, guardam em cache e expõem
 // carregando/erro para os estados de skeleton e erro.
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef } from 'react'
+import { toast } from 'sonner'
 import { fonte, SemAcesso } from './fonte'
 import { useSessao } from './sessao'
 
 const MEIA_HORA = 30 * 60 * 1000
+const DOIS_MINUTOS = 2 * 60 * 1000
 
 /** Tudo o que é público (serviços, saídas, referências). Uma requisição grande, depois tudo no navegador. */
 export function useBase() {
@@ -27,6 +30,49 @@ export function useBase() {
 export function useRecarregar() {
   const cliente = useQueryClient()
   return () => cliente.invalidateQueries({ queryKey: ['base'] })
+}
+
+/**
+ * O site se atualiza sozinho, sem F5 (usuário, 04/11/2026; o trabalho sobe uma carga a cada 30 min). A cada 2 min, só com
+ * a aba visível, um pedido pequeno (~80 bytes) pergunta qual foi a última carga; se é mais nova que a da base na tela,
+ * busca a base de novo por trás — a tela segue com os dados antigos até os novos chegarem, sem esqueleto; filtros, página,
+ * ficha aberta e rolagem ficam onde estavam — e avisa. Aba escondida não pergunta nada; ao voltar, pergunta na hora.
+ * A parte restrita só fica marcada como velha: é buscada quando alguém abre a ficha, Serviços ou Relatórios, ou volta à
+ * aba (baixá-la a cada carga dobraria o tráfego de quem está logado; o plano gratuito do Supabase tem 5 GB/mês).
+ * No CSV local e nos cenários de teste não há carga nova (menos no cenário "vivo", feito para ver isto). Montado uma vez,
+ * na Moldura.
+ */
+export function useAtualizacaoAutomatica() {
+  const cliente = useQueryClient()
+  const { data: base } = useBase()
+  const naTela = base?.atualizadoEm?.getTime() ?? null
+  const { data: ultima } = useQuery({
+    queryKey: ['ultima-carga'],
+    queryFn: () => fonte.ultimaCarga(),
+    // CSV local e cenários respondem null na hora (sem rede); o cenário "vivo" responde uma carga nova a cada vez
+    enabled: naTela !== null,
+    refetchInterval: DOIS_MINUTOS,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: 'always',
+    staleTime: 0,
+    retry: false,
+  })
+  useEffect(() => {
+    if (naTela === null || !ultima || new Date(ultima).getTime() <= naTela) return
+    void cliente.invalidateQueries({ queryKey: ['base'] })
+    void cliente.invalidateQueries({ queryKey: ['detalhes'], refetchType: 'none' })
+  }, [ultima, naTela, cliente])
+
+  // aviso quando a base da tela troca por uma carga nova (não na 1ª carga)
+  const anterior = useRef<number | null>(null)
+  useEffect(() => {
+    if (naTela === null) return
+    if (anterior.current !== null && naTela > anterior.current) {
+      const hora = new Date(naTela).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+      toast('Dados atualizados', { description: `Carga das ${hora}`, duration: 4000 })
+    }
+    anterior.current = naTela
+  }, [naTela])
 }
 
 /**

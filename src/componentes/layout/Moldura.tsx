@@ -3,6 +3,7 @@ import { Suspense, useEffect } from 'react'
 import { Outlet, useLocation, useNavigationType } from 'react-router'
 import { Toaster } from 'sonner'
 import { PaletaBusca } from '@/busca/PaletaBusca'
+import { useAtualizacaoAutomatica } from '@/dados/consultas'
 import { EsqueletoPagina } from '@/componentes/estados/Estados'
 import { Ficha } from '@/ficha/Ficha'
 import { BarraFiltros } from '@/filtros/BarraFiltros'
@@ -18,6 +19,7 @@ export function Moldura() {
   const { pathname } = useLocation()
   const tipoNavegacao = useNavigationType()
   useEffect(preCarregarPaginas, [])
+  useAtualizacaoAutomatica()
   // página nova começa no topo (antes abria no meio, na altura em que a anterior estava). Só quando muda a
   // PÁGINA: filtro e Ficha mudam só a parte depois do "?" e não mexem na rolagem; no voltar/avançar do
   // navegador (POP) quem decide é o navegador
