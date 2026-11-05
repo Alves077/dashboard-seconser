@@ -3,7 +3,7 @@
 import { describe, expect, it } from 'vitest'
 import { FAIXAS_ESPERA } from '@/calculos/panorama'
 import { FAIXAS_EXEC } from '@/calculos/prazo'
-import { alertaDias, fraseDeQuando, NIVEL } from '@/calculos/relatorios'
+import { alertaDias, fraseAbertosHoje, fraseDeQuando, fraseSairam, NIVEL } from '@/calculos/relatorios'
 import { FAIXAS } from '@/dados/regras'
 import { COR_ESPERA, COR_ESPERA_PDF, COR_EXEC, COR_EXEC_PDF, COR_FAIXA_MENSAL, COR_FAIXA_MENSAL_PDF } from '@/lib/cores'
 
@@ -54,5 +54,36 @@ describe('frase dos Executados: de quando eram os executados', () => {
 
   it('os números em negrito são as duas partes', () => {
     expect(fraseDeQuando(1234, 1000, 'ontem').filter((p) => p.forte).map((p) => p.t)).toEqual(['234', '1.000'])
+  })
+})
+
+describe('frase dos Executados: o que saiu na mesma época', () => {
+  const texto = (n: number, quando: string) => fraseSairam(n, quando).map((p) => p.t).join('')
+  it('dia, período ou mês', () => {
+    expect(texto(74, 'ontem')).toBe('No mesmo dia, 74 serviços foram para a rua.')
+    expect(texto(1, 'hoje')).toBe('No mesmo dia, 1 serviço foi para a rua.')
+    expect(texto(5, 'em 30/10')).toBe('No mesmo dia, 5 serviços foram para a rua.')
+    expect(texto(1317, 'nos últimos 30 dias (05/10 até 03/11)')).toBe('No mesmo período, 1.317 serviços foram para a rua.')
+    expect(texto(145, 'em outubro de 2026')).toBe('No mesmo mês, 145 serviços foram para a rua.')
+    expect(texto(12, 'em março de 2026')).toBe('No mesmo mês, 12 serviços foram para a rua.')
+  })
+})
+
+describe('frase do Mensal: em aberto hoje por ano e mês', () => {
+  const ano = (a: number, meses: Record<number, number>) => {
+    const m: (number | null)[] = Array(12).fill(null)
+    for (const [i, n] of Object.entries(meses)) m[+i] = n
+    return { ano: a, meses: m, total: Object.values(meses).reduce((x, y) => x + y, 0) }
+  }
+  const texto = (total: number, anos: ReturnType<typeof ano>[], doAno: boolean) => fraseAbertosHoje(total, anos, doAno).map((p) => p.t).join('')
+  it('no relatório de um ano, só os meses', () => {
+    expect(texto(24, [ano(2026, { 0: 16, 1: 8 })], true)).toBe('Em aberto hoje: 24 (jan 16, fev 8).')
+  })
+  it('no histórico, o ano sempre aparece', () => {
+    expect(texto(905, [ano(2025, { 6: 0 }), ano(2026, { 3: 1, 10: 904 })], false)).toBe('Em aberto hoje: 905, todos de 2026 (abr 1, nov 904).')
+    expect(texto(1, [ano(2026, { 9: 1 })], false)).toBe('Em aberto hoje: 1, de 2026 (out 1).')
+    expect(texto(10, [ano(2016, { 9: 1 }), ano(2025, { 1: 2 }), ano(2026, { 0: 7 })], false)).toBe(
+      'Em aberto hoje: 10 — 7 de 2026 (jan 7); 2 de 2025 (fev 2) e 1 de 2016 (out 1).',
+    )
   })
 })

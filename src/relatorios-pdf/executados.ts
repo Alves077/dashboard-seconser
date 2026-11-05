@@ -1,7 +1,7 @@
 // Serviços executados em PDF — as mesmas seções de relatorios/Executados.tsx: abertura, 4 indicadores, distribuição um
 // nível abaixo do filtro, categoria e origem e, se pedida, a lista por região (cartão) e bairro (linha de grupo), execução mais recente primeiro.
 import { FAIXAS_EXEC } from '@/calculos/prazo'
-import { fraseDeQuando, NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
+import { fraseDeQuando, fraseSairam, NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
@@ -53,10 +53,8 @@ export function desenharExecutados(
   // o que saiu na mesma época, como referência (como na tela; sem %: os executados não são uma parte dessas saídas)
   const saldo = r.sairam - r.n
   trechos.push(
-    { t: ' Nesse período, ' },
-    forte(numero(r.sairam)),
-    { t: ` ${r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua. ` },
-    ...fraseDeQuando(r.n, r.saiuAntes, quando).map((p) => (p.forte ? forte(p.t) : { t: p.t })),
+    { t: ' ' },
+    ...[...fraseSairam(r.sairam, quando), { t: ' ' }, ...fraseDeQuando(r.n, r.saiuAntes, quando)].map((p) => ('forte' in p && p.forte ? forte(p.t) : { t: p.t })),
   )
   const linhas = f.quebrar(trechos, w - 27, 12)
   const alto = linhas.length * 12 * 1.625 + 16

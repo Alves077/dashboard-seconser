@@ -486,13 +486,20 @@ export function grafico(f: Folha, x: number, w: number, altura: number, g: Grafi
       })
   }
 
-  // um rótulo de mês a cada ~52 px (sempre o último)
+  // um rótulo de mês a cada ~52 px (sempre o último). Da direita para a esquerda, pulando o que encostaria no já escrito:
+  // o último é alinhado à direita (não sai do quadro) e colava no penúltimo ("nov/25 dez/25", 04/11/2026)
   const cada = Math.max(1, Math.ceil(52 / (passo || 52)))
-  g.rotulos.forEach((r, i) => {
-    if ((n - 1 - i) % cada !== 0) return
+  let limite = Infinity
+  for (let i = n - 1; i >= 0; i--) {
+    if ((n - 1 - i) % cada !== 0) continue
+    const r = g.rotulos[i]
     const alinhar: Alinhar = n > 1 && i === 0 ? 'esq' : n > 1 && i === n - 1 ? 'dir' : 'centro'
+    const larg = f.medirTexto(r, 10, 400)
+    const esq = alinhar === 'esq' ? px(i) : alinhar === 'dir' ? px(i) - larg : px(i) - larg / 2
+    if (esq + larg > limite - 8) continue
     f.texto(r, px(i), 0, { tam: 10, cor: COR.ink3, alinhar, base: y0 + altura - 6 })
-  })
+    limite = esq
+  }
   f.y = y0 + altura
 }
 

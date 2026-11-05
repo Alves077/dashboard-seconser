@@ -246,6 +246,28 @@ export function abertosPorAnoTexto(anos: { ano: number; meses: (number | null)[]
     }))
 }
 
+type Trecho = { t: string; forte?: boolean }
+
+/**
+ * Mensal (histórico ou um ano): os abertos de hoje por ano e mês de saída, em pedaços para a tela e o PDF. No relatório de
+ * um ano, só os meses: "Em aberto hoje: 255 (jan 16, fev 8, …)." No histórico o ano sempre aparece — com os abertos todos
+ * num ano só, "abr 1, mai 4" ficava sem ano num relatório de 17 meses (04/11/2026): "Em aberto hoje: 905, todos de 2026
+ * (abr 1, …)."; com mais anos, "Em aberto hoje: 323 — 255 de 2026 (…); 52 de 2025 (…) e 1 de 2016 (out 1)."
+ */
+export function fraseAbertosHoje(total: number, anos: { ano: number; meses: (number | null)[]; total: number }[], doAno: boolean): Trecho[] {
+  const lista = abertosPorAnoTexto(anos)
+  const p: Trecho[] = [{ t: 'Em aberto hoje: ' }, { t: numero(total), forte: true }]
+  if (doAno || lista.length === 0) {
+    if (lista.length) p.push({ t: ` (${lista[0].meses})` })
+  } else if (lista.length === 1) p.push({ t: `, ${total === 1 ? '' : 'todos '}de ${lista[0].ano} (${lista[0].meses})` })
+  else
+    lista.forEach((a, i) =>
+      p.push({ t: i === 0 ? ' — ' : i === lista.length - 1 ? ' e ' : '; ' }, { t: numero(a.total), forte: true }, { t: ` de ${a.ano} (${a.meses})` }),
+    )
+  p.push({ t: '.' })
+  return p
+}
+
 // ── Serviços em aberto (espelho do tratamento_manual/relatorio_abertos.py) ──────────────────
 // Unidade: saídas sem retorno (o que está na rua hoje); espera = dias desde o registro (data de saída).
 
@@ -314,7 +336,7 @@ export const alertaDias = (v: number): 'atraso' | 'andamento' | null => (v > 30 
  * Com a concordância no singular ("1 saiu", "1 já estava") e "Todos os …" quando uma das partes é zero.
  * Em pedaços, para a tela e o PDF porem em negrito (`forte`) os mesmos números.
  */
-export function fraseDeQuando(n: number, saiuAntes: number, quando: string): { t: string; forte?: boolean }[] {
+export function fraseDeQuando(n: number, saiuAntes: number, quando: string): Trecho[] {
   const noPeriodo = n - saiuAntes
   const epoca = quando.replace(/\s*\(.*\)$/, '')
   // "antes de ontem", "antes de outubro de 2026", "antes desses 7 dias"
@@ -330,6 +352,17 @@ export function fraseDeQuando(n: number, saiuAntes: number, quando: string): { t
     { t: numero(saiuAntes), forte: true },
     { t: ` ${saiuAntes === 1 ? 'já estava' : 'já estavam'} na rua antes.` },
   ]
+}
+
+/**
+ * Executados: o que saiu para a rua na mesma época, como referência — "No mesmo dia, 74 serviços foram para a rua." (hoje,
+ * ontem, em 30/10), "No mesmo período, …" (últimos 7/30 dias), "No mesmo mês, …" (um mês). Era "Nesse período", que soava
+ * estranho para um dia só; e repetir a época ("Ontem, …") a deixava três vezes no parágrafo (04/11/2026).
+ */
+export function fraseSairam(sairam: number, quando: string): Trecho[] {
+  const epoca = quando.replace(/\s*\(.*\)$/, '')
+  const mesma = /^(hoje|ontem|em \d{2}\/\d{2})$/.test(epoca) ? 'No mesmo dia' : /^em \p{L}+ de \d{4}$/u.test(epoca) ? 'No mesmo mês' : 'No mesmo período'
+  return [{ t: `${mesma}, ` }, { t: numero(sairam), forte: true }, { t: ` ${sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua.` }]
 }
 
 /** Origem como no script: "Cidadão", o nome do vereador, ou o detalhe da origem */

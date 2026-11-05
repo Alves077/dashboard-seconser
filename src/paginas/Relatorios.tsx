@@ -295,7 +295,7 @@ function PaginaRelatorios() {
   const cab =
     aba === 'mensal' && mensal
       ? {
-          titulo: mensal.ano !== null ? `Relatório Anual · ${mensal.ano}` : mensal.todos ? 'Visão Geral · Todo o Período' : `Relatório Mensal · ${rotuloMesLongo(mensal.mes!)}`,
+          titulo: mensal.ano !== null ? `Relatório Anual · ${mensal.ano}${mensal.ano === Math.floor(chaveMes(hoje) / 100) ? ' (até hoje)' : ''}` : mensal.todos ? 'Visão Geral · Todo o Período' : `Relatório Mensal · ${rotuloMesLongo(mensal.mes!)}`,
           subtitulo: escopo === 'Cidade inteira' ? undefined : escopo,
           meta: soTexto([geradoLongo, `${numero(mensal.total)} serviços ${mensal.todos ? 'no período' : 'registrados no mês'}`, dadosAte]),
         }
@@ -515,12 +515,13 @@ function PaginaRelatorios() {
         <p className="mt-3 text-[13px] text-ink-2">{atual.descricao}</p>
 
         {/* ano e mês separados (usuário, 04/11/2026): numa lista só, os meses de anos diferentes se misturavam; e o ano
-            inteiro virou opção. Ao trocar de ano, vai para o ano inteiro; "Histórico completo" fica no lugar do ano e esconde o mês */}
+            inteiro virou opção. Ao trocar de ano, vai para o ano inteiro; "Histórico completo" fica no lugar do ano e esconde o mês.
+            Largura fixa do sm para cima: antes a 1ª caixa encolhia de 208 para 112 px ao escolher um ano e tudo pulava de lugar */}
         {aba === 'mensal' && meses.length > 0 && (
-          <div className="mt-3 flex w-full max-w-md gap-2">
+          <div className="mt-3 flex w-full gap-2 sm:w-auto">
             <Selecao
               rotulo="Referência"
-              className={anoSelecionado === null ? 'w-52 shrink-0' : 'w-28 shrink-0'}
+              className="flex-1 sm:w-52 sm:flex-none"
               opcoes={[{ valor: 'tudo', texto: 'Histórico completo' }, ...anosRelatorio.map((a) => ({ valor: `a${a}`, texto: String(a) }))]}
               value={anoSelecionado === null ? 'tudo' : `a${anoSelecionado}`}
               onChange={(e) => trocar('referencia', e.target.value)}
@@ -528,7 +529,7 @@ function PaginaRelatorios() {
             {anoSelecionado !== null && (
               <Selecao
                 rotulo="Mês"
-                className="min-w-0 flex-1"
+                className="flex-1 sm:w-52 sm:flex-none"
                 opcoes={[
                   { valor: `a${anoSelecionado}`, texto: 'Ano inteiro' },
                   ...meses.filter((k) => Math.floor(k / 100) === anoSelecionado).map((k) => ({ valor: String(k), texto: nomeMes(k) })),

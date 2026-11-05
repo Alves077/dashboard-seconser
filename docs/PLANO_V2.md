@@ -1005,3 +1005,19 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
   medidos de 360 a 1920 px e no PDF, tudo numa linha (em 320 px o rótulo e "84,5% · mais de 5 dias" ainda quebram —
   celular raro). A frase de abertura (por extenso) virou `fraseDeQuando` em calculos/relatorios.ts, a mesma na tela e
   no PDF, com o singular ("1 saiu", "1 já estava") e "Todos os N executados…" quando uma parte é zero (50 testes).
+
+## Ano no Mensal e frases (04/11/2026)
+- **Do trabalho (`ab5a917`):** Mensal com "Referência" (Histórico completo / anos) + "Mês" (Ano inteiro / meses do ano);
+  **Relatório Anual** (`relatorioMensal(..., ano)`: só o que saiu para a rua no ano; retornos e fila no fim do mês contam
+  pendentes de qualquer ano); abertura com "Em aberto hoje" por ano e mês; PDF: "Saídas × retornos" encolhe (até 110)
+  para caber no fim da página 1; Executados: "… saíram ontem e … já estavam na rua antes" (`fraseDeQuando` com a época).
+- **Revisão em casa (mesmo dia), com dado real:** `fraseAbertosHoje` (tela e PDF): no histórico o ano sempre aparece
+  ("Em aberto hoje: 905, todos de 2026 (abr 1, …)" — antes, com um ano só, ficava sem ano num relatório de 17 meses);
+  `fraseSairam`: "No mesmo dia/período/mês, 74 serviços foram para a rua" (era "Nesse período", estranho para um dia);
+  faixas de espera zeradas fora da barra do Mensal (num ano fechado, "Até 5 dias 0 (0,0%)"); seletores com largura fixa
+  (208 px do sm para cima; antes a 1ª caixa encolhia de 208 para 112 e tudo pulava); "Relatório Anual · 2026 (até hoje)"
+  no ano em curso; PDF: rótulos do eixo dos meses pulam o que encostaria no vizinho (o último, alinhado à direita, colava
+  no penúltimo). 54 testes.
+- **Colab fora da planilha:** o Supabase só tem os serviços da planilha (todos com saída); os encaminhados (API "ABERTO")
+  e os em atendimento sem saída estão só no MySQL (`demandas.status`). Consulta para o trabalho:
+  `sql/colab_fora_da_planilha.sql` no projeto de dados (contagem por status, lista com descrição, divergências).

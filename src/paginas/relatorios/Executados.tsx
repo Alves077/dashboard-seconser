@@ -7,7 +7,7 @@
 import { clsx } from 'clsx'
 import { Fragment } from 'react'
 import { FAIXAS_EXEC } from '@/calculos/prazo'
-import { fraseDeQuando, NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
+import { fraseDeQuando, fraseSairam, NIVEL, type LinhaLugarExecutado, type RelatorioExecutados } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { enderecoCurto } from '@/dados/regras'
 import type { Detalhe } from '@/dados/tipos'
@@ -120,8 +120,7 @@ export function RelatorioExecutadosFolha({
           </>
         )}{' '}
         {/* o que saiu na mesma época, como referência — sem porcentagem: os executados não são uma parte dessas saídas */}
-        Nesse período, <strong className={forte}>{numero(r.sairam)}</strong> {r.sairam === 1 ? 'serviço foi' : 'serviços foram'} para a rua.{' '}
-        {fraseDeQuando(r.n, r.saiuAntes, quando).map((p, i) =>
+        {[...fraseSairam(r.sairam, quando), { t: ' ' }, ...fraseDeQuando(r.n, r.saiuAntes, quando)].map((p, i) =>
           p.forte ? (
             <strong key={i} className={forte}>
               {p.t}

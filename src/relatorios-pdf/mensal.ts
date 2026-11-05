@@ -1,6 +1,6 @@
 // Relatório mensal / histórico em PDF — as mesmas seções de relatorios/Mensal.tsx, na mesma ordem.
 import { FAIXAS_ESPERA } from '@/calculos/panorama'
-import { abertosPorAnoTexto, type GrupoMensal, type RelatorioMensal } from '@/calculos/relatorios'
+import { fraseAbertosHoje, type GrupoMensal, type RelatorioMensal } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { CATEGORIA_RISCO, FAIXAS } from '@/dados/regras'
 import { formatarDia, formatarDiaCurto, rotuloMes } from '@/lib/datas'
@@ -112,13 +112,8 @@ export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
         { t: ' fora do prazo.' },
       )
     // abertos hoje por ano e mês de registro, em texto (como na tela)
-    if (h.fila.total > 0) {
-      const anos = abertosPorAnoTexto(h.abertosPorAno)
-      trechos.push({ t: ' Em aberto hoje: ' }, forte(numero(h.fila.total)))
-      if (anos.length === 1) trechos.push({ t: ` (${anos[0].meses})` })
-      else anos.forEach((a, i) => trechos.push({ t: i === 0 ? ' — ' : i === anos.length - 1 ? ' e ' : '; ' }, forte(numero(a.total)), { t: ` de ${a.ano} (${a.meses})` }))
-      trechos.push({ t: '.' })
-    }
+    if (h.fila.total > 0)
+      trechos.push({ t: ' ' }, ...fraseAbertosHoje(h.fila.total, h.abertosPorAno, r.ano !== null).map((p) => (p.forte ? forte(p.t) : { t: p.t })))
     const linhas = f.quebrar(trechos, w - 24, 12.5)
     const alto = linhas.length * 12.5 * 1.625 + 16
     f.caixa(x, f.y, w, alto, { fundo: COR.page, raio: 6 })
@@ -162,7 +157,7 @@ export function desenharMensal(f: Folha, r: RelatorioMensal, obs: string) {
         f.texto(`${numero(h.fila.total)} serviços pendentes, por tempo de espera`, xi, f.y, { tam: 12.5, peso: 500 })
         f.texto(direita, xi + wi, f.y + 1.5, { tam: 11, cor: COR.ink2, alinhar: 'dir' })
         f.y += 12.5 * 1.5 + 8
-        barraFaixas(f, xi, wi, FAIXAS_ESPERA.map((fx, i) => ({ rotulo: fx.rotulo, n: h.fila.espera[i], cor: COR_ESPERA_PDF[i], textoEscuro: TEXTO_ESCURO_ESPERA(i) })), h.fila.total)
+        barraFaixas(f, xi, wi, FAIXAS_ESPERA.map((fx, i) => ({ rotulo: fx.rotulo, n: h.fila.espera[i], cor: COR_ESPERA_PDF[i], textoEscuro: TEXTO_ESCURO_ESPERA(i) })).filter((p) => p.n > 0), h.fila.total)
         if (h.fila.acima150 > 0) nota(f, xi, wi, `${numero(h.fila.acima150)} acima de 150 dias.`)
       },
       { cartao: true },

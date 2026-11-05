@@ -2,10 +2,11 @@
 // seção. Mudanças combinadas: categoria revisada, filtros de região/categoria/origem valendo, e a
 // evolução mensal em dois gráficos (o antigo tinha dois eixos no mesmo quadro).
 import { clsx } from 'clsx'
+import { Fragment } from 'react'
 import { GraficoTempo, LegendaTempo } from '@/componentes/graficos/GraficoTempo'
 import { COR_ESPERA, COR_FAIXA_MENSAL, TEXTO_ESCURO_ESPERA, TEXTO_ESCURO_FAIXA_MENSAL } from '@/lib/cores'
 import { FAIXAS_ESPERA } from '@/calculos/panorama'
-import { abertosPorAnoTexto, type GrupoMensal, type RelatorioMensal } from '@/calculos/relatorios'
+import { fraseAbertosHoje, type GrupoMensal, type RelatorioMensal } from '@/calculos/relatorios'
 import { PRAZO_DIAS } from '@/config'
 import { CATEGORIA_RISCO, FAIXAS } from '@/dados/regras'
 import { formatarDia, formatarDiaCurto, rotuloMes, rotuloMesLongo } from '@/lib/datas'
@@ -102,18 +103,15 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
           {h.fila.total > 0 && (
             <>
               {' '}
-              Em aberto hoje: <strong className="font-semibold text-ink">{numero(h.fila.total)}</strong>
-              {abertosPorAnoTexto(h.abertosPorAno).map((a, i, l) =>
-                l.length === 1 ? (
-                  <span key={a.ano}> ({a.meses})</span>
+              {fraseAbertosHoje(h.fila.total, h.abertosPorAno, r.ano !== null).map((p, i) =>
+                p.forte ? (
+                  <strong key={i} className="font-semibold text-ink">
+                    {p.t}
+                  </strong>
                 ) : (
-                  <span key={a.ano}>
-                    {i === 0 ? ' — ' : i === l.length - 1 ? ' e ' : '; '}
-                    <strong className="font-semibold text-ink">{numero(a.total)}</strong> de {a.ano} ({a.meses})
-                  </span>
+                  <Fragment key={i}>{p.t}</Fragment>
                 ),
               )}
-              .
             </>
           )}
         </p>
@@ -171,7 +169,11 @@ export function RelatorioMensalFolha({ r, obs, aoMudarObs }: { r: RelatorioMensa
               prazo
             </p>
           </div>
-          <BarraFaixas partes={FAIXAS_ESPERA.map((f, i) => ({ rotulo: f.rotulo, n: h.fila.espera[i], cor: COR_ESPERA[i], textoEscuro: TEXTO_ESCURO_ESPERA(i) }))} total={h.fila.total} />
+          {/* sem as faixas zeradas: num ano fechado ninguém espera pouco, e "Até 5 dias 0 (0,0%)" só ocupava espaço */}
+          <BarraFaixas
+            partes={FAIXAS_ESPERA.map((f, i) => ({ rotulo: f.rotulo, n: h.fila.espera[i], cor: COR_ESPERA[i], textoEscuro: TEXTO_ESCURO_ESPERA(i) })).filter((p) => p.n > 0)}
+            total={h.fila.total}
+          />
           {h.fila.acima150 > 0 && <p className="mt-1.5 text-[10.5px] text-ink-3">{numero(h.fila.acima150)} acima de 150 dias.</p>}
         </SecaoFolha>
       )}
