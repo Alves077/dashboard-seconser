@@ -16,9 +16,12 @@ export function useBase() {
     queryFn: () => fonte.carregarBase(),
     staleTime: MEIA_HORA,
     gcTime: Infinity,
-    // 1 tentativa a mais (antes 3: ~8 s de esqueleto parado antes do erro); o cabeçalho diz "Tentando de novo…"
+    // 1 tentativa a mais (antes 3: ~8 s de esqueleto parado antes do erro); o cabeçalho diz "Tentando de novo…".
+    // 5 s (eram 1,5): tentar logo em seguida pegava o banco ainda ocupado e só somava pedidos (05/11/2026)
     retry: 1,
-    retryDelay: 1500,
+    retryDelay: 5000,
+    // mostrando a cópia anterior porque a carga nova falhou: tenta de novo a cada minuto até conseguir
+    refetchInterval: (q) => (q.state.data?.copiaAnterior ? 60_000 : false),
     // sem comparar a base nova com a antiga campo a campo (padrão do TanStack): serviço e saída se apontam
     // (servico.saidas / saida.servico) e a comparação seguia esse vai-e-volta até 500 níveis, dobrando a cada
     // serviço com 2 saídas — "Buscar dados de novo" travava o site (26/10/2026). A carga troca tudo mesmo.

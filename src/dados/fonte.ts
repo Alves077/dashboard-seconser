@@ -112,9 +112,12 @@ function fonteCsv(): Fonte {
 // ── Supabase ──────────────────────────────────────────────────────────────────
 
 const PAGINA = 1000 // limite de linhas por requisição da API do projeto
+// páginas pedidas ao mesmo tempo. Eram todas (19 da vw_servicos): numa leitura no meio da carga (05/11/2026, 12h12)
+// cada uma passou dos 8 s do Supabase, as novas tentativas esgotaram as conexões e o site ficou ~3 min sem dados
+const PAGINAS_JUNTAS = 4
 
 /**
- * Lê a tabela/view inteira em páginas de 1.000, em paralelo.
+ * Lê a tabela/view inteira em páginas de 1.000, no máximo PAGINAS_JUNTAS por vez.
  * Ordem SEMPRE pela chave: sem ordem, o Postgres pode repetir ou pular linhas entre páginas.
  */
 async function lerTudo(tabela: string, colunas: string, ordem: string[]): Promise<Record<string, unknown>[]> {
@@ -126,15 +129,21 @@ async function lerTudo(tabela: string, colunas: string, ordem: string[]): Promis
   const primeira = await consulta(true).range(0, PAGINA - 1)
   if (primeira.error) throw primeira.error
   const total = primeira.count ?? primeira.data.length
-  const resto = []
-  for (let i = PAGINA; i < total; i += PAGINA) resto.push(consulta(false).range(i, i + PAGINA - 1))
-  const paginas = await Promise.all(resto)
-  const linhas = [...(primeira.data as unknown as Record<string, unknown>[])]
-  for (const p of paginas) {
-    if (p.error) throw p.error
-    linhas.push(...(p.data as unknown as Record<string, unknown>[]))
+  const inicios: number[] = []
+  for (let i = PAGINA; i < total; i += PAGINA) inicios.push(i)
+  const paginas: Record<string, unknown>[][] = new Array(inicios.length)
+  // cada "trabalhador" pega o próximo início livre; a ordem final vem do índice, não de quem terminou primeiro
+  let proxima = 0
+  const trabalhador = async () => {
+    while (proxima < inicios.length) {
+      const k = proxima++
+      const p = await consulta(false).range(inicios[k], inicios[k] + PAGINA - 1)
+      if (p.error) throw p.error
+      paginas[k] = p.data as unknown as Record<string, unknown>[]
+    }
   }
-  return linhas
+  await Promise.all(Array.from({ length: Math.min(PAGINAS_JUNTAS, inicios.length) }, trabalhador))
+  return [...(primeira.data as unknown as Record<string, unknown>[]), ...paginas.flat()]
 }
 
 const COLUNAS_VW =
@@ -178,12 +187,19 @@ function fonteSupabase(): Fonte {
       const guardada = await lerCache<CopiaPublica>(CHAVE_CACHE)
       if (guardada && ultima && guardada.sincId === ultima.id) return montar(guardada)
 
-      const [vw, ver, cat, bai] = await Promise.all([
-        lerTudo('vw_servicos', COLUNAS_VW, ['id_colab', 'type', 'data_saida']),
-        lerTudo('vereadores', 'id,nome,foto_url', ['id']),
-        lerTudo('categorias_revisadas', 'id,nome,descricao', ['id']),
-        lerTudo('bairros', 'id,nome,regiao', ['id']),
-      ])
+      let vw, ver, cat, bai
+      try {
+        ;[vw, ver, cat, bai] = await Promise.all([
+          lerTudo('vw_servicos', COLUNAS_VW, ['id_colab', 'type', 'data_saida']),
+          lerTudo('vereadores', 'id,nome,foto_url', ['id']),
+          lerTudo('categorias_revisadas', 'id,nome,descricao', ['id']),
+          lerTudo('bairros', 'id,nome,regiao', ['id']),
+        ])
+      } catch (e) {
+        // a carga nova não veio (tempo esgotado, rede): melhor a carga anterior, avisada no cabeçalho, que "Sem dados"
+        if (guardada) return { ...montar(guardada), copiaAnterior: true }
+        throw e
+      }
       const copia: CopiaPublica = { sincId: ultima?.id ?? null, fim: ultima?.terminada_em ?? null, vw, ver, cat, bai }
       // sem saber a carga (falhou o pedido pequeno), não guarda: não teria como saber se a cópia está velha
       if (ultima) void gravarCache(CHAVE_CACHE, copia)

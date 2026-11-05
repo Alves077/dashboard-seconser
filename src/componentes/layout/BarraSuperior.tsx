@@ -20,6 +20,8 @@ import { usePaginas } from './usePaginas'
 function StatusDados() {
   const { data, isFetching, error, failureCount } = useBase()
   const semDados = !data && !!error && !isFetching
+  // a carga nova não veio e o site mostra a anterior (guardada no navegador); tenta de novo sozinho a cada minuto
+  const anterior = !!data?.copiaAnterior && !isFetching
   const impossiveis = data?.datasImpossiveis ?? []
   const { modo } = useSessao()
   const recarregar = useRecarregar()
@@ -42,7 +44,9 @@ function StatusDados() {
         aria-label={
           semDados
             ? 'Não foi possível carregar os dados. Ver detalhes e tentar de novo'
-            : em
+            : anterior
+              ? `A atualização falhou; mostrando os dados de ${curto}. Ver detalhes e tentar de novo`
+              : em
               ? `Dados de ${curto}${velho ? `, há ${dias} dias` : ''}. Ver detalhes e atualizar`
               : 'Status dos dados'
         }
@@ -50,14 +54,14 @@ function StatusDados() {
           'pressionavel inline-flex h-9 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap',
           semDados
             ? 'bg-atraso/12 text-atraso-texto hover:bg-atraso/20'
-            : velho
+            : velho || anterior
               ? 'bg-andamento/15 text-andamento-texto hover:bg-andamento/25'
               : 'text-ink-2 hover:bg-realce-forte hover:text-ink',
         )}
       >
         {isFetching ? (
           <RefreshCw aria-hidden className="size-3.5 animate-spin motion-reduce:animate-none" />
-        ) : semDados ? (
+        ) : semDados || anterior ? (
           <CloudOff aria-hidden className="size-3.5" />
         ) : velho ? (
           <History aria-hidden className="size-3.5" />
@@ -69,6 +73,8 @@ function StatusDados() {
           <span className="hidden sm:inline">{failureCount > 0 ? 'Tentando de novo…' : 'Atualizando…'}</span>
         ) : semDados ? (
           <span className="hidden sm:inline">Sem dados</span>
+        ) : anterior ? (
+          <span className="hidden sm:inline">Não atualizou</span>
         ) : velho ? (
           // abaixo de 375 px só o ícone âmbar (o texto empurrava o cabeçalho para fora da tela — logado, em 360 px, com o
           // botão da conta; o aviso continua no aria-label e ao tocar)
@@ -86,6 +92,12 @@ function StatusDados() {
             {semDados && (
               <p className="mt-2 rounded-md bg-atraso/10 px-2.5 py-2 text-[13px] text-atraso-texto">
                 Não foi possível carregar os dados agora. Confira a internet e busque de novo.
+              </p>
+            )}
+            {anterior && (
+              <p className="mt-2 rounded-md bg-andamento/10 px-2.5 py-2 text-[13px] text-andamento-texto">
+                A atualização não veio agora (o banco pode estar recebendo uma carga). Mostrando a anterior; o site tenta de
+                novo sozinho a cada minuto.
               </p>
             )}
             <dl className="mt-3 flex flex-col gap-2.5 text-[13px]">

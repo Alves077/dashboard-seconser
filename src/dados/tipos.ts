@@ -77,6 +77,8 @@ export interface Base {
   atualizadoEm: Date | null
   /** saídas/retornos com data no futuro (erro de digitação) que ficaram de fora — "123456 (saída 2062-10-12)" */
   datasImpossiveis: string[]
+  /** a leitura da carga nova falhou e o site mostra a cópia guardada no navegador (de `atualizadoEm`) */
+  copiaAnterior?: boolean
 }
 
 /** Parte restrita (logado com acesso) */
