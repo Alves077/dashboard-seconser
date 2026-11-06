@@ -1048,3 +1048,10 @@ o período do filtro NÃO vale (lista tudo); pública com rua, endereço só com
   Folga do cabeçalho medida com cada texto do selo, 320–1920 px (scratchpad `cabecalho.mjs`).
 - **Workflow:** actions/checkout v7, setup-node v7, upload-pages-artifact v5, deploy-pages v5 (o aviso do Node 20
   ia virar erro); sem `.nojekyll` (o Actions não usa Jekyll e o upload v4+ deixa arquivos com ponto de fora).
+
+## README com imagens (05/11/2026)
+- README refeito com 14 imagens em `docs/img/` (webp, ~1,1 MB): as 7 páginas, ficha, busca, relatório na tela, PDF,
+  celular e tema escuro. **Todas com dados fictícios**: cenário novo `?dados=demo` (src/dev/cenarios.ts) — o volume do
+  `pior` sem os casos de borda, base em dia, sem fotos e com vereadores "Vereador 1…7" (o `pior` usa nomes e fotos de
+  vereadores reais com números inventados: não serve para um repositório público). Para refazer as imagens: scratchpad
+  `readme_fotos.mjs` (Chrome headless) + `pdf_demo.mjs`.

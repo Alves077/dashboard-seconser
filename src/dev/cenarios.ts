@@ -9,12 +9,14 @@
 //   lento  → o pior caso, mas a base demora 4 s (esqueleto × página pronta: a tela pula?)
 //   erro   → a base falha como sem rede ("Failed to fetch")
 //   erro-restrito → a base abre, mas descrição/endereço e fotos falham (Ficha, Relatórios, busca)
+//   demo   → o volume do pior caso SEM os casos de borda, base em dia, vereadores fictícios ("Vereador 1"…) e sem fotos:
+//            para as imagens do README (repositório público — nada de nome real com número inventado)
 // Valores tirados do dado real quando existem (bairros, categorias, vereadores com foto), o resto
 // plausível: nada aqui é dado real de pedido.
 import { diaDe, isoDe, partes, type Dia } from '@/lib/datas'
 import type { Bairro, CategoriaRevisada, Detalhe, Foto, LinhaVw, Vereador } from '@/dados/tipos'
 
-export type Cenario = 'pior' | 'vazio' | 'um' | 'enorme' | 'lento' | 'erro' | 'erro-restrito' | 'vivo'
+export type Cenario = 'pior' | 'vazio' | 'um' | 'enorme' | 'lento' | 'erro' | 'erro-restrito' | 'vivo' | 'demo'
 export const CENARIOS: { id: Cenario | null; rotulo: string }[] = [
   { id: null, rotulo: 'Dados reais' },
   { id: 'pior', rotulo: 'Pior caso' },
@@ -26,6 +28,7 @@ export const CENARIOS: { id: Cenario | null; rotulo: string }[] = [
   { id: 'erro-restrito', rotulo: 'Erro restrito' },
   // a cada consulta (2 em 2 min) há uma carga nova: para ver o site se atualizar sozinho
   { id: 'vivo', rotulo: 'Ao vivo' },
+  { id: 'demo', rotulo: 'Demonstração' },
 ]
 
 export interface DadosCenario {
@@ -79,6 +82,9 @@ const VEREADORES: Vereador[] = [
   { id: 903, nome: 'Dr. Jorge Luiz Fernandes/Jorginho da Saúde Comunitária', fotoUrl: null },
   { id: 904, nome: 'Ítalo Ônix', fotoUrl: null },
 ]
+
+/** demonstração (imagens do README): nomes fictícios, sem foto */
+const VEREADORES_FICTICIOS: Vereador[] = Array.from({ length: 7 }, (_, i) => ({ id: 801 + i, nome: `Vereador ${i + 1}`, fotoUrl: null }))
 
 const ORIGENS: { origem: string; detalhes: (string | null)[]; peso: number }[] = [
   { origem: 'Cidadão', detalhes: [null], peso: 55 },
@@ -182,7 +188,10 @@ const DESCRICAO_LONGA =
   'o poste 5 acende de dia e apaga de noite (fotocélula?); o poste 6 pisca. **Atenção equipe: cão bravo no portão.**'
 
 export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
-  if (cenario === 'lento' || cenario === 'erro' || cenario === 'erro-restrito' || cenario === 'vivo') cenario = 'pior'
+  const vitrine = cenario === 'demo'
+  const desatualizado = cenario === 'pior'
+  if (cenario === 'lento' || cenario === 'erro' || cenario === 'erro-restrito' || cenario === 'vivo' || vitrine) cenario = 'pior'
+  const vereadores = vitrine ? VEREADORES_FICTICIOS : VEREADORES
   const s = sorteador(cenario === 'enorme' ? 77 : 1284)
   const bairros: Bairro[] = REGIOES_BAIRROS.map(([nome, regiao], i) => ({ id: i + 1, nome, regiao }))
   const categorias: CategoriaRevisada[] = CATEGORIAS.map(([nome, descricao], i) => ({ id: i + 1, nome, descricao }))
@@ -206,7 +215,7 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
       lng,
       origem: o.origem,
       origemDetalhe: s.um(o.detalhes),
-      vereador: o.origem === 'Vereador' ? (s.r() < 0.15 ? null : s.um(VEREADORES.slice(0, 7))) : null,
+      vereador: o.origem === 'Vereador' ? (s.r() < 0.15 ? null : s.um(vereadores.slice(0, 7))) : null,
       // poucas ruas por bairro, para a mesma rua repetir (lista de campo por rua, "nesta rua" na ficha)
       rua: s.r() < 0.01 ? null : s.um(RUAS.slice(0, 6)),
       ...(s.r() < 0.03 ? s.um(ESPACOS) : { tipoLocal: null, local: null }),
@@ -247,41 +256,43 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
       novo({ saidas })
     }
 
-    // casos de borda, um de cada (os números ficam em 1 de propósito)
-    novo({ saidas: [[hoje - 912, null]], bairro: null, regiao: null, lat: null, lng: null, categoria: null })
-    novo({ saidas: [[hoje, null]], categoria: 'Caixa de passagem / quadro' })
-    novo({ saidas: [[hoje - 3, hoje - 3]], categoria: 'Caixa de passagem / quadro' })
-    novo({ saidas: [[hoje - 40, null]], bairro: 'Ilha da Conceição', regiao: 'Norte', categoria: 'Serviço especial' })
-    novo({ saidas: [[hoje - 30, hoje - 1]], bairro: BAIRRO_FORA_DA_TABELA, regiao: 'Pendotiba' })
-    for (let i = 0; i < 9; i++) novo({ saidas: [[hoje - s.int(6, 25), null]], bairro: BAIRRO_FORA_DA_TABELA, regiao: 'Pendotiba' })
-    // origens longas dentro dos últimos 30 dias (aparecem no período padrão)
-    const mp = ORIGENS[ORIGENS.length - 1]
-    const assoc = ORIGENS[3]
-    for (let i = 0; i < 2; i++) novo({ saidas: [[hoje - s.int(3, 20), null]], origem: mp.origem, origemDetalhe: mp.detalhes[0] })
-    for (let i = 0; i < 3; i++) novo({ saidas: [[hoje - s.int(3, 20), null]], origem: assoc.origem, origemDetalhe: assoc.detalhes[0] })
-    novo({ saidas: [[hoje - 15, null]], lat: -43.0812, lng: -22.9135 }) // lat/lng trocados na importação
-    for (let i = 0; i < 15; i++) novo({ saidas: [[hoje - s.int(1, 300), s.r() < 0.5 ? null : hoje]], categoria: null })
-    for (let i = 0; i < 6; i++) novo({ saidas: [[hoje - s.int(6, 60), null]], bairro: null, regiao: null })
-    // 60 pedidos no mesmo ponto (mesmo pino de condomínio)
-    for (let i = 0; i < 60; i++)
-      novo({ saidas: [[hoje - s.int(1, 200), s.r() < 0.6 ? null : hoje - 1]], bairro: 'Itaipu', regiao: 'Oceânica', lat: -22.9601, lng: -43.0455 })
-    // datas impossíveis que a sincronização deixa passar (ela só recusa retorno antes da saída): erro de
-    // digitação na planilha — ano trocado (2062, 2016), dia errado (saída daqui a 3 dias), retorno no futuro
-    novo({ saidas: [[diaDe(2062, 9, 12), null]], bairro: 'Icaraí', regiao: 'Praias da Baía', categoria: 'Poste' })
-    novo({ saidas: [[hoje + 3, null]], bairro: 'Fonseca', regiao: 'Norte' })
-    novo({ saidas: [[hoje - 20, hoje + 5]], bairro: 'Centro', regiao: 'Praias da Baía' })
-    novo({ saidas: [[diaDe(2016, 9, 2), null]], bairro: 'Barreto', regiao: 'Norte', categoria: 'Lâmpada apagada' })
-    // vereador com 1 pedido só (e executado), vereador com muitos em aberto, nomes longos
-    novo({ saidas: [[hoje - 25, hoje - 20]], origem: 'Vereador', origemDetalhe: 'Ofício', vereador: VEREADORES[6] })
-    for (let i = 0; i < 40; i++)
-      novo({
-        saidas: [[hoje - s.int(6, 400), null]], origem: 'Vereador',
-        origemDetalhe: i % 3 ? 'Indicação legislativa' : 'Ofício', vereador: VEREADORES[5],
-      })
-    for (let i = 0; i < 12; i++)
-      novo({ saidas: [[hoje - s.int(1, 200), s.r() < 0.5 ? null : hoje]], origem: 'Vereador', origemDetalhe: 'Indicação (Câmara)', vereador: VEREADORES[7] })
-    for (let i = 0; i < 3; i++)
-      novo({ saidas: [[hoje - s.int(10, 90), hoje - 2]], origem: 'Vereador', origemDetalhe: 'Indicação legislativa', vereador: VEREADORES[8] })
+    // casos de borda, um de cada (os números ficam em 1 de propósito) — fora da demonstração
+    if (!vitrine) {
+      novo({ saidas: [[hoje - 912, null]], bairro: null, regiao: null, lat: null, lng: null, categoria: null })
+      novo({ saidas: [[hoje, null]], categoria: 'Caixa de passagem / quadro' })
+      novo({ saidas: [[hoje - 3, hoje - 3]], categoria: 'Caixa de passagem / quadro' })
+      novo({ saidas: [[hoje - 40, null]], bairro: 'Ilha da Conceição', regiao: 'Norte', categoria: 'Serviço especial' })
+      novo({ saidas: [[hoje - 30, hoje - 1]], bairro: BAIRRO_FORA_DA_TABELA, regiao: 'Pendotiba' })
+      for (let i = 0; i < 9; i++) novo({ saidas: [[hoje - s.int(6, 25), null]], bairro: BAIRRO_FORA_DA_TABELA, regiao: 'Pendotiba' })
+      // origens longas dentro dos últimos 30 dias (aparecem no período padrão)
+      const mp = ORIGENS[ORIGENS.length - 1]
+      const assoc = ORIGENS[3]
+      for (let i = 0; i < 2; i++) novo({ saidas: [[hoje - s.int(3, 20), null]], origem: mp.origem, origemDetalhe: mp.detalhes[0] })
+      for (let i = 0; i < 3; i++) novo({ saidas: [[hoje - s.int(3, 20), null]], origem: assoc.origem, origemDetalhe: assoc.detalhes[0] })
+      novo({ saidas: [[hoje - 15, null]], lat: -43.0812, lng: -22.9135 }) // lat/lng trocados na importação
+      for (let i = 0; i < 15; i++) novo({ saidas: [[hoje - s.int(1, 300), s.r() < 0.5 ? null : hoje]], categoria: null })
+      for (let i = 0; i < 6; i++) novo({ saidas: [[hoje - s.int(6, 60), null]], bairro: null, regiao: null })
+      // 60 pedidos no mesmo ponto (mesmo pino de condomínio)
+      for (let i = 0; i < 60; i++)
+        novo({ saidas: [[hoje - s.int(1, 200), s.r() < 0.6 ? null : hoje - 1]], bairro: 'Itaipu', regiao: 'Oceânica', lat: -22.9601, lng: -43.0455 })
+      // datas impossíveis que a sincronização deixa passar (ela só recusa retorno antes da saída): erro de
+      // digitação na planilha — ano trocado (2062, 2016), dia errado (saída daqui a 3 dias), retorno no futuro
+      novo({ saidas: [[diaDe(2062, 9, 12), null]], bairro: 'Icaraí', regiao: 'Praias da Baía', categoria: 'Poste' })
+      novo({ saidas: [[hoje + 3, null]], bairro: 'Fonseca', regiao: 'Norte' })
+      novo({ saidas: [[hoje - 20, hoje + 5]], bairro: 'Centro', regiao: 'Praias da Baía' })
+      novo({ saidas: [[diaDe(2016, 9, 2), null]], bairro: 'Barreto', regiao: 'Norte', categoria: 'Lâmpada apagada' })
+      // vereador com 1 pedido só (e executado), vereador com muitos em aberto, nomes longos
+      novo({ saidas: [[hoje - 25, hoje - 20]], origem: 'Vereador', origemDetalhe: 'Ofício', vereador: VEREADORES[6] })
+      for (let i = 0; i < 40; i++)
+        novo({
+          saidas: [[hoje - s.int(6, 400), null]], origem: 'Vereador',
+          origemDetalhe: i % 3 ? 'Indicação legislativa' : 'Ofício', vereador: VEREADORES[5],
+        })
+      for (let i = 0; i < 12; i++)
+        novo({ saidas: [[hoje - s.int(1, 200), s.r() < 0.5 ? null : hoje]], origem: 'Vereador', origemDetalhe: 'Indicação (Câmara)', vereador: VEREADORES[7] })
+      for (let i = 0; i < 3; i++)
+        novo({ saidas: [[hoje - s.int(10, 90), hoje - 2]], origem: 'Vereador', origemDetalhe: 'Indicação legislativa', vereador: VEREADORES[8] })
+    }
   }
 
   // ── restrito: endereço, descrição, local; fotos ─────────────────────────────
@@ -289,16 +300,16 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
     const chave = `${p.id}-${p.type}`
     const rua = p.rua ?? s.um(RUAS)
     const n = s.int(1, 4000)
-    const longo = i % 97 === 0
+    const longo = !vitrine && i % 97 === 0
     detalhes.set(chave, {
       endereco:
         longo
           ? `Condomínio do Edifício Green Star Residence Club - ${rua}, ${n}, bloco 3, apto 1104 - ${p.bairro ?? 'Niterói'}, Niterói - RJ, 24230-200, Brasil (esquina com Travessa Professora Alice Picanço)`
-          : i % 23 === 1
+          : !vitrine && i % 23 === 1
             ? null
             : `${rua}, ${n} - ${p.bairro ?? 'Niterói'}, Niterói - RJ`,
-      descricao: longo ? DESCRICAO_LONGA : i % 31 === 1 ? null : i % 5 === 0 ? 'Apagada' : `Lâmpada apagada em frente ao nº ${n}.`,
-      local: i % 41 === 0 ? 'Escadaria entre a Rua Professora Maria Luiza Cardoso de Albuquerque e a Travessa Doutor Bittencourt' : null,
+      descricao: longo ? DESCRICAO_LONGA : !vitrine && i % 31 === 1 ? null : i % 5 === 0 ? 'Apagada' : `Lâmpada apagada em frente ao nº ${n}.`,
+      local: !vitrine && i % 41 === 0 ? 'Escadaria entre a Rua Professora Maria Luiza Cardoso de Albuquerque e a Travessa Doutor Bittencourt' : null,
       mudouLogradouro: i % 53 === 0,
     })
     const lista: Foto[] = []
@@ -311,7 +322,7 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
     } else if (i % 3 === 0) {
       lista.push({ url: fotoSvg(900, 1600, 'retrato', '#6b7280'), atualizadoEm: null })
     }
-    if (lista.length) fotos.set(chave, lista)
+    if (lista.length && !vitrine) fotos.set(chave, lista)
   })
 
   const linhas: LinhaVw[] = []
@@ -342,12 +353,12 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
 
   return {
     linhas,
-    vereadores: VEREADORES.map((v) => ({ ...v })),
+    vereadores: vereadores.map((v) => ({ ...v })),
     categorias,
     bairros,
     detalhes,
     fotos,
     // pior: última carga há 3 dias (aparece o aviso de desatualizado)
-    atualizadoEm: new Date(Date.now() - (cenario === 'pior' ? 3.2 : 0) * 86_400_000),
+    atualizadoEm: new Date(Date.now() - (desatualizado ? 3.2 : 0) * 86_400_000),
   }
 }
