@@ -16,11 +16,6 @@ export function ListaCampoFolha({ regioes, detalhes, hoje }: { regioes: RegiaoCa
   if (regioes.length === 0) return <p className="py-10 text-center text-[13px] text-ink-2">Nenhum serviço em aberto com esses filtros.</p>
   return (
     <>
-      <p className="mb-4 text-[10.5px] leading-relaxed text-ink-3">
-        Dias = desde a última saída para a rua (em vermelho, passou dos 5 dias). "2ª ida" embaixo do número = serviço que voltou à rua.
-        <span className="max-sm:hidden print:inline"> Anotar à mão a data de retorno.</span>
-        <span className="print:hidden"> Toque no número do serviço para ver a ficha.</span>
-      </p>
       {regioes.map((reg, i) => (
         <section key={reg.nome} className={i > 0 ? 'quebra-pagina mt-8 print:mt-0' : undefined}>
           <h3 className="flex items-baseline justify-between gap-3 border-b border-ink pb-1 text-[15px] font-semibold text-ink">

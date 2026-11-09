@@ -18,13 +18,6 @@ export function desenharCampo(f: Folha, regioes: RegiaoCampo[], detalhes: Map<st
     f.paragrafo('Nenhum serviço em aberto com esses filtros.', x, w, { tam: 13, cor: COR.ink2, alinhar: 'centro' })
     return
   }
-  f.paragrafo('Dias = desde a última saída para a rua (em vermelho, passou dos 5 dias). "2ª ida" embaixo do número = serviço que voltou à rua. Anotar à mão a data de retorno.', x, w, {
-    tam: 10.5,
-    lh: 1.625,
-    cor: COR.ink3,
-  })
-  f.y += 16
-
   const colunas: Coluna[] = [
     { titulo: 'Serviço', fracao: 0.14, quebra: true },
     { titulo: 'Categoria', esq: true, quebra: true, ...(detalhes ? { fracao: 0.2 } : { fracao: 0.42 }) },
