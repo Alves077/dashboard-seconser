@@ -87,6 +87,9 @@ export interface Detalhe {
   endereco: string | null
   local: string | null
   mudouLogradouro: boolean
+  /** pino exato: restrito desde 11/11/2026 (aponta a casa de quem pediu); entra no Servico por comPinos (montar.ts) */
+  lat: number | null
+  lng: number | null
 }
 
 export interface Foto {
@@ -106,8 +109,9 @@ export interface LinhaVw {
   data_retorno: string | null
   reaberto: boolean | number | string | null
   resolvido_por_led: boolean | number | string | null
-  lat: number | string | null
-  lng: number | string | null
+  /** só no retrato CSV local; no Supabase o pino vem do restrito (servicos_detalhe) */
+  lat?: number | string | null
+  lng?: number | string | null
   origem: string | null
   origem_detalhe: string | null
   vereador_id: number | string | null

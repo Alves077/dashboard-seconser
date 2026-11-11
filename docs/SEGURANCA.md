@@ -29,6 +29,7 @@ só com a chave pública (a que qualquer visitante tem, embutida no site); inspe
 | Rota aberta direto | O que aparece | Pedidos ao restrito |
 |---|---|---|
 | `#/relatorios` (mensal, em aberto, lista de campo) | "Relatórios são para a equipe da DIP" + Entrar; some do menu | nenhum |
+| `#/mapa` (desde 11/11/2026: o pino é restrito) | "O mapa é para a equipe da DIP" + Entrar; some do menu | nenhum |
 | `#/?servico=…` e `#/mapa?servico=…` (Ficha) | parte pública; no lugar de descrição/endereço/fotos, "Restrito · Entrar para ver" | nenhum |
 | rota inexistente | "Em construção" | nenhum |
 
@@ -54,9 +55,12 @@ vezes recarrega uma vez (o Vite preparando o Leaflet sob demanda) — no build d
 2. **URLs de redirecionamento do login** (*Authentication → URL Configuration*): deixar só o endereço do site
    publicado (e `http://localhost:5173` enquanto houver desenvolvimento). Evita link de "nova senha" apontando para
    outro site.
-3. **Privacidade dos pinos:** a posição do pino é pública (já era no site antigo) e, em pedido de cidadão, cai na porta
-   de quem pediu — o endereço em texto continua restrito. Se a Dayse/TI preferir, dá para arredondar as coordenadas na
-   camada pública (ex.: 3 casas ≈ 100 m) e manter a exata só no restrito.
+3. **Privacidade dos pinos — FEITO em 11/11/2026:** o pino (lat/lng) saiu da camada pública e foi para o
+   `servicos_detalhe` (mesma regra da descrição e do endereço). A `vw_servicos` manteve as colunas `lat`/`lng` sempre
+   vazias só para o site anterior não quebrar até o novo subir; depois, a limpeza tira as duas colunas
+   (`nuvem/migracoes/2026-11-11b_pinos_limpa_view.sql`, no projeto de dados). No site: o Mapa virou página da equipe
+   (como Relatórios e Serviços), a Ficha só mostra o mini-mapa para quem tem acesso, e a cópia no navegador
+   (IndexedDB) guarda uma cópia só — gravar a nova apaga as antigas, que ainda tinham o pino.
 4. **Cabeçalhos de segurança:** o GitHub Pages não deixa configurar CSP/anti-iframe; dá para pôr uma CSP por `<meta>`
    como camada extra (precisa liberar o script do tema, o OpenStreetMap e o Supabase). Opcional.
 5. Repetir esta auditoria (o `get_advisors` de segurança do Supabase e os testes de fora) depois de qualquer mudança

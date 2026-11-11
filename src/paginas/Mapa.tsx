@@ -7,6 +7,7 @@ import { ChevronRight, MapPinOff, Zap } from 'lucide-react'
 import { lazy, Suspense, useCallback, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useSearchParams } from 'react-router'
 import { EstadoErro, EstadoVazio, Esqueleto } from '@/componentes/estados/Estados'
+import { PaginaRestrita } from '@/componentes/layout/PaginaRestrita'
 import { Card } from '@/componentes/ui/Card'
 import { SeloSituacao } from '@/componentes/ui/SeloSituacao'
 import { calcularMapa, OPCOES_MOSTRAR, type Contagem, type DadosMapa, type Mostrar } from '@/calculos/mapa'
@@ -245,7 +246,21 @@ function Painel({ d, mostrar }: { d: DadosMapa; mostrar: Mostrar }) {
   )
 }
 
+/** Mapa é da equipe da DIP desde 11/11/2026: o pino exato é restrito, como o endereço (PaginaRestrita) */
 export function Mapa() {
+  return (
+    <PaginaRestrita
+      nome="Mapa"
+      titulo="O mapa é para a equipe da DIP"
+      texto="Entre com a sua conta para ver os serviços no mapa. O ponto exato de cada pedido fica só com a equipe, como o endereço."
+      tituloErro="Não foi possível abrir o mapa"
+    >
+      <PaginaMapa />
+    </PaginaRestrita>
+  )
+}
+
+function PaginaMapa() {
   const { data: base, isLoading, error, refetch } = useBase()
   const { filtros, limpar, mudar } = useFiltros()
   const { chave: selecionado, abrir } = useFicha()

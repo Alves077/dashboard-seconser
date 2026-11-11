@@ -1,16 +1,27 @@
 // Ganchos de dados (TanStack Query): carregam uma vez, guardam em cache e expõem
 // carregando/erro para os estados de skeleton e erro.
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { toast } from 'sonner'
 import { fonte, SemAcesso } from './fonte'
+import { comPinos } from './montar'
 import { useSessao } from './sessao'
 
 const MEIA_HORA = 30 * 60 * 1000
 const DOIS_MINUTOS = 2 * 60 * 1000
 
-/** Tudo o que é público (serviços, saídas, referências). Uma requisição grande, depois tudo no navegador. */
+/**
+ * Tudo o que é público (serviços, saídas, referências). Uma requisição grande, depois tudo no navegador.
+ * Para quem tem acesso ao restrito, os serviços já vêm com o pino (lat/lng é restrito desde 11/11/2026: comPinos).
+ */
 export function useBase() {
+  const q = useBaseSemPinos()
+  const { data: detalhes } = useDetalhes()
+  const data = useMemo(() => (q.data ? comPinos(q.data, detalhes) : q.data), [q.data, detalhes])
+  return { ...q, data }
+}
+
+function useBaseSemPinos() {
   return useQuery({
     queryKey: ['base'],
     queryFn: () => fonte.carregarBase(),

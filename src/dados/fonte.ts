@@ -148,7 +148,8 @@ async function lerTudo(tabela: string, colunas: string, ordem: string[]): Promis
 
 const COLUNAS_VW =
   'id_colab,type,categoria,categoria_revisada,bairro,regiao,data_saida,data_retorno,reaberto,' +
-  'resolvido_por_led,lat,lng,origem,origem_detalhe,vereador_id,vereador,tipo_local,local,logradouro_norm'
+  'resolvido_por_led,origem,origem_detalhe,vereador_id,vereador,tipo_local,local,logradouro_norm'
+// sem lat/lng desde 11/11/2026: o pino é restrito (servicos_detalhe; ver comPinos em montar.ts)
 
 /** Cópia da parte pública guardada no navegador, marcada com a carga de que veio */
 interface CopiaPublica {
@@ -219,7 +220,7 @@ function fonteSupabase(): Fonte {
       try {
         const linhas = await lerTudo(
           'servicos_detalhe',
-          'id_colab,type,descricao,endereco,local,endereco_mudou_logradouro',
+          'id_colab,type,descricao,endereco,local,endereco_mudou_logradouro,lat,lng',
           ['id_colab', 'type'],
         )
         // logado mas fora da lista de acessos: o RLS devolve 0 linhas (não erro)

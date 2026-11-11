@@ -4,7 +4,8 @@ import { FileText, Gauge, Landmark, List, Map, Timer, TrendingUp, type LucideIco
 // restrita = só aparece no menu para quem tem acesso à parte restrita (usePaginas)
 export const PAGINAS: { caminho: string; nome: string; pergunta: string; icone: LucideIcon; restrita?: boolean }[] = [
   { caminho: '/', nome: 'Panorama', pergunta: 'Como estamos agora?', icone: Gauge },
-  { caminho: '/mapa', nome: 'Mapa', pergunta: 'Onde está o problema?', icone: Map },
+  // só a equipe desde 11/11/2026: o pino exato aponta a casa de quem pediu (restrito, como o endereço)
+  { caminho: '/mapa', nome: 'Mapa', pergunta: 'Onde está o problema?', icone: Map, restrita: true },
   { caminho: '/prazo', nome: 'Prazo', pergunta: 'Estamos atendendo bem?', icone: Timer },
   { caminho: '/evolucao', nome: 'Evolução', pergunta: 'Está melhorando ou piorando?', icone: TrendingUp },
   { caminho: '/vereadores', nome: 'Vereadores', pergunta: 'O que os vereadores pediram?', icone: Landmark },

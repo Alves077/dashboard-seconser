@@ -1,6 +1,6 @@
 import { compararTexto } from '@/lib/formato'
 import { diaDeIso, hoje } from '@/lib/datas'
-import type { Base, Bairro, CategoriaRevisada, LinhaVw, Saida, Servico, Tipo, Vereador } from './tipos'
+import type { Base, Bairro, CategoriaRevisada, Detalhe, LinhaVw, Saida, Servico, Tipo, Vereador } from './tipos'
 
 const txt = (v: unknown): string | null => {
   if (v === null || v === undefined) return null
@@ -130,9 +130,39 @@ export const lerBairro = (r: Record<string, unknown>): Bairro => ({
   nome: txt(r.nome) ?? '',
   regiao: txt(r.regiao) ?? '',
 })
-export const lerDetalhe = (r: Record<string, unknown>) => ({
+export const lerDetalhe = (r: Record<string, unknown>): Detalhe => ({
   descricao: txt(r.descricao),
   endereco: txt(r.endereco),
   local: txt(r.local),
   mudouLogradouro: bool(r.endereco_mudou_logradouro),
+  lat: num(r.lat),
+  lng: num(r.lng),
 })
+
+// uma cópia com pinos por (base, detalhes): todas as telas recebem o mesmo objeto (serviço e saída se apontam)
+const comPinosFeitos = new WeakMap<Base, { detalhes: Map<string, Detalhe>; base: Base }>()
+
+/**
+ * Pino exato é restrito (11/11/2026: aponta a casa de quem pediu — vai junto da descrição e do endereço, no
+ * servicos_detalhe). A base pública chega sem pino; para quem tem acesso, os serviços ganham lat/lng do restrito.
+ * Cópia nova (serviços e saídas), nunca mexe na base pública: ela é a que fica no cache do navegador e serve a
+ * quem sai da conta. Sem detalhes (não logado, sem acesso, ainda carregando) = a base como veio, sem pinos.
+ */
+export function comPinos(base: Base, detalhes: Map<string, Detalhe> | undefined): Base {
+  if (!detalhes) return base
+  const feito = comPinosFeitos.get(base)
+  if (feito?.detalhes === detalhes) return feito.base
+  const porChave = new Map<string, Servico>()
+  const servicos = base.servicos.map((s) => {
+    const d = detalhes.get(s.chave)
+    const novo: Servico = { ...s, lat: d?.lat ?? null, lng: d?.lng ?? null, saidas: [] }
+    porChave.set(s.chave, novo)
+    return novo
+  })
+  const saidas = base.saidas.map((x) => ({ ...x, servico: porChave.get(x.servico.chave)! }))
+  for (const x of saidas) x.servico.saidas.push(x)
+  for (const s of servicos) s.saidas.sort((a, b) => a.ordem - b.ordem)
+  const nova: Base = { ...base, servicos, saidas, porChave }
+  comPinosFeitos.set(base, { detalhes, base: nova })
+  return nova
+}

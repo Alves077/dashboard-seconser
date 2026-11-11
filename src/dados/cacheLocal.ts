@@ -1,7 +1,8 @@
 // Guarda a última cópia da parte PÚBLICA no navegador (IndexedDB), para o site abrir na hora nas próximas visitas.
 // Os dados só mudam uma vez por dia (sincronização do trabalho): ao abrir, um pedido pequeno pergunta qual é a
 // última carga; se for a mesma da cópia guardada, usa a cópia — senão baixa tudo de novo e guarda.
-// Nunca guarda o restrito (descrição, endereço, fotos): esse fica só na memória da aba (ver docs/SEGURANCA.md).
+// Nunca guarda o restrito (descrição, endereço, pino, fotos): esse fica só na memória da aba (ver docs/SEGURANCA.md).
+// Guarda uma cópia só: gravar apaga as outras (11/11/2026: as cópias de antes guardavam o pino, que virou restrito).
 // Qualquer falha (navegação privada, armazenamento cheio, bloqueado) = segue sem cache, como antes.
 
 const BANCO = 'dip-iluminacao'
@@ -34,7 +35,9 @@ export async function gravarCache(chave: string, valor: unknown): Promise<void> 
     const db = await abrir()
     await new Promise<void>((ok) => {
       const tx = db.transaction(LOJA, 'readwrite')
-      tx.objectStore(LOJA).put(valor, chave)
+      const loja = tx.objectStore(LOJA)
+      loja.clear()
+      loja.put(valor, chave)
       tx.oncomplete = () => ok()
       tx.onerror = () => ok()
       tx.onabort = () => ok()

@@ -311,6 +311,8 @@ export function gerarCenario(cenario: Cenario, hoje: Dia): DadosCenario {
       descricao: longo ? DESCRICAO_LONGA : !vitrine && i % 31 === 1 ? null : i % 5 === 0 ? 'Apagada' : `Lâmpada apagada em frente ao nº ${n}.`,
       local: !vitrine && i % 41 === 0 ? 'Escadaria entre a Rua Professora Maria Luiza Cardoso de Albuquerque e a Travessa Doutor Bittencourt' : null,
       mudouLogradouro: i % 53 === 0,
+      lat: p.lat,
+      lng: p.lng,
     })
     const lista: Foto[] = []
     if (i === 0) {
