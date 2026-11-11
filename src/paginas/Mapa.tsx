@@ -251,8 +251,8 @@ export function Mapa() {
   return (
     <PaginaRestrita
       nome="Mapa"
-      titulo="O mapa é para a equipe da DIP"
-      texto="Entre com a sua conta para ver os serviços no mapa. O ponto exato de cada pedido fica só com a equipe, como o endereço."
+      titulo="Parte restrita"
+      texto="Entre com a sua conta para ver os serviços no mapa."
       tituloErro="Não foi possível abrir o mapa"
     >
       <PaginaMapa />

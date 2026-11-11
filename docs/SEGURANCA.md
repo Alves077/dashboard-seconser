@@ -28,8 +28,7 @@ só com a chave pública (a que qualquer visitante tem, embutida no site); inspe
 
 | Rota aberta direto | O que aparece | Pedidos ao restrito |
 |---|---|---|
-| `#/relatorios` (mensal, em aberto, lista de campo) | "Relatórios são para a equipe da DIP" + Entrar; some do menu | nenhum |
-| `#/mapa` (desde 11/11/2026: o pino é restrito) | "O mapa é para a equipe da DIP" + Entrar; some do menu | nenhum |
+| `#/relatorios`, `#/servicos` e `#/mapa` (o Mapa desde 11/11/2026: o pino é restrito) | "Parte restrita" + Entrar; no menu do computador com cadeado, no do celular some | nenhum |
 | `#/?servico=…` e `#/mapa?servico=…` (Ficha) | parte pública; no lugar de descrição/endereço/fotos, "Restrito · Entrar para ver" | nenhum |
 | rota inexistente | "Em construção" | nenhum |
 

@@ -1,7 +1,8 @@
 import { FileText, Gauge, Landmark, List, Map, Timer, TrendingUp, type LucideIcon } from 'lucide-react'
 
 // Páginas pela pergunta de quem usa (docs/PLANO_V2.md §3)
-// restrita = só aparece no menu para quem tem acesso à parte restrita (usePaginas)
+// restrita = só a equipe: no computador aparece com cadeado para quem não tem acesso (usePaginasMenu, depois das
+// públicas); na navegação de baixo do celular, só para quem tem acesso (usePaginas)
 export const PAGINAS: { caminho: string; nome: string; pergunta: string; icone: LucideIcon; restrita?: boolean }[] = [
   { caminho: '/', nome: 'Panorama', pergunta: 'Como estamos agora?', icone: Gauge },
   // só a equipe desde 11/11/2026: o pino exato aponta a casa de quem pediu (restrito, como o endereço)

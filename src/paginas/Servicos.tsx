@@ -191,7 +191,7 @@ export function Servicos() {
   return (
     <PaginaRestrita
       nome="Serviços"
-      titulo="A lista de serviços é para a equipe da DIP"
+      titulo="Parte restrita"
       texto="Entre com a sua conta para ver todos os serviços, em aberto e executados, com o endereço."
       tituloErro="Não foi possível abrir a lista de serviços"
     >

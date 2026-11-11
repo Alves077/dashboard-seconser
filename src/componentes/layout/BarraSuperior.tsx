@@ -1,8 +1,8 @@
 import { Menu } from '@base-ui/react/menu'
 import { Popover } from '@base-ui/react/popover'
 import { clsx } from 'clsx'
-import { CloudOff, Database, History, LogIn, Moon, RefreshCw, Search, Sun, UserRound } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { CloudOff, Database, History, Lock, LogIn, Moon, RefreshCw, Search, Sun, UserRound } from 'lucide-react'
+import { Fragment, useEffect, useState } from 'react'
 import { DIAS_PARA_DESATUALIZADO } from '@/config'
 import { NavLink } from 'react-router'
 import { Botao } from '@/componentes/ui/Botao'
@@ -10,7 +10,7 @@ import { useBase, useDetalhes, useRecarregar } from '@/dados/consultas'
 import { useSessao } from '@/dados/sessao'
 import { useDestino, useTema } from '@/lib/ganchos'
 import { useInterface } from './interface'
-import { usePaginas } from './usePaginas'
+import { usePaginasMenu } from './usePaginas'
 
 /**
  * Status dos dados num botão só (data · fonte · atualizar), para o cabeçalho ter espaço para crescer.
@@ -200,13 +200,16 @@ export function BarraSuperior() {
   const { tema, alternar } = useTema()
   const { setBuscaAberta } = useInterface()
   const destino = useDestino()
-  const paginas = usePaginas()
+  const paginas = usePaginasMenu()
 
   return (
     <header className="fixo-na-troca sticky top-0 z-30 border-b border-line bg-card/90 pt-[env(safe-area-inset-top,0px)] backdrop-blur-md print:hidden">
       {/* computador: 64 px — em tela cheia (F11), sem a barra do navegador, 56 px deixava o logo colado na borda */}
-      <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-4 sm:px-6 lg:h-16">
-        <NavLink to={destino('/')} className="flex min-w-0 shrink-0 items-center gap-2.5" aria-label="Início — Panorama">
+      {/* computador: 3 colunas — logo | menu no centro | ações (11/11/2026: o menu à esquerda deixava um vazio até a busca).
+          As laterais são 1fr com mínimo do próprio conteúdo: entre 1024 e 1280 px o menu sai um pouco do centro, mas não
+          passa por cima de nada */}
+      <div className="mx-auto flex h-14 max-w-[1280px] items-center gap-3 px-4 sm:px-6 lg:grid lg:h-16 lg:grid-cols-[1fr_auto_1fr]">
+        <NavLink to={destino('/')} className="flex min-w-0 shrink-0 items-center gap-2.5 justify-self-start" aria-label="Início — Panorama">
           <img src={`${import.meta.env.BASE_URL}img/logo-seconser.png`} alt="" className="h-8 w-auto" />
           {/* entre 1024 e 1280 px o menu inteiro + o nome + os botões passavam ~50 px da tela: ali, só o logo */}
           <span className="hidden min-w-0 leading-tight sm:block lg:hidden xl:block">
@@ -215,40 +218,50 @@ export function BarraSuperior() {
           </span>
         </NavLink>
 
-        <nav aria-label="Páginas" className="ml-1 hidden items-center gap-0.5 lg:flex xl:ml-4 xl:gap-1">
-          {paginas.map((p) => (
-            <NavLink
-              key={p.caminho}
-              to={destino(p.caminho)}
-              end={p.caminho === '/'}
-              title={p.pergunta}
-              className={({ isActive }) =>
-                clsx(
-                  // entre 1024 e 1280 px, com 7 páginas, itens mais juntos (px-2.5) para tudo caber na barra
-                  'relative flex h-16 items-center px-2.5 text-[13px] font-medium transition-colors duration-150 xl:px-3',
-                  isActive
-                    ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-acao'
-                    : 'text-ink-2 hover:text-ink',
-                )
-              }
-            >
-              {p.nome}
-            </NavLink>
+        <nav aria-label="Páginas" className="hidden items-center gap-0.5 lg:flex xl:gap-1">
+          {paginas.map((p, i) => (
+            <Fragment key={p.caminho}>
+              {/* traço entre as públicas e as da equipe */}
+              {p.restrita && !paginas[i - 1]?.restrita && <span aria-hidden className="mx-1 h-4 w-px bg-line xl:mx-1.5" />}
+              <NavLink
+                to={destino(p.caminho)}
+                end={p.caminho === '/'}
+                title={p.bloqueada ? `${p.pergunta} — parte restrita: entre com a sua conta` : p.pergunta}
+                aria-label={p.bloqueada ? `${p.nome} (parte restrita, precisa entrar)` : undefined}
+                className={({ isActive }) =>
+                  clsx(
+                    // entre 1024 e 1280 px, com 7 páginas, itens mais juntos (px-2.5) para tudo caber na barra
+                    'relative flex h-16 items-center gap-1 px-2.5 text-[13px] font-medium transition-colors duration-150 xl:px-3',
+                    isActive
+                      ? 'text-ink after:absolute after:inset-x-3 after:bottom-0 after:h-0.5 after:rounded-full after:bg-acao'
+                      : p.bloqueada
+                        ? 'text-ink-3 hover:text-ink-2'
+                        : 'text-ink-2 hover:text-ink',
+                  )
+                }
+              >
+                {p.bloqueada && <Lock aria-hidden className="size-3" />}
+                {p.nome}
+              </NavLink>
+            </Fragment>
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-1">
+        <div className="ml-auto flex items-center gap-1 justify-self-end">
           <button
             type="button"
             onClick={() => setBuscaAberta(true)}
             data-gatilho-busca
             className="pressionavel mr-1 flex h-9 items-center gap-2 rounded-full border border-line bg-page px-3 text-[13px] text-ink-3 hover:border-acao/40 hover:text-ink-2 max-sm:w-9 max-sm:justify-center max-sm:px-0 lg:max-xl:w-9 lg:max-xl:justify-center lg:max-xl:px-0"
             aria-label="Buscar serviço, bairro ou endereço"
+            title="Buscar (atalho: /)"
           >
             <Search aria-hidden className="size-4" />
             {/* entre 1024 e 1280 px só a lupa: o menu inteiro ocupa a barra */}
             <span className="hidden sm:inline lg:hidden xl:inline">Buscar</span>
-            <kbd className="ml-3 hidden rounded border border-line px-1.5 font-sans text-[11px] text-ink-3 md:inline lg:hidden xl:inline">/</kbd>
+            {/* a tecla "/" só no tablet: no computador, com o menu no centro (11/11/2026), ela tirava o menu do meio — o
+                atalho continua valendo e aparece na dica do botão */}
+            <kbd className="ml-3 hidden rounded border border-line px-1.5 font-sans text-[11px] text-ink-3 md:inline lg:hidden">/</kbd>
           </button>
           <StatusDados />
           <Botao

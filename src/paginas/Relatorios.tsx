@@ -133,7 +133,7 @@ export function Relatorios() {
   return (
     <PaginaRestrita
       nome="Relatórios"
-      titulo="Relatórios são para a equipe da DIP"
+      titulo="Parte restrita"
       texto="Entre com a sua conta para imprimir o relatório mensal, os serviços em aberto, os executados e a lista de campo."
       tituloErro="Não foi possível abrir os relatórios"
     >

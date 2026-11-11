@@ -8,7 +8,8 @@ import { useSessao } from '@/dados/sessao'
 import { useInterface } from './interface'
 
 /**
- * Página só da equipe da DIP (com acesso à parte restrita): Relatórios e Serviços. O menu já a esconde (usePaginas);
+ * Página só da equipe da DIP (com acesso à parte restrita): Mapa, Relatórios e Serviços. No computador o menu a mostra com
+ * cadeado (usePaginasMenu); no celular a esconde (usePaginas);
  * quem chega pelo link vê o título com o botão de entrar, e depois de entrar a página aparece sozinha (o acesso muda
  * e o componente redesenha).
  */
