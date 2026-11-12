@@ -17,8 +17,8 @@ const classeItem = (ativo: boolean) =>
   )
 
 // Celular/tablet: navegação embaixo, ao alcance do polegar (uso na rua, com uma mão). Até 5 destinos (usuário, 24/10/2026:
-// com 7 ícones de ~51 px e nome em 10 px ficava apertado): sem login são 5 (Panorama, Mapa, Prazo, Evolução,
-// Vereadores); a equipe tem Panorama, Mapa, Serviços, Relatórios e "Mais" (Prazo, Evolução, Vereadores). Numa página do
+// com 7 ícones de ~51 px e nome em 10 px ficava apertado): sem login são 4 (Panorama, Prazo, Evolução, Vereadores — o
+// Mapa é da equipe desde 11/11/2026); a equipe tem Panorama, Mapa, Serviços, Relatórios e "Mais" (Prazo, Evolução, Vereadores). Numa página do
 // "Mais", ele fica marcado e mostra o nome dela — para saber onde se está.
 export function NavInferior() {
   const destino = useDestino()

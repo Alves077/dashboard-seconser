@@ -15,6 +15,7 @@ import { FotoVereador } from '@/componentes/ui/FotoVereador'
 import { SeloRisco, SeloSituacao } from '@/componentes/ui/SeloSituacao'
 import { ehIndicacao, type ContaNome, type PerfilVereador } from '@/calculos/vereadores'
 import { CATEGORIA_RISCO, SEM_VEREADOR, situacao } from '@/dados/regras'
+import { useDetalhes } from '@/dados/consultas'
 import { useFiltros } from '@/filtros/useFiltros'
 import { corRegiao } from '@/lib/cores'
 import { chaveMes, formatarDia, rotuloMes, rotuloMesLongo } from '@/lib/datas'
@@ -268,6 +269,7 @@ function EmAberto({ p }: { p: PerfilVereador }) {
 export function Perfil({ p, quem, aoVoltar }: { p: PerfilVereador; quem: string; aoVoltar: () => void }) {
   const { filtros, mudar } = useFiltros()
   const destino = useDestino()
+  const { acesso } = useDetalhes()
   const semNome = quem === SEM_VEREADOR
   return (
     <div className="flex flex-col gap-4">
@@ -294,10 +296,13 @@ export function Perfil({ p, quem, aoVoltar }: { p: PerfilVereador; quem: string;
                 : `${plural(p.total, 'pedido', 'pedidos')} desde ${p.primeiroPedido !== null ? rotuloMes(chaveMes(p.primeiroPedido)) : 'o início'}`}
           </p>
         </div>
-        <Link to={destino('/mapa')} className={clsx(estiloBotao({ variante: 'secundario', tamanho: 'compacto' }), 'max-sm:w-full')}>
-          <IconeMapa aria-hidden className="size-4" />
-          Ver no mapa
-        </Link>
+        {/* o Mapa é da equipe (11/11/2026: o pino é restrito): sem acesso, o botão levaria à tela de "Parte restrita" */}
+        {acesso !== false && (
+          <Link to={destino('/mapa')} className={clsx(estiloBotao({ variante: 'secundario', tamanho: 'compacto' }), 'max-sm:w-full')}>
+            <IconeMapa aria-hidden className="size-4" />
+            Ver no mapa
+          </Link>
+        )}
       </Card>
 
       {/* linhas de 1px entre os números: o fundo da grade aparece pelos vãos */}

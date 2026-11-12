@@ -18,10 +18,10 @@ Cada página responde a uma pergunta de quem usa:
 | Página | Pergunta | O que mostra |
 |---|---|---|
 | **Panorama** | Como estamos agora? | fila de hoje por tempo de espera, saídas e execuções do período, movimento da fila, regiões, categorias, bairros e quem pede |
-| **Mapa** | Onde está o problema? | um pino por serviço (abertos por padrão), painel por região e bairro |
 | **Prazo** | Estamos atendendo bem? | % no prazo de 5 dias, tempo até a execução, atraso de agora, reaberturas |
 | **Evolução** | Está melhorando ou piorando? | saídas × execuções com a fila, tempo e prazo mês a mês, categorias |
 | **Vereadores** | O que os vereadores pediram? | pedidos por vereador, situação e perfil de cada um |
+| **Mapa** 🔒 | Onde está o problema? | um pino por serviço (abertos por padrão), painel por região e bairro |
 | **Serviços** 🔒 | Onde está tal serviço? | todos os serviços, de qualquer data, com busca, situação, ordem por coluna e páginas de 50 |
 | **Relatórios** 🔒 | O que levo para a reunião ou para a rua? | Mensal (mês, ano ou histórico), Em aberto, Executados e Lista de campo, na tela e em PDF A4 |
 
@@ -41,7 +41,7 @@ Cada página responde a uma pergunta de quem usa:
     <td><img src="docs/img/relatorio-executados.webp" alt="Relatório de serviços executados na tela"><br><sub><b>Relatórios</b> 🔒 — Executados: indicadores, tempo até a execução e distribuição</sub></td>
   </tr>
   <tr>
-    <td><img src="docs/img/ficha.webp" alt="Ficha de um serviço aberta ao lado do Panorama"><br><sub><b>Ficha do serviço</b> — histórico de saídas, mapa e "perto daqui"; descrição e endereço só com acesso</sub></td>
+    <td><img src="docs/img/ficha.webp" alt="Ficha de um serviço aberta ao lado do Panorama"><br><sub><b>Ficha do serviço</b> — histórico de saídas e "perto daqui"; mapa, descrição e endereço só com acesso</sub></td>
     <td><img src="docs/img/busca.webp" alt="Busca rápida com resultados por endereço e situação"><br><sub><b>Busca rápida</b> (tecla <code>/</code>) — número, rua ou endereço, com a situação de cada um</sub></td>
   </tr>
 </table>
@@ -73,7 +73,7 @@ Cada página responde a uma pergunta de quem usa:
 Colab → banco da SECONSER (MySQL) → tratamento → sincronização (a cada 30 min no horário de trabalho) → Supabase → este site
 ```
 
-O site lê do Supabase a camada pública (sem dados pessoais). A parte restrita (descrição, endereço, fotos) exige login
+O site lê do Supabase a camada pública (sem dados pessoais). A parte restrita (descrição, endereço, pino no mapa, fotos) exige login
 e é protegida por regras de acesso no próprio banco (RLS) — ver `docs/SEGURANCA.md`. A coleta e o tratamento ficam em
 outro repositório; dado real nunca entra neste.
 
