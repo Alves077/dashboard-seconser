@@ -205,15 +205,35 @@ function Pinos({
   const jaPosicionou = useRef(false)
   // enquadramento que não pôde ser feito porque o mapa estava sem tamanho (ver enquadrar)
   const enquadrePendente = useRef<(() => boolean) | null>(null)
+  // último enquadramento automático, refeito se o mapa mudar de tamanho antes de a pessoa mexer nele
+  const ultimoEnquadre = useRef<(() => boolean) | null>(null)
 
-  // o espaço do mapa muda (altura medida da página, painel, rotação do celular): o Leaflet precisa saber
+  // o espaço do mapa muda (altura medida da página, painel, rotação do celular): o Leaflet precisa saber.
+  // 23/11/2026: com "Todo o período" a altura da área do mapa só fica certa DEPOIS do 1º enquadramento; o
+  // invalidateSize mantém o canto de cima fixo e o centro escorregava (abria em São Gonçalo, só o "Ver todos"
+  // acertava). Enquanto ninguém mexeu no mapa, o enquadramento automático é refeito no tamanho novo.
   useEffect(() => {
     const obs = new ResizeObserver(() => {
       map.invalidateSize({ pan: false })
-      if (enquadrePendente.current?.()) enquadrePendente.current = null
+      if (enquadrePendente.current) {
+        if (enquadrePendente.current()) enquadrePendente.current = null
+      } else ultimoEnquadre.current?.()
     })
     obs.observe(map.getContainer())
-    return () => obs.disconnect()
+    // a pessoa mexeu (arrastar, roda do mouse, teclado, +/−): o tamanho novo não muda mais a vista dela
+    const mexeu = () => {
+      ultimoEnquadre.current = null
+    }
+    const caixa = map.getContainer()
+    caixa.addEventListener('pointerdown', mexeu)
+    caixa.addEventListener('wheel', mexeu, { passive: true })
+    caixa.addEventListener('keydown', mexeu)
+    return () => {
+      obs.disconnect()
+      caixa.removeEventListener('pointerdown', mexeu)
+      caixa.removeEventListener('wheel', mexeu)
+      caixa.removeEventListener('keydown', mexeu)
+    }
   }, [map])
 
   // pinos (refaz quando os pontos ou o tema mudam — as cores vêm das variáveis do tema)
@@ -319,6 +339,7 @@ function Pinos({
     const animar = !primeira.current
     const fazer = () => enquadrar(map, pontos, animar, map.getSize().x < LARGURA_ESTREITA)
     enquadrePendente.current = fazer() ? null : fazer
+    ultimoEnquadre.current = () => enquadrar(map, pontos, false, map.getSize().x < LARGURA_ESTREITA)
     primeira.current = false
     // eslint-disable-next-line react-hooks/exhaustive-deps -- só quando o recorte muda, não a cada ponto
   }, [map, chaveEnquadre])
@@ -328,6 +349,7 @@ function Pinos({
     if (!selecionado) return
     const p = pontos.find((x) => x.servico.chave === selecionado)
     if (!p) return
+    ultimoEnquadre.current = null // a vista agora é a do serviço escolhido
     // 1ª vez (chegou com o serviço escolhido): abre direto no pino; depois, voa
     map.invalidateSize({ pan: false })
     voarPara(map, [p.lat, p.lng], Math.max(map.getZoom(), 17), lateral, jaPosicionou.current)
